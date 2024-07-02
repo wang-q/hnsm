@@ -1,4 +1,5 @@
 use clap::*;
+use std::io::BufRead;
 
 // Create clap subcommand arguments
 pub fn make_subcommand() -> Command {
@@ -9,7 +10,7 @@ pub fn make_subcommand() -> Command {
                 .required(true)
                 .num_args(1..)
                 .index(1)
-                .help("Set the input file to use")
+                .help("Set the input file to use"),
         )
         .arg(
             Arg::new("header")
@@ -41,7 +42,12 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     //----------------------------
     // Options
     //----------------------------
-    let mut writer = writer(args.get_one::<String>("outfile").unwrap());
+    let mut writer = intspan::writer(args.get_one::<String>("outfile").unwrap());
+
+    for infile in args.get_many::<String>("infiles").unwrap() {
+        let reader = intspan::reader(infile);
+        for line in reader.lines().map_while(Result::ok) {}
+    }
 
     Ok(())
 }

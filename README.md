@@ -31,6 +31,15 @@ cargo build
 
 ```
 
+## Examples
+
+```shell
+cargo run --bin hnsm help
+
+cargo run --bin hnsm sixframe
+
+```
+
 ## Author
 
 Qiang Wang <wang-q@outlook.com>
