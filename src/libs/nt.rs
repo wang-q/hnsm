@@ -16,14 +16,14 @@
 ///  D   =>  A or G or T
 ///  B   =>  C or G or T
 ///  N   =>  A or G or C or T (any)
-
-#[repr(u8)]
+#[repr(usize)]
 enum Nt {
     A = 0,
     C = 1,
     G = 2,
     T = 3, // U
     N = 4,
+    Invalid = 255,
 }
 
 impl Nt {
@@ -39,7 +39,7 @@ impl Nt {
 /// U = 85, u = 117 => 3
 /// N => 4
 /// Invalid => 255
-pub static NT_VAL: &'static [u8; 256] = &{
+pub static NT_VAL: &[usize; 256] = &{
     let mut array = [255; 256];
 
     array[b'A' as usize] = 0;
@@ -83,7 +83,7 @@ pub static NT_VAL: &'static [u8; 256] = &{
 };
 
 /// block -> row -> column
-pub static AA_TAB: &'static [[[char; 4]; 4]; 4] = &[
+pub static AA_TAB: &[[[char; 4]; 4]; 4] = &[
     [
         ['K', 'N', 'K', 'N'], // AAA, AAC, AAG, AAU/AAT
         ['T', 'T', 'T', 'T'], // ACA, ACC, ACG, ACU/ACT
@@ -110,3 +110,44 @@ pub static AA_TAB: &'static [[[char; 4]; 4]; 4] = &[
     ],
 ];
 
+/// ```
+/// let dna = b"GCTAGTCGTATCGTAGCTAGTC";
+/// assert_eq!(&hnsm::translate(dna), "ASRIVAS");
+///
+/// let rna = b"GCUAGUCGUAUCGUAGCUAGUC";
+/// assert_eq!(&hnsm::translate(rna), "ASRIVAS");
+///
+/// // To shift the reading frame, pass in a slice
+/// assert_eq!(&hnsm::translate(&dna[1..]), "LVVS*LV");
+/// assert_eq!(&hnsm::translate(&dna[2..]), "*SYRS*");
+/// ```
+// https://github.com/dweb0/protein-translate/blob/master/src/lib.rs
+pub fn translate(seq: &[u8]) -> String {
+    let mut peptide = String::with_capacity(seq.len() / 3);
+
+    'outer: for triplet in seq.chunks_exact(3) {
+        for c in triplet {
+            if !c.is_ascii() {
+                peptide.push('X');
+                continue 'outer;
+            }
+            if NT_VAL[*c as usize] == Nt::N as usize {
+                peptide.push('X');
+                continue 'outer;
+            }
+            if NT_VAL[*c as usize] == Nt::Invalid as usize {
+                peptide.push('X');
+                continue 'outer;
+            }
+        }
+
+        let c1 = NT_VAL[triplet[0] as usize]  ;
+        let c2 = NT_VAL[triplet[1] as usize] ;
+        let c3 = NT_VAL[triplet[2] as usize] ;
+
+        let amino_acid = AA_TAB[c1][c2][c3];
+
+        peptide.push(amino_acid);
+    }
+    peptide
+}

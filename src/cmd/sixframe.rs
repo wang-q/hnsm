@@ -49,5 +49,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
         for line in reader.lines().map_while(Result::ok) {}
     }
 
+    // dbg!(hnsm::NT_VAL);
+
     Ok(())
 }
