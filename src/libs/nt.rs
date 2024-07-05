@@ -141,9 +141,9 @@ pub fn translate(seq: &[u8]) -> String {
             }
         }
 
-        let c1 = NT_VAL[triplet[0] as usize]  ;
-        let c2 = NT_VAL[triplet[1] as usize] ;
-        let c3 = NT_VAL[triplet[2] as usize] ;
+        let c1 = NT_VAL[triplet[0] as usize];
+        let c2 = NT_VAL[triplet[1] as usize];
+        let c3 = NT_VAL[triplet[2] as usize];
 
         let amino_acid = AA_TAB[c1][c2][c3];
 

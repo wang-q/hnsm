@@ -3,7 +3,7 @@ name = "hnsm"
 version = "0.0.1"
 authors = ["wang-q <wang-q@outlook.com>"]
 edition = "2018"
-description = "Genome Analyst with Rust and rediS"
+description = "Homogeneous Nucleic acid Smart Matching"
 documentation = "https://github.com/wang-q/hnsm"
 readme = "README.md"
 homepage = "https://github.com/wang-q/hnsm"
@@ -24,7 +24,8 @@ itertools = "0.12.1"
 crossbeam = "0.8.4"
 
 intspan = "0.7.5"
-bio = "1.5.0"
+noodles = { version = "0.77.0", features = ["fasta"] }
+noodles-fasta = "0.40.0"
 
 # serialize
 rust-lapper = { version = "1.0.1", features = ["with_serde"] }

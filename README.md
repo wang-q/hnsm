@@ -36,6 +36,8 @@ cargo build
 ```shell
 cargo run --bin hnsm help
 
+cargo run --bin hnsm size tests/fasta/ufasta.fa
+
 cargo run --bin hnsm sixframe
 
 ```
