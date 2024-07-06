@@ -16,6 +16,7 @@
 ///  D   =>  A or G or T
 ///  B   =>  C or G or T
 ///  N   =>  A or G or C or T (any)
+#[allow(dead_code)]
 #[repr(usize)]
 enum Nt {
     A = 0,
@@ -26,6 +27,7 @@ enum Nt {
     Invalid = 255,
 }
 
+#[allow(dead_code)]
 impl Nt {
     pub const U: Nt = Nt::T;
 }
