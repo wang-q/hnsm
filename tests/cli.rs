@@ -63,7 +63,7 @@ fn command_size() -> anyhow::Result<()> {
 }
 
 #[test]
-fn command_size_gz() -> Result<(), Box<dyn std::error::Error>> {
+fn command_size_gz() -> anyhow::Result<()> {
     let mut cmd = Command::cargo_bin("hnsm")?;
     let output = cmd
         .arg("size")
@@ -76,6 +76,38 @@ fn command_size_gz() -> Result<(), Box<dyn std::error::Error>> {
     assert_eq!(stdout.lines().count(), 100);
     assert!(stdout.contains("read0\t359"), "read0");
     assert!(stdout.contains("read1\t106"), "read1");
+
+    Ok(())
+}
+
+#[test]
+fn command_some() -> anyhow::Result<()> {
+    let mut cmd = Command::cargo_bin("hnsm")?;
+    let output = cmd
+        .arg("some")
+        .arg("tests/fasta/ufasta.fa")
+        .arg("tests/fasta/list.txt")
+        .output()
+        .unwrap();
+    let stdout = String::from_utf8(output.stdout).unwrap();
+
+    assert_eq!(stdout.lines().count(), 4);
+    assert!(stdout.contains("read0\n"), "read0");
+    assert!(stdout.contains("read12\n"), "read12");
+
+    let mut cmd = Command::cargo_bin("hnsm")?;
+    let output = cmd
+        .arg("some")
+        .arg("tests/fasta/ufasta.fa")
+        .arg("tests/fasta/list.txt")
+        .arg("-i")
+        .output()
+        .unwrap();
+    let stdout = String::from_utf8(output.stdout).unwrap();
+
+    assert_eq!(stdout.lines().count(), 91);
+    assert!(!stdout.contains("read0\n"), "read0");
+    assert!(!stdout.contains("read12\n"), "read12");
 
     Ok(())
 }

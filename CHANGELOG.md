@@ -6,3 +6,4 @@
 
 * Subcommands
     * size
+    * some
