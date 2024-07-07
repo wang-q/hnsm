@@ -8,3 +8,4 @@
     * size
     * some
     * one
+    * masked

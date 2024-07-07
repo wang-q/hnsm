@@ -128,3 +128,18 @@ fn command_one() -> anyhow::Result<()> {
 
     Ok(())
 }
+
+#[test]
+fn command_masked() -> anyhow::Result<()> {
+    let mut cmd = Command::cargo_bin("hnsm")?;
+    let output = cmd
+        .arg("masked")
+        .arg("tests/fasta/ufasta.fa")
+        .output()
+        .unwrap();
+    let stdout = String::from_utf8(output.stdout).unwrap();
+
+    assert!(stdout.contains("read46:3-4"), "read46");
+
+    Ok(())
+}

@@ -11,6 +11,7 @@ fn main() -> anyhow::Result<()> {
         .propagate_version(true)
         .arg_required_else_help(true)
         .color(ColorChoice::Auto)
+        .subcommand(cmd::masked::make_subcommand())
         .subcommand(cmd::one::make_subcommand())
         .subcommand(cmd::sixframe::make_subcommand())
         .subcommand(cmd::size::make_subcommand())
@@ -18,6 +19,7 @@ fn main() -> anyhow::Result<()> {
 
     // Check which subcomamnd the user ran...
     match app.get_matches().subcommand() {
+        Some(("masked", sub_matches)) => cmd::masked::execute(sub_matches),
         Some(("one", sub_matches)) => cmd::one::execute(sub_matches),
         Some(("sixframe", sub_matches)) => cmd::sixframe::execute(sub_matches),
         Some(("size", sub_matches)) => cmd::size::execute(sub_matches),

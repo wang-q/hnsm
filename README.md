@@ -38,7 +38,9 @@ cargo run --bin hnsm help
 
 hnsm size tests/fasta/ufasta.fa
 
-cargo run --bin hnsm some tests/fasta/ufasta.fa tests/fasta/list.txt
+some tests/fasta/ufasta.fa tests/fasta/list.txt
+
+cargo run --bin hnsm masked tests/fasta/ufasta.fa
 
 cargo run --bin hnsm sixframe
 

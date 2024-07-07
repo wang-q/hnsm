@@ -42,12 +42,12 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     //----------------------------
     // Options
     //----------------------------
-    let mut writer = intspan::writer(args.get_one::<String>("outfile").unwrap());
-
-    for infile in args.get_many::<String>("infiles").unwrap() {
-        let reader = intspan::reader(infile);
-        for line in reader.lines().map_while(Result::ok) {}
-    }
+    // let mut writer = intspan::writer(args.get_one::<String>("outfile").unwrap());
+    //
+    // for infile in args.get_many::<String>("infiles").unwrap() {
+    //     let reader = intspan::reader(infile);
+    //     for line in reader.lines().map_while(Result::ok) {}
+    // }
 
     // dbg!(hnsm::NT_VAL);
 

@@ -24,7 +24,7 @@ enum Nt {
     G = 2,
     T = 3, // U
     N = 4,
-    Invalid = usize::MAX,
+    Invalid = 255,
 }
 
 #[allow(dead_code)]
@@ -40,9 +40,9 @@ impl Nt {
 /// T = 84, t = 116 => 3
 /// U = 85, u = 117 => 3
 /// N => 4
-/// Invalid => usize::MAX
+/// Invalid => 255
 pub static NT_VAL: &[usize; 256] = &{
-    let mut array = [usize::MAX; 256];
+    let mut array = [255; 256];
 
     array[b'A' as usize] = 0;
     array[b'a' as usize] = 0;
@@ -91,6 +91,14 @@ pub static NT_VAL: &[usize; 256] = &{
 /// ```
 pub fn is_n(nt: u8) -> bool {
     NT_VAL[nt as usize] == Nt::N as usize || NT_VAL[nt as usize] == Nt::Invalid as usize
+}
+
+/// ```
+/// assert!(&hnsm::is_lower('n' as u8));
+/// assert!(!&hnsm::is_lower('A' as u8));
+/// ```
+pub fn is_lower(nt: u8) -> bool {
+    (nt as char).is_ascii_lowercase()
 }
 
 /// block -> row -> column
