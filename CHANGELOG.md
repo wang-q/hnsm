@@ -7,3 +7,4 @@
 * Subcommands
     * size
     * some
+    * one
