@@ -10,3 +10,4 @@
     * one
     * masked
     * rc
+    * count

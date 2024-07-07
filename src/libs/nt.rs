@@ -18,7 +18,8 @@
 ///  N   =>  A or G or C or T (any)
 #[allow(dead_code)]
 #[repr(usize)]
-enum Nt {
+#[derive(Clone, Copy)]
+pub enum Nt {
     A = 0,
     C = 1,
     G = 2,
@@ -83,6 +84,17 @@ pub static NT_VAL: &[usize; 256] = &{
 
     array
 };
+
+pub fn to_nt(nt: u8) -> Nt {
+    match NT_VAL[nt as usize] {
+        0 => Nt::A,
+        1 => Nt::C,
+        2 => Nt::G,
+        3 => Nt::T,
+        4 => Nt::N,
+        _ => Nt::Invalid,
+    }
+}
 
 /// ```
 /// assert!(&hnsm::is_n('n' as u8));

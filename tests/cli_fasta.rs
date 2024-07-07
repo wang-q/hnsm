@@ -147,11 +147,7 @@ fn command_masked() -> anyhow::Result<()> {
 #[test]
 fn command_rc() -> anyhow::Result<()> {
     let mut cmd = Command::cargo_bin("hnsm")?;
-    let output = cmd
-        .arg("rc")
-        .arg("tests/fasta/ufasta.fa")
-        .output()
-        .unwrap();
+    let output = cmd.arg("rc").arg("tests/fasta/ufasta.fa").output().unwrap();
     let stdout = String::from_utf8(output.stdout).unwrap();
 
     assert!(stdout.contains("GgacTgcggCTagAA"), "read46");
@@ -168,6 +164,22 @@ fn command_rc() -> anyhow::Result<()> {
     assert!(stdout.contains(">RC_read12"), "read12");
     assert!(!stdout.contains(">RC_read46"), "read46");
     assert!(!stdout.contains("GgacTgcggCTagAA"), "read46");
+
+    Ok(())
+}
+
+#[test]
+fn command_count() -> anyhow::Result<()> {
+    let mut cmd = Command::cargo_bin("hnsm")?;
+    let output = cmd
+        .arg("count")
+        .arg("tests/fasta/ufasta.fa")
+        .output()
+        .unwrap();
+    let stdout = String::from_utf8(output.stdout).unwrap();
+
+    assert!(stdout.contains("read45\t0\t0"), "empty");
+    assert!(stdout.contains("total\t9317\t2318"), "total");
 
     Ok(())
 }

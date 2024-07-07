@@ -11,6 +11,7 @@ fn main() -> anyhow::Result<()> {
         .propagate_version(true)
         .arg_required_else_help(true)
         .color(ColorChoice::Auto)
+        .subcommand(cmd::count::make_subcommand())
         .subcommand(cmd::masked::make_subcommand())
         .subcommand(cmd::one::make_subcommand())
         .subcommand(cmd::rc::make_subcommand())
@@ -20,6 +21,8 @@ fn main() -> anyhow::Result<()> {
 
     // Check which subcomamnd the user ran...
     match app.get_matches().subcommand() {
+        // fasta
+        Some(("count", sub_matches)) => cmd::count::execute(sub_matches),
         Some(("masked", sub_matches)) => cmd::masked::execute(sub_matches),
         Some(("one", sub_matches)) => cmd::one::execute(sub_matches),
         Some(("rc", sub_matches)) => cmd::rc::execute(sub_matches),

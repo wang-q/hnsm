@@ -42,7 +42,9 @@ hnsm some tests/fasta/ufasta.fa tests/fasta/list.txt
 
 hnsm masked tests/fasta/ufasta.fa
 
-cargo run --bin hnsm rc tests/fasta/ufasta.fa
+hnsm rc tests/fasta/ufasta.fa
+
+cargo run --bin hnsm count tests/fasta/ufasta.fa
 
 cargo run --bin hnsm sixframe
 
