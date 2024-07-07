@@ -13,6 +13,7 @@ fn main() -> anyhow::Result<()> {
         .color(ColorChoice::Auto)
         .subcommand(cmd::masked::make_subcommand())
         .subcommand(cmd::one::make_subcommand())
+        .subcommand(cmd::rc::make_subcommand())
         .subcommand(cmd::sixframe::make_subcommand())
         .subcommand(cmd::size::make_subcommand())
         .subcommand(cmd::some::make_subcommand());
@@ -21,6 +22,7 @@ fn main() -> anyhow::Result<()> {
     match app.get_matches().subcommand() {
         Some(("masked", sub_matches)) => cmd::masked::execute(sub_matches),
         Some(("one", sub_matches)) => cmd::one::execute(sub_matches),
+        Some(("rc", sub_matches)) => cmd::rc::execute(sub_matches),
         Some(("sixframe", sub_matches)) => cmd::sixframe::execute(sub_matches),
         Some(("size", sub_matches)) => cmd::size::execute(sub_matches),
         Some(("some", sub_matches)) => cmd::some::execute(sub_matches),
