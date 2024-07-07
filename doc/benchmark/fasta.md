@@ -31,22 +31,48 @@ Memory: 562MiB / 32030MiB
 
 ## `hnsm size`
 
-```bash
+```shell
 hyperfine --warmup 10 --export-markdown size.md.tmp \
-    -n "hnsm  size ufasta.fa" \
+    -n "hnsm  size .fa" \
     'cat tests/fasta/ufasta.fa | hnsm  size stdin > /dev/null' \
-    -n "faops size ufasta.fa" \
+    -n "faops size .fa" \
     'cat tests/fasta/ufasta.fa | faops size stdin > /dev/null' \
-    -n "hnsm  size ufasta.fa.gz" \
+    -n "hnsm  size .fa.gz" \
     'hnsm  size tests/fasta/ufasta.fa.gz > /dev/null' \
-    -n "faops size ufasta.fa.gz" \
+    -n "faops size .fa.gz" \
     'faops size tests/fasta/ufasta.fa.gz > /dev/null'
+
+cat size.md.tmp
 
 ```
 
-| Command                   | Mean [ms] | Min [ms] | Max [ms] |    Relative |
-|:--------------------------|----------:|---------:|---------:|------------:|
-| `hnsm  size ufasta.fa`    | 2.7 ± 0.3 |      2.3 |      3.9 | 1.02 ± 0.14 |
-| `faops size ufasta.fa`    | 2.7 ± 0.2 |      2.1 |      3.7 |        1.00 |
-| `hnsm  size ufasta.fa.gz` | 2.8 ± 0.3 |      2.4 |      3.9 | 1.05 ± 0.14 |
-| `faops size ufasta.fa.gz` | 2.9 ± 0.3 |      2.4 |      3.9 | 1.07 ± 0.14 |
+| Command             | Mean [ms] | Min [ms] | Max [ms] |    Relative |
+|:--------------------|----------:|---------:|---------:|------------:|
+| `hnsm  size .fa`    | 2.7 ± 0.3 |      2.1 |      4.2 | 1.01 ± 0.13 |
+| `faops size .fa`    | 2.6 ± 0.2 |      2.0 |      4.2 |        1.00 |
+| `hnsm  size .fa.gz` | 2.7 ± 0.2 |      2.3 |      3.6 | 1.03 ± 0.12 |
+| `faops size .fa.gz` | 2.8 ± 0.2 |      2.4 |      4.5 | 1.07 ± 0.13 |
+
+## `hnsm some`
+
+```shell
+hyperfine --warmup 10 --export-markdown some.md.tmp \
+    -n "hnsm some" \
+    'hnsm  some tests/fasta/ufasta.fa.gz tests/fasta/list.txt > /dev/null' \
+    -n "faops some" \
+    'faops some tests/fasta/ufasta.fa.gz tests/fasta/list.txt stdout > /dev/null' \
+    -n "hnsm some -i" \
+    'hnsm  some -i tests/fasta/ufasta.fa.gz tests/fasta/list.txt > /dev/null' \
+    -n "faops some -i" \
+    'faops some -i tests/fasta/ufasta.fa.gz tests/fasta/list.txt stdout > /dev/null'
+
+cat some.md.tmp
+
+```
+
+| Command         | Mean [ms] | Min [ms] | Max [ms] |    Relative |
+|:----------------|----------:|---------:|---------:|------------:|
+| `hnsm some`     | 3.9 ± 0.3 |      3.3 |      6.0 | 1.01 ± 0.12 |
+| `faops some`    | 4.1 ± 0.3 |      3.6 |      5.9 | 1.06 ± 0.12 |
+| `hnsm some -i`  | 3.9 ± 0.3 |      3.4 |      5.8 |        1.00 |
+| `faops some -i` | 4.1 ± 0.4 |      3.6 |      6.3 | 1.07 ± 0.13 |
