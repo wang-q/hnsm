@@ -24,7 +24,7 @@ enum Nt {
     G = 2,
     T = 3, // U
     N = 4,
-    Invalid = 255,
+    Invalid = usize::MAX,
 }
 
 #[allow(dead_code)]
@@ -40,9 +40,9 @@ impl Nt {
 /// T = 84, t = 116 => 3
 /// U = 85, u = 117 => 3
 /// N => 4
-/// Invalid => 255
+/// Invalid => usize::MAX
 pub static NT_VAL: &[usize; 256] = &{
-    let mut array = [255; 256];
+    let mut array = [usize::MAX; 256];
 
     array[b'A' as usize] = 0;
     array[b'a' as usize] = 0;
@@ -83,6 +83,15 @@ pub static NT_VAL: &[usize; 256] = &{
 
     array
 };
+
+/// ```
+/// assert!(&hnsm::is_n('n' as u8));
+/// assert!(&hnsm::is_n('Z' as u8));
+/// assert!(!&hnsm::is_n('A' as u8));
+/// ```
+pub fn is_n(nt: u8) -> bool {
+    NT_VAL[nt as usize] == Nt::N as usize || NT_VAL[nt as usize] == Nt::Invalid as usize
+}
 
 /// block -> row -> column
 pub static AA_TAB: &[[[char; 4]; 4]; 4] = &[
