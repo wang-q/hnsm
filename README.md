@@ -28,6 +28,25 @@ cargo build
 ### `hnsm help`
 
 ```text
+$ hnsm help
+Homogeneous Nucleic acid Smart Matching
+
+Usage: hnsm [COMMAND]
+
+Commands:
+  count     Count base statistics in FA file(s)
+  masked    Masked regions in FA file(s)
+  one       Extract one FA record
+  order     Extract some FA records by the given order
+  rc        Reverse complement a FA file
+  sixframe  Six-Frame Translation
+  size      Count total bases in FA file(s)
+  some      Extract some FA records
+  help      Print this message or the help of the given subcommand(s)
+
+Options:
+  -h, --help     Print help
+  -V, --version  Print version
 
 ```
 
@@ -37,6 +56,9 @@ cargo build
 cargo run --bin hnsm help
 
 hnsm size tests/fasta/ufasta.fa
+hnsm count tests/fasta/ufasta.fa
+
+hnsm one tests/fasta/ufasta.fa read12
 
 hnsm some tests/fasta/ufasta.fa tests/fasta/list.txt
 
@@ -46,7 +68,6 @@ hnsm masked tests/fasta/ufasta.fa
 
 hnsm rc tests/fasta/ufasta.fa
 
-hnsm count tests/fasta/ufasta.fa
 
 cargo run --bin hnsm sixframe
 
