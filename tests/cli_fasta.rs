@@ -113,6 +113,24 @@ fn command_some() -> anyhow::Result<()> {
 }
 
 #[test]
+fn command_order() -> anyhow::Result<()> {
+    let mut cmd = Command::cargo_bin("hnsm")?;
+    let output = cmd
+        .arg("order")
+        .arg("tests/fasta/ufasta.fa")
+        .arg("tests/fasta/list.txt")
+        .output()
+        .unwrap();
+    let stdout = String::from_utf8(output.stdout).unwrap();
+
+    assert_eq!(stdout.lines().count(), 4);
+    assert!(stdout.contains("read12\n"), "read12");
+    assert!(stdout.contains("read0\n"), "read0");
+
+    Ok(())
+}
+
+#[test]
 fn command_one() -> anyhow::Result<()> {
     let mut cmd = Command::cargo_bin("hnsm")?;
     let output = cmd

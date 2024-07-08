@@ -1,2 +1,2 @@
-read0
 read12
+read0

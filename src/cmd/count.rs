@@ -46,7 +46,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
             let mut base_cnt = [0usize; 5];
             for el in seq.get(..).unwrap().iter() {
                 let nt = hnsm::to_nt(*el);
-                if !matches!( nt, Nt::Invalid) {
+                if !matches!(nt, Nt::Invalid) {
                     len += 1;
                     base_cnt[nt as usize] += 1;
                 }

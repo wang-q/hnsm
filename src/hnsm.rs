@@ -14,6 +14,7 @@ fn main() -> anyhow::Result<()> {
         .subcommand(cmd::count::make_subcommand())
         .subcommand(cmd::masked::make_subcommand())
         .subcommand(cmd::one::make_subcommand())
+        .subcommand(cmd::order::make_subcommand())
         .subcommand(cmd::rc::make_subcommand())
         .subcommand(cmd::sixframe::make_subcommand())
         .subcommand(cmd::size::make_subcommand())
@@ -25,6 +26,7 @@ fn main() -> anyhow::Result<()> {
         Some(("count", sub_matches)) => cmd::count::execute(sub_matches),
         Some(("masked", sub_matches)) => cmd::masked::execute(sub_matches),
         Some(("one", sub_matches)) => cmd::one::execute(sub_matches),
+        Some(("order", sub_matches)) => cmd::order::execute(sub_matches),
         Some(("rc", sub_matches)) => cmd::rc::execute(sub_matches),
         Some(("sixframe", sub_matches)) => cmd::sixframe::execute(sub_matches),
         Some(("size", sub_matches)) => cmd::size::execute(sub_matches),

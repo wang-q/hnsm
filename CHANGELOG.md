@@ -6,8 +6,9 @@
 
 * Subcommands
     * size
-    * some
     * one
+    * some
+    * order
     * masked
     * rc
     * count

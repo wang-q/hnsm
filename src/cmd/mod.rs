@@ -3,6 +3,7 @@
 pub mod count;
 pub mod masked;
 pub mod one;
+pub mod order;
 pub mod rc;
 pub mod sixframe;
 pub mod size;
