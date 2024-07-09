@@ -43,10 +43,10 @@ pub fn make_subcommand() -> Command {
 
 // command implementation
 pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
-    let is_consistent = args.get_flag("consistent");
-
     let reader = intspan::reader(args.get_one::<String>("infile").unwrap());
     let mut fa_in = fasta::io::Reader::new(reader);
+
+    let is_consistent = args.get_flag("consistent");
 
     let writer = intspan::writer(args.get_one::<String>("outfile").unwrap());
     let mut fa_out = fasta::io::writer::Builder::default()
