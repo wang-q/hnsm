@@ -53,8 +53,6 @@ Options:
 ## Examples
 
 ```shell
-cargo run --bin hnsm help
-
 hnsm size tests/fasta/ufasta.fa
 hnsm count tests/fasta/ufasta.fa
 
@@ -62,12 +60,13 @@ hnsm one tests/fasta/ufasta.fa read12
 
 hnsm some tests/fasta/ufasta.fa tests/fasta/list.txt
 
-cargo run --bin hnsm order tests/fasta/ufasta.fa tests/fasta/list.txt
+hnsm order tests/fasta/ufasta.fa tests/fasta/list.txt
+
+cargo run --bin hnsm replace tests/fasta/ufasta.fa tests/fasta/replace.tsv
 
 hnsm masked tests/fasta/ufasta.fa
 
 hnsm rc tests/fasta/ufasta.fa
-
 
 cargo run --bin hnsm sixframe
 

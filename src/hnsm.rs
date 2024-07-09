@@ -16,9 +16,18 @@ fn main() -> anyhow::Result<()> {
         .subcommand(cmd::one::make_subcommand())
         .subcommand(cmd::order::make_subcommand())
         .subcommand(cmd::rc::make_subcommand())
+        .subcommand(cmd::replace::make_subcommand())
         .subcommand(cmd::sixframe::make_subcommand())
         .subcommand(cmd::size::make_subcommand())
-        .subcommand(cmd::some::make_subcommand());
+        .subcommand(cmd::some::make_subcommand())
+        .after_help(
+            r###"
+* <infiles> are paths to fasta files, .fa.gz is supported
+    * infile == stdin means reading from STDIN
+
+"###,
+        )
+        ;
 
     // Check which subcomamnd the user ran...
     match app.get_matches().subcommand() {
@@ -28,6 +37,7 @@ fn main() -> anyhow::Result<()> {
         Some(("one", sub_matches)) => cmd::one::execute(sub_matches),
         Some(("order", sub_matches)) => cmd::order::execute(sub_matches),
         Some(("rc", sub_matches)) => cmd::rc::execute(sub_matches),
+        Some(("replace", sub_matches)) => cmd::replace::execute(sub_matches),
         Some(("sixframe", sub_matches)) => cmd::sixframe::execute(sub_matches),
         Some(("size", sub_matches)) => cmd::size::execute(sub_matches),
         Some(("some", sub_matches)) => cmd::some::execute(sub_matches),

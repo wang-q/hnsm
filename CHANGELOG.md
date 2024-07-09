@@ -12,3 +12,4 @@
     * masked
     * rc
     * count
+    * replace

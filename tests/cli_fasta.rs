@@ -201,3 +201,35 @@ fn command_count() -> anyhow::Result<()> {
 
     Ok(())
 }
+
+#[test]
+fn command_replace() -> anyhow::Result<()> {
+    let mut cmd = Command::cargo_bin("hnsm")?;
+    let output = cmd
+        .arg("replace")
+        .arg("tests/fasta/ufasta.fa")
+        .arg("tests/fasta/replace.tsv")
+        .output()
+        .unwrap();
+    let stdout = String::from_utf8(output.stdout).unwrap();
+
+    assert_eq!(stdout.lines().count(), 95);
+    assert!(stdout.contains(">359"), "read0");
+    assert!(!stdout.contains(">read0"), "read0");
+
+    let mut cmd = Command::cargo_bin("hnsm")?;
+    let output = cmd
+        .arg("replace")
+        .arg("tests/fasta/ufasta.fa")
+        .arg("tests/fasta/replace.tsv")
+        .arg("--some")
+        .output()
+        .unwrap();
+    let stdout = String::from_utf8(output.stdout).unwrap();
+
+    assert_eq!(stdout.lines().count(), 6);
+    assert!(stdout.contains(">359"), "read0");
+    assert!(!stdout.contains(">read0"), "read0");
+
+    Ok(())
+}
