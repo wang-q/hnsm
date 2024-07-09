@@ -19,7 +19,7 @@ pub fn make_subcommand() -> Command {
                 .help("Set the input file to use"),
         )
         .arg(
-            Arg::new("list")
+            Arg::new("list.txt")
                 .required(true)
                 .index(2)
                 .help("One name per line"),
@@ -44,7 +44,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
         .set_line_base_count(usize::MAX)
         .build_with_writer(writer);
 
-    let vec_list = intspan::read_first_column(args.get_one::<String>("list").unwrap());
+    let vec_list = intspan::read_first_column(args.get_one::<String>("list.txt").unwrap());
     let mut record_of = BTreeMap::new();
 
     for result in fa_in.records() {

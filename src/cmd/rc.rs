@@ -19,7 +19,7 @@ pub fn make_subcommand() -> Command {
                 .help("Set the input file to use"),
         )
         .arg(
-            Arg::new("list")
+            Arg::new("list.txt")
                 .required(false)
                 .index(2)
                 .help("One name per line"),
@@ -55,7 +55,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
 
     let mut set_list: HashSet<String> = HashSet::new();
     if args.contains_id("list") {
-        set_list = intspan::read_first_column(args.get_one::<String>("list").unwrap())
+        set_list = intspan::read_first_column(args.get_one::<String>("list.txt").unwrap())
             .into_iter()
             .collect();
     }
