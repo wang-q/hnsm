@@ -54,7 +54,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
         .build_with_writer(writer);
 
     let mut set_list: HashSet<String> = HashSet::new();
-    if args.contains_id("list") {
+    if args.contains_id("list.txt") {
         set_list = intspan::read_first_column(args.get_one::<String>("list.txt").unwrap())
             .into_iter()
             .collect();
@@ -65,7 +65,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
         let record = result?;
         let mut name = String::from_utf8(record.name().into()).unwrap();
 
-        if args.contains_id("list") && !set_list.contains(&name) {
+        if args.contains_id("list.txt") && !set_list.contains(&name) {
             fa_out.write_record(&record)?;
             continue;
         }
