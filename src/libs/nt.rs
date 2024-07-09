@@ -97,20 +97,49 @@ pub fn to_nt(nt: u8) -> Nt {
 }
 
 /// ```
-/// assert!(&hnsm::is_n('n' as u8));
-/// assert!(&hnsm::is_n('Z' as u8));
-/// assert!(!&hnsm::is_n('A' as u8));
+/// assert!(hnsm::is_n(b'n'));
+/// assert!(!hnsm::is_n(b'Z'));
+/// assert!(!hnsm::is_n(b'-'));
+/// assert!(!hnsm::is_n(b'A'));
 /// ```
 pub fn is_n(nt: u8) -> bool {
-    NT_VAL[nt as usize] == Nt::N as usize || NT_VAL[nt as usize] == Nt::Invalid as usize
+    NT_VAL[nt as usize] == Nt::N as usize
 }
 
 /// ```
-/// assert!(&hnsm::is_lower('n' as u8));
-/// assert!(!&hnsm::is_lower('A' as u8));
+/// assert!(hnsm::is_lower(b'n'));
+/// assert!(!hnsm::is_lower(b'A'));
 /// ```
 pub fn is_lower(nt: u8) -> bool {
     (nt as char).is_ascii_lowercase()
+}
+
+/// ```
+/// let dna = b"NCTAGTCGTATCGTAGCTAGNNC";
+/// assert_eq!(hnsm::count_n(dna), 3);
+/// ```
+pub fn count_n(seq: &[u8]) -> usize {
+    let mut n_cnt = 0;
+    for c in seq {
+        if is_n(*c) {
+            n_cnt += 1;
+        }
+    }
+
+    n_cnt
+}
+
+/// convert IUPAC ambiguous codes to 'N'
+/// ```
+/// assert_eq!(hnsm::to_n(b'a'), b'a');
+/// assert_eq!(hnsm::to_n(b'M'), b'N');
+/// ```
+pub fn to_n(nt: u8) -> u8 {
+    if is_n(nt) {
+        b'N'
+    } else {
+        nt
+    }
 }
 
 /// block -> row -> column

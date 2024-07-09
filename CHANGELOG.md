@@ -13,3 +13,4 @@
     * rc
     * count
     * replace
+    * filter

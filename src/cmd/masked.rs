@@ -18,7 +18,7 @@ pub fn make_subcommand() -> Command {
                 .long("gap")
                 .short('g')
                 .action(ArgAction::SetTrue)
-                .help("only regions of N/n"),
+                .help("Only regions of N/n"),
         )
         .arg(
             Arg::new("outfile")

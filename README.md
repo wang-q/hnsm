@@ -52,21 +52,25 @@ Options:
 
 ## Examples
 
+* Fasta files
+
 ```shell
 hnsm size tests/fasta/ufasta.fa
-hnsm count tests/fasta/ufasta.fa
+hnsm count tests/fasta/ufasta.fa.gz
 
 hnsm one tests/fasta/ufasta.fa read12
-
 hnsm some tests/fasta/ufasta.fa tests/fasta/list.txt
-
 hnsm order tests/fasta/ufasta.fa tests/fasta/list.txt
 
-cargo run --bin hnsm replace tests/fasta/ufasta.fa tests/fasta/replace.tsv
+hnsm replace tests/fasta/ufasta.fa tests/fasta/replace.tsv
 
 hnsm masked tests/fasta/ufasta.fa
 
 hnsm rc tests/fasta/ufasta.fa
+
+cargo run --bin hnsm filter -a 10 -z 50 -U tests/fasta/ufasta.fa
+cargo run --bin hnsm filter -a 1 -u tests/fasta/ufasta.fa tests/fasta/ufasta.fa.gz
+cargo run --bin hnsm filter --iupac --upper tests/fasta/filter.fa
 
 cargo run --bin hnsm sixframe
 
