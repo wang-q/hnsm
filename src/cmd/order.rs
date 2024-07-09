@@ -60,7 +60,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     for el in vec_list.iter() {
         if record_of.contains_key(el) {
             let record = record_of.get(el).unwrap();
-            fa_out.write_record(&record)?;
+            fa_out.write_record(record)?;
         }
     }
 
