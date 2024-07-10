@@ -374,3 +374,101 @@ fn command_split_about() -> anyhow::Result<()> {
     tempdir.close()?;
     Ok(())
 }
+
+#[test]
+fn command_n50() -> anyhow::Result<()> {
+    // display header
+    let mut cmd = Command::cargo_bin("hnsm")?;
+    let output = cmd
+        .arg("n50")
+        .arg("tests/fasta/ufasta.fa")
+        .output()
+        .unwrap();
+    let stdout = String::from_utf8(output.stdout).unwrap();
+
+    assert_eq!(stdout.lines().count(), 1);
+    assert!(stdout.contains("N50\t314"), "line 1");
+
+    // doesn't display header
+    let mut cmd = Command::cargo_bin("hnsm")?;
+    let output = cmd
+        .arg("n50")
+        .arg("tests/fasta/ufasta.fa")
+        .arg("-H")
+        .output()
+        .unwrap();
+    let stdout = String::from_utf8(output.stdout).unwrap();
+
+    assert_eq!(stdout.lines().count(), 1);
+    assert!(!stdout.contains("N50\t314"), "line 1");
+    assert!(stdout.contains("314"), "line 1");
+
+    // set genome size (NG50)
+    let mut cmd = Command::cargo_bin("hnsm")?;
+    let output = cmd
+        .arg("n50")
+        .arg("tests/fasta/ufasta.fa")
+        .arg("-H")
+        .arg("-g")
+        .arg("10000")
+        .output()
+        .unwrap();
+    let stdout = String::from_utf8(output.stdout).unwrap();
+
+    assert_eq!(stdout.lines().count(), 1);
+    assert!(stdout.contains("297"), "line 1");
+
+    // sum and average of size
+    let mut cmd = Command::cargo_bin("hnsm")?;
+    let output = cmd
+        .arg("n50")
+        .arg("tests/fasta/ufasta.fa")
+        .arg("-H")
+        .arg("-S")
+        .arg("-A")
+        .output()
+        .unwrap();
+    let stdout = String::from_utf8(output.stdout).unwrap();
+
+    assert_eq!(stdout.lines().count(), 3);
+    assert!(stdout.contains("314\n9317\n186.34"), "line 1,2,3");
+
+    // N10, N90, E-size
+    let mut cmd = Command::cargo_bin("hnsm")?;
+    let output = cmd
+        .arg("n50")
+        .arg("tests/fasta/ufasta.fa")
+        .arg("-H")
+        .arg("-E")
+        .arg("-N")
+        .arg("10")
+        .arg("-N")
+        .arg("90")
+        .output()
+        .unwrap();
+    let stdout = String::from_utf8(output.stdout).unwrap();
+
+    assert_eq!(stdout.lines().count(), 3);
+    assert!(stdout.contains("516\n112\n314.70\n"), "line 1,2,3");
+
+    // transposed
+    let mut cmd = Command::cargo_bin("hnsm")?;
+    let output = cmd
+        .arg("n50")
+        .arg("tests/fasta/ufasta.fa")
+        .arg("-E")
+        .arg("-N")
+        .arg("10")
+        .arg("-N")
+        .arg("90")
+        .arg("-t")
+        .output()
+        .unwrap();
+    let stdout = String::from_utf8(output.stdout).unwrap();
+
+    assert_eq!(stdout.lines().count(), 2);
+    assert!(stdout.contains("N10\tN90\tE\n"), "line 1");
+    assert!(stdout.contains("516\t112\t314.70\n"), "line 2");
+
+    Ok(())
+}

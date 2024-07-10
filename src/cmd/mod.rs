@@ -3,6 +3,7 @@
 pub mod count;
 pub mod filter;
 pub mod masked;
+pub mod n50;
 pub mod one;
 pub mod order;
 pub mod rc;
