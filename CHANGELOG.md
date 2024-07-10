@@ -14,3 +14,5 @@
     * count
     * replace
     * filter
+    * split name
+    * split about

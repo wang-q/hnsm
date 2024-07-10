@@ -21,6 +21,7 @@ fn main() -> anyhow::Result<()> {
         .subcommand(cmd::sixframe::make_subcommand())
         .subcommand(cmd::size::make_subcommand())
         .subcommand(cmd::some::make_subcommand())
+        .subcommand(cmd::split::make_subcommand())
         .after_help(
             r###"
 * <infiles> are paths to fasta files, .fa.gz is supported
@@ -42,6 +43,7 @@ fn main() -> anyhow::Result<()> {
         Some(("sixframe", sub_matches)) => cmd::sixframe::execute(sub_matches),
         Some(("size", sub_matches)) => cmd::size::execute(sub_matches),
         Some(("some", sub_matches)) => cmd::some::execute(sub_matches),
+        Some(("split", sub_matches)) => cmd::split::execute(sub_matches),
         _ => unreachable!(),
     }
     .unwrap();

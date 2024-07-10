@@ -10,3 +10,4 @@ pub mod replace;
 pub mod sixframe;
 pub mod size;
 pub mod some;
+pub mod split;

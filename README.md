@@ -72,6 +72,10 @@ cargo run --bin hnsm filter -a 10 -z 50 -U tests/fasta/ufasta.fa
 cargo run --bin hnsm filter -a 1 -u tests/fasta/ufasta.fa tests/fasta/ufasta.fa.gz
 cargo run --bin hnsm filter --iupac --upper tests/fasta/filter.fa
 
+hnsm filter -a 400 tests/fasta/ufasta.fa |
+    cargo run --bin hnsm split name stdin -o tmp
+cargo run --bin hnsm split about -c 2000 tests/fasta/ufasta.fa -o tmp
+
 cargo run --bin hnsm sixframe
 
 ```

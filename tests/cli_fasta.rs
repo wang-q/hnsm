@@ -1,6 +1,7 @@
 use assert_cmd::prelude::*;
 use predicates::prelude::*;
 use std::process::Command;
+use tempfile::TempDir;
 
 #[test]
 fn command_invalid() -> anyhow::Result<()> {
@@ -323,5 +324,53 @@ fn command_filter_fmt() -> anyhow::Result<()> {
     assert!(!stdout.contains(">read.1 simplify\nAGGG"), "simplify");
     assert!(stdout.contains(">read\nAGGG"), "simplify");
 
+    Ok(())
+}
+
+#[test]
+fn command_split_name() -> anyhow::Result<()> {
+    let tempdir = TempDir::new().unwrap();
+    let tempdir_str = tempdir.path().to_str().unwrap();
+
+    let mut cmd = Command::cargo_bin("hnsm")?;
+    cmd.arg("split")
+        .arg("name")
+        .arg("tests/fasta/ufasta.fa")
+        .arg("-o")
+        .arg(tempdir_str)
+        .assert()
+        .success()
+        .stdout(predicate::str::is_empty());
+
+    assert!(&tempdir.path().join("read0.fa").is_file());
+    assert!(!&tempdir.path().join("000.fa").exists());
+
+    tempdir.close()?;
+    Ok(())
+}
+
+#[test]
+fn command_split_about() -> anyhow::Result<()> {
+    let tempdir = TempDir::new().unwrap();
+    let tempdir_str = tempdir.path().to_str().unwrap();
+
+    let mut cmd = Command::cargo_bin("hnsm")?;
+    cmd.arg("split")
+        .arg("about")
+        .arg("tests/fasta/ufasta.fa")
+        .arg("-c")
+        .arg("2000")
+        .arg("-o")
+        .arg(tempdir_str)
+        .assert()
+        .success()
+        .stdout(predicate::str::is_empty());
+
+    assert!(!&tempdir.path().join("read0.fa").is_file());
+    assert!(&tempdir.path().join("000.fa").exists());
+    assert!(&tempdir.path().join("004.fa").exists());
+    assert!(!&tempdir.path().join("005.fa").exists());
+
+    tempdir.close()?;
     Ok(())
 }

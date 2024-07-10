@@ -1,7 +1,6 @@
 use clap::*;
 use noodles_fasta as fasta;
 use std::collections::BTreeSet;
-use std::io::Write;
 
 // Create clap subcommand arguments
 pub fn make_subcommand() -> Command {
@@ -178,8 +177,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
             let mut seq_out = String::new();
             for nt in seq.get(..).unwrap().iter() {
                 if is_dash && *nt == b'-' {
-                        continue;
-
+                    continue;
                 }
                 if is_iupac {
                     if is_upper {
