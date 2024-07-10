@@ -76,3 +76,27 @@ cat some.md.tmp
 | `faops some`    | 4.1 ± 0.3 |      3.6 |      5.9 | 1.06 ± 0.12 |
 | `hnsm some -i`  | 3.9 ± 0.3 |      3.4 |      5.8 |        1.00 |
 | `faops some -i` | 4.1 ± 0.4 |      3.6 |      6.3 | 1.07 ± 0.13 |
+
+## `hnsm n50`
+
+```shell
+hyperfine --warmup 10 --export-markdown n50.md.tmp \
+    -n "hnsm n50 .gz" \
+    'hnsm  n50 tests/fasta/ufasta.fa.gz > /dev/null' \
+    -n "faops n50 .gz" \
+    'faops n50 tests/fasta/ufasta.fa.gz > /dev/null' \
+    -n "hnsm n50 -E -S -A" \
+    'hnsm  n50 -E -S -A tests/fasta/ufasta.fa > /dev/null' \
+    -n "faops n50 -E -S -A" \
+    'faops n50 -E -S -A tests/fasta/ufasta.fa > /dev/null'
+
+cat n50.md.tmp
+
+```
+
+| Command              | Mean [ms] | Min [ms] | Max [ms] |    Relative |
+|:---------------------|----------:|---------:|---------:|------------:|
+| `hnsm n50 .gz`       | 2.7 ± 0.2 |      2.3 |      3.7 | 1.00 ± 0.09 |
+| `faops n50 .gz`      | 2.7 ± 0.2 |      2.3 |      3.6 |        1.00 |
+| `hnsm n50 -E -S -A`  | 3.2 ± 0.2 |      2.9 |      4.2 | 1.22 ± 0.10 |
+| `faops n50 -E -S -A` | 2.8 ± 0.2 |      2.4 |      3.8 | 1.04 ± 0.09 |
