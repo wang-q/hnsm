@@ -1,6 +1,6 @@
 name: Code Coverage
 
-on: [push]
+on: [ push ]
 
 env:
   CARGO_TERM_COLOR: always
@@ -27,5 +27,7 @@ jobs:
           version: '0.18.0'
           args: ' --bins --tests --follow-exec -- --test-threads 1'
 
-      - name: Upload to codecov.io
-        uses: codecov/codecov-action@v2
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v4.0.1
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
