@@ -2,6 +2,8 @@
 
 ## Unreleased - ReleaseDate
 
+## 0.1.0 - 2024-07-11
+
 * Skeletons, need to be filled
 
 * Subcommands
