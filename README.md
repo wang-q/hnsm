@@ -1,8 +1,8 @@
 # hnsm
 
 [![Build](https://github.com/wang-q/hnsm/actions/workflows/build.yml/badge.svg)](https://github.com/wang-q/hnsm/actions)
-[![codecov](https://codecov.io/gh/wang-q/hnsm/branch/master/graph/badge.svg?token=8toyNHCsVU)](https://codecov.io/gh/wang-q/hnsm)[![license](https://img.shields.io/github/license/wang-q/hnsm)](https://github.com//wang-q/hnsm)
-[![Lines of code](https://tokei.rs/b1/github/wang-q/hnsm?category=code)](https://github.com//wang-q/hnsm)
+[![codecov](https://codecov.io/gh/wang-q/hnsm/branch/master/graph/badge.svg?token=8toyNHCsVU)](https://codecov.io/gh/wang-q/hnsm)
+[![license](https://img.shields.io/github/license/wang-q/hnsm)](https://github.com//wang-q/hnsm)
 
 `hnsm` - **H**omogeneous **N**ucleic acid **S**mart **M**atching
 
