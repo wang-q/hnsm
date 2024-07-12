@@ -2,11 +2,14 @@
 
 ## Unreleased - ReleaseDate
 
+* Index Subcommands
+    * gz
+
 ## 0.1.0 - 2024-07-11
 
 * Skeletons, need to be filled
 
-* Subcommands
+* Fasta Subcommands
     * size
     * one
     * some

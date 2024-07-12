@@ -96,10 +96,11 @@ into memory would take up more resources and reduce speed.
 
 However, for bacterial genome or metagenome sequences, loading a complete sequence has no impact,
 and this program will use the LRU cache to store the recently used sequences to reduce disk accesses
-and thus speed up the process. In addition, plain text files use the same indexing format as bgzip
-files.
+and thus speed up the process. In addition, fasta files use the same indexing format as tsv files.
 
 ```shell
+cargo run --bin hnsm gz tests/index/final.contigs.fa
+
 cargo run --bin hnsm rg tests/fasta/ufasta.fa read12:50-60
 
 cargo run --bin hnsm range tests/fasta/ufasta.fa.gz tests/fasta/region.txt

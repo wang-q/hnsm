@@ -100,3 +100,33 @@ cat n50.md.tmp
 | `faops n50 .gz`      | 2.7 ± 0.2 |      2.3 |      3.6 |        1.00 |
 | `hnsm n50 -E -S -A`  | 3.2 ± 0.2 |      2.9 |      4.2 | 1.22 ± 0.10 |
 | `faops n50 -E -S -A` | 2.8 ± 0.2 |      2.4 |      3.8 | 1.04 ± 0.09 |
+
+## `bgzip`
+
+```shell
+hyperfine --warmup 5 --export-markdown gz.md.tmp \
+    -n "bgzip" \
+    'rm -f tests/fasta/final.contigs.fa.gz*;
+     bgzip -c tests/fasta/final.contigs.fa > tests/fasta/final.contigs.fa.gz;
+     bgzip -r tests/fasta/final.contigs.fa.gz' \
+    -n "bgzip --threads 4" \
+    'rm -f tests/fasta/final.contigs.fa.gz*;
+     bgzip -c --threads 4 tests/fasta/final.contigs.fa > tests/fasta/final.contigs.fa.gz;
+     bgzip -r tests/fasta/final.contigs.fa.gz' \
+    -n "hnsm gz" \
+    'rm -f tests/fasta/final.contigs.fa.gz*;
+     hnsm gz tests/fasta/final.contigs.fa' \
+    -n "hnsm gz -p 4" \
+    'rm -f tests/fasta/final.contigs.fa.gz*;
+     hnsm gz -p 4 tests/fasta/final.contigs.fa'
+
+cat gz.md.tmp
+
+```
+
+| Command             |   Mean [ms] | Min [ms] | Max [ms] |    Relative |
+|:--------------------|------------:|---------:|---------:|------------:|
+| `bgzip`             | 134.1 ± 1.6 |    132.0 |    138.2 | 2.70 ± 0.07 |
+| `bgzip --threads 4` |  67.1 ± 0.9 |     65.8 |     68.9 | 1.35 ± 0.04 |
+| `hnsm gz`           | 95.7 ± 16.1 |     90.6 |    183.4 | 1.93 ± 0.33 |
+| `hnsm gz -p 4`      |  49.7 ± 1.2 |     47.5 |     52.8 |        1.00 |

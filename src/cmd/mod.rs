@@ -2,12 +2,14 @@
 
 pub mod count;
 pub mod filter;
+pub mod gz;
 pub mod masked;
 pub mod n50;
 pub mod one;
 pub mod order;
 pub mod rc;
 pub mod replace;
+pub mod rg;
 pub mod sixframe;
 pub mod size;
 pub mod some;
