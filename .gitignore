@@ -106,3 +106,4 @@ Cargo.lock
 *.lst
 
 /tmp/
+tmp.*
