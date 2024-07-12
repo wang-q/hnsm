@@ -190,7 +190,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     if is_sum {
         let mut row = vec![];
         if !is_noheader {
-            row.push(format!("S"));
+            row.push("S".to_string());
         }
         row.push(format!("{}", total_size));
         outputs.push(row);
@@ -199,7 +199,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     if is_average {
         let mut row = vec![];
         if !is_noheader {
-            row.push(format!("A"));
+            row.push("A".to_string());
         }
         row.push(format!("{:.2}", total_size as f64 / record_cnt as f64));
         outputs.push(row);
@@ -208,7 +208,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     if is_esize {
         let mut row = vec![];
         if !is_noheader {
-            row.push(format!("E"));
+            row.push("E".to_string());
         }
         row.push(format!("{:.2}", e_size));
         outputs.push(row);
@@ -217,7 +217,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     if is_count {
         let mut row = vec![];
         if !is_noheader {
-            row.push(format!("C"));
+            row.push("C".to_string());
         }
         row.push(format!("{:.2}", record_cnt));
         outputs.push(row);
