@@ -1,10 +1,7 @@
 use clap::*;
 
-use std::fs;
-use std::io;
-use std::num;
-use std::process;
-use std::path;
+use std::io::{self};
+use std::{fs, num, path, process};
 
 use noodles_bgzf as bgzf;
 
@@ -66,7 +63,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     //----------------------------
     // Open files
     //----------------------------
-    let mut reader : Box<dyn io::BufRead> = if infile == "stdin" {
+    let mut reader: Box<dyn io::BufRead> = if infile == "stdin" {
         Box::new(io::BufReader::new(io::stdin()))
     } else {
         let path = path::Path::new(infile);
