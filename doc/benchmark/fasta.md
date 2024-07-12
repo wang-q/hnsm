@@ -106,19 +106,19 @@ cat n50.md.tmp
 ```shell
 hyperfine --warmup 5 --export-markdown gz.md.tmp \
     -n "bgzip" \
-    'rm -f tests/fasta/final.contigs.fa.gz*;
-     bgzip -c tests/fasta/final.contigs.fa > tests/fasta/final.contigs.fa.gz;
-     bgzip -r tests/fasta/final.contigs.fa.gz' \
+    'rm -f tests/index/final.contigs.fa.gz*;
+     bgzip -c tests/index/final.contigs.fa > tests/index/final.contigs.fa.gz;
+     bgzip -r tests/index/final.contigs.fa.gz' \
     -n "bgzip --threads 4" \
-    'rm -f tests/fasta/final.contigs.fa.gz*;
-     bgzip -c --threads 4 tests/fasta/final.contigs.fa > tests/fasta/final.contigs.fa.gz;
-     bgzip -r tests/fasta/final.contigs.fa.gz' \
+    'rm -f tests/index/final.contigs.fa.gz*;
+     bgzip -c --threads 4 tests/index/final.contigs.fa > tests/index/final.contigs.fa.gz;
+     bgzip -r tests/index/final.contigs.fa.gz' \
     -n "hnsm gz" \
-    'rm -f tests/fasta/final.contigs.fa.gz*;
-     hnsm gz tests/fasta/final.contigs.fa' \
+    'rm -f tests/index/final.contigs.fa.gz*;
+     hnsm gz tests/index/final.contigs.fa' \
     -n "hnsm gz -p 4" \
-    'rm -f tests/fasta/final.contigs.fa.gz*;
-     hnsm gz -p 4 tests/fasta/final.contigs.fa'
+    'rm -f tests/index/final.contigs.fa.gz*;
+     hnsm gz -p 4 tests/index/final.contigs.fa'
 
 cat gz.md.tmp
 
