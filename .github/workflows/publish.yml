@@ -15,7 +15,7 @@ jobs:
         run: ldd --version
 
       - name: Checkout sources
-        uses: actions/checkout@v4
+        uses: actions/checkout@v1
 
       - name: Install stable toolchain
         uses: actions-rs/toolchain@v1
