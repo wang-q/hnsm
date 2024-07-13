@@ -2,6 +2,8 @@
 
 ## Unreleased - ReleaseDate
 
+## 0.1.6 - 2024-07-13
+
 * LRU cahce for `hnsm range`
 
 ## 0.1.1 - 2024-07-13
