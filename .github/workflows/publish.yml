@@ -50,7 +50,7 @@ jobs:
         run: tar cvfz hnsm.tar.gz target/x86_64-unknown-linux-musl/release/hnsm
         shell: bash
       - name: Upload binaries to releases
-        uses: svenstaro/upload-release-action@v1-release
+        uses: svenstaro/upload-release-action@v2
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           file: hnsm.tar.gz
@@ -71,7 +71,7 @@ jobs:
         run: tar cvfz hnsm.tar.gz target/release/hnsm
         shell: bash
       - name: Upload binaries to releases
-        uses: svenstaro/upload-release-action@v1-release
+        uses: svenstaro/upload-release-action@v2
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           file: hnsm.tar.gz
@@ -95,7 +95,7 @@ jobs:
         run: Compress-Archive -DestinationPath ./hnsm.zip -Path ./target/release/hnsm.exe
         shell: powershell
       - name: Upload binaries to releases
-        uses: svenstaro/upload-release-action@v1-release
+        uses: svenstaro/upload-release-action@v2
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           file: hnsm.zip
