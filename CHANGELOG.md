@@ -2,6 +2,8 @@
 
 ## Unreleased - ReleaseDate
 
+* LRU cahce for `hnsm range`
+
 ## 0.1.1 - 2024-07-13
 
 * Index Subcommands
