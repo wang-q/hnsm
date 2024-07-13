@@ -39,6 +39,13 @@ pub fn make_subcommand() -> Command {
                 .help("Ranges of interest"),
         )
         .arg(
+            Arg::new("rgfile")
+                .long("rgfile")
+                .short('r')
+                .num_args(1)
+                .help("File of regions, one per line"),
+        )
+        .arg(
             Arg::new("outfile")
                 .long("outfile")
                 .short('o')
@@ -67,7 +74,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
         path.extension() == Some(ffi::OsStr::new("gz"))
     };
 
-    let ranges = if args.contains_id("ranges") {
+    let mut ranges = if args.contains_id("ranges") {
         args.get_many::<String>("ranges")
             .unwrap()
             .cloned()
@@ -75,6 +82,11 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     } else {
         vec![]
     };
+
+    if args.contains_id("rgfile") {
+        let mut rgs = intspan::read_first_column(args.get_one::<String>("rgfile").unwrap());
+        ranges.append(&mut rgs);
+    }
 
     //----------------------------
     // Open files

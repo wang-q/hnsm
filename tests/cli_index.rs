@@ -53,3 +53,21 @@ fn command_range() -> anyhow::Result<()> {
 
     Ok(())
 }
+
+#[test]
+fn command_range_r() -> anyhow::Result<()> {
+    let mut cmd = Command::cargo_bin("hnsm")?;
+    let output = cmd
+        .arg("range")
+        .arg("tests/index/final.contigs.fa.gz")
+        .arg("-r")
+        .arg("tests/index/sample.rg")
+        .output()
+        .unwrap();
+    let stdout = String::from_utf8(output.stdout).unwrap();
+
+    assert_eq!(stdout.lines().count(), 12);
+    assert!(stdout.contains(">k81_130:11-20\nGGTGAATCAA\n"));
+
+    Ok(())
+}

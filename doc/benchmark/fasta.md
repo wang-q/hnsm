@@ -186,3 +186,27 @@ cat rg.md.tmp
 | `samtools faidx .fa.gz` | 14.3 ± 0.8 |     12.6 |     17.1 | 1.42 ± 0.12 |
 | `hnsm range .fa`        | 10.0 ± 0.7 |      8.7 |     12.8 |        1.00 |
 | `hnsm range .fa.gz`     | 14.1 ± 0.7 |     12.0 |     15.8 | 1.40 ± 0.12 |
+
+## `hnsm range -r`
+
+```shell
+hyperfine --warmup 5 --export-markdown rg.md.tmp \
+    -n "samtools faidx .fa" \
+    'samtools faidx tests/index/final.contigs.fa -r tests/index/sample.rg > /dev/null' \
+    -n "samtools faidx .fa.gz" \
+    'samtools faidx tests/index/final.contigs.fa.gz -r tests/index/sample.rg > /dev/null' \
+    -n "hnsm range .fa" \
+    'hnsm range tests/index/final.contigs.fa -r tests/index/sample.rg > /dev/null' \
+    -n "hnsm range .fa.gz" \
+    'hnsm range tests/index/final.contigs.fa.gz -r tests/index/sample.rg > /dev/null'
+
+cat rg.md.tmp
+
+```
+
+| Command                 |  Mean [ms] | Min [ms] | Max [ms] |    Relative |
+|:------------------------|-----------:|---------:|---------:|------------:|
+| `samtools faidx .fa`    | 14.1 ± 0.9 |     12.3 |     16.8 | 1.03 ± 0.08 |
+| `samtools faidx .fa.gz` | 15.9 ± 0.8 |     14.1 |     18.6 | 1.16 ± 0.08 |
+| `hnsm range .fa`        | 13.7 ± 0.7 |     12.3 |     15.7 |        1.00 |
+| `hnsm range .fa.gz`     | 20.0 ± 0.9 |     18.2 |     23.9 | 1.46 ± 0.10 |
