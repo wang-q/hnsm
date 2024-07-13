@@ -9,7 +9,7 @@ pub mod one;
 pub mod order;
 pub mod rc;
 pub mod replace;
-pub mod rg;
+pub mod range;
 pub mod sixframe;
 pub mod size;
 pub mod some;

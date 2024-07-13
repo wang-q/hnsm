@@ -19,9 +19,9 @@ fn main() -> anyhow::Result<()> {
         .subcommand(cmd::n50::make_subcommand())
         .subcommand(cmd::one::make_subcommand())
         .subcommand(cmd::order::make_subcommand())
+        .subcommand(cmd::range::make_subcommand())
         .subcommand(cmd::rc::make_subcommand())
         .subcommand(cmd::replace::make_subcommand())
-        .subcommand(cmd::rg::make_subcommand())
         .subcommand(cmd::sixframe::make_subcommand())
         .subcommand(cmd::size::make_subcommand())
         .subcommand(cmd::some::make_subcommand())
@@ -30,6 +30,7 @@ fn main() -> anyhow::Result<()> {
             r###"
 * <infiles> are paths to fasta files, .fa.gz is supported
     * infile == stdin means reading from STDIN
+    * `hnsm gz` writes out the BGZF format and `hnsm range` reads it
 
 "###,
         );
@@ -45,13 +46,13 @@ fn main() -> anyhow::Result<()> {
         Some(("order", sub_matches)) => cmd::order::execute(sub_matches),
         Some(("rc", sub_matches)) => cmd::rc::execute(sub_matches),
         Some(("replace", sub_matches)) => cmd::replace::execute(sub_matches),
-        Some(("rg", sub_matches)) => cmd::rg::execute(sub_matches),
         Some(("sixframe", sub_matches)) => cmd::sixframe::execute(sub_matches),
         Some(("size", sub_matches)) => cmd::size::execute(sub_matches),
         Some(("some", sub_matches)) => cmd::some::execute(sub_matches),
         Some(("split", sub_matches)) => cmd::split::execute(sub_matches),
         // index
         Some(("gz", sub_matches)) => cmd::gz::execute(sub_matches),
+        Some(("range", sub_matches)) => cmd::range::execute(sub_matches),
         _ => unreachable!(),
     }
     .unwrap();
@@ -61,4 +62,4 @@ fn main() -> anyhow::Result<()> {
 
 // TODO:
 //  interleave
-//  region
+//  LRU cache in range

@@ -91,19 +91,31 @@ cargo run --bin hnsm sort
 
 `samtools faidx` is designed for fast randomized extraction of sequences from reference sequences,
 and requires that the sequence file be "well-formatted", i.e., all sequence lines must be the same
-length. For a mammal reference genome, this requirement is reasonable; loading a 100M chromosome
-into memory would take up more resources and reduce speed.
+length, which is to facilitate random access to disk files. For a mammal reference genome, this
+requirement is reasonable; loading a 100M chromosome into memory would take up more resources and
+reduce speed.
 
 However, for bacterial genome or metagenome sequences, loading a complete sequence has no impact,
-and this program will use the LRU cache to store the recently used sequences to reduce disk accesses
-and thus speed up the process. In addition, fasta files use the same indexing format as tsv files.
+and `hnsm range` will use the LRU cache to store the recently used sequences to reduce disk accesses
+and thus speed up the process. In addition, plain text files use the same indexing format as BGZF.
 
 ```shell
-cargo run --bin hnsm gz tests/index/final.contigs.fa
+# gz
+bgzip -c tests/index/final.contigs.fa > tests/index/final.contigs.fa.gz;
+bgzip -r tests/index/final.contigs.fa.gz
 
-cargo run --bin hnsm rg tests/fasta/ufasta.fa read12:50-60
+hnsm gz tests/index/final.contigs.fa -o tmp
 
-cargo run --bin hnsm range tests/fasta/ufasta.fa.gz tests/fasta/region.txt
+# range
+samtools faidx tests/index/final.contigs.fa
+samtools faidx tests/index/final.contigs.fa \
+    "k81_130" "k81_130:11-20" "k81_170:304-323" "k81_158:70001-70020"
+
+hnsm range tests/index/final.contigs.fa \
+    "k81_130" "k81_130:11-20" "k81_170:304-323" "k81_170(-):1-20" "k81_158:70001-70020"
+
+hnsm range tests/index/final.contigs.fa.gz \
+    "k81_130" "k81_130:11-20" "k81_170:304-323" "k81_170(-):1-20" "k81_158:70001-70020"
 
 ```
 
