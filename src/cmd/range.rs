@@ -1,6 +1,6 @@
 use clap::*;
 use std::collections::HashMap;
-use std::{ffi, fs, path};
+use std::{ffi, fs, num, path};
 
 use noodles_bgzf as bgzf;
 use noodles_core::Position;
@@ -23,6 +23,9 @@ pub fn make_subcommand() -> Command {
     II:21294-22075
     II:23537-24097
 
+* The default capacity of the LRU cache is 1, i.e., the most recent record is cached
+* Sorting the rgfile will speed up the extraction
+
 "###,
         )
         .arg(
@@ -44,6 +47,15 @@ pub fn make_subcommand() -> Command {
                 .short('r')
                 .num_args(1)
                 .help("File of regions, one per line"),
+        )
+        .arg(
+            Arg::new("cache")
+                .long("cache")
+                .short('c')
+                .value_parser(value_parser!(num::NonZeroUsize))
+                .num_args(1)
+                .default_value("1")
+                .help("Set the capacity of the LRU cache"),
         )
         .arg(
             Arg::new("outfile")
@@ -88,6 +100,9 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
         ranges.append(&mut rgs);
     }
 
+    let opt_cache = *args.get_one::<num::NonZeroUsize>("cache").unwrap();
+    let mut cache : lru::LruCache<String, fasta::Record> = lru::LruCache::new(opt_cache);
+
     //----------------------------
     // Open files
     //----------------------------
@@ -118,11 +133,16 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
             continue;
         }
 
-        let record = hnsm::record_loc(&mut reader, &loc_of, &seq_id)?;
+        if !cache.contains(&seq_id) {
+            let record = hnsm::record_loc(&mut reader, &loc_of, &seq_id)?;
+            cache.put(seq_id.clone(), record);
+        }
+
+        let record : &fasta::Record = cache.get(&seq_id).unwrap();
 
         // name only
         if *rg.start() == 0 {
-            fa_out.write_record(&record)?;
+            fa_out.write_record(record)?;
             continue;
         }
 

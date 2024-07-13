@@ -49,7 +49,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     //----------------------------
     let infile = args.get_one::<String>("infile").unwrap();
 
-    let parallel = *args.get_one::<num::NonZeroUsize>("parallel").unwrap();
+    let opt_parallel = *args.get_one::<num::NonZeroUsize>("parallel").unwrap();
 
     let outfile = format!(
         "{}.gz",
@@ -76,7 +76,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     };
 
     let mut writer = bgzf::MultithreadedWriter::with_worker_count(
-        parallel,
+        opt_parallel,
         Box::new(io::BufWriter::new(fs::File::create(&outfile).unwrap())),
     );
 

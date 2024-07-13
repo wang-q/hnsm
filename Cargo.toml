@@ -28,6 +28,7 @@ noodles = { version = "0.77.0", features = ["core", "fasta", "bgzf"] }
 noodles-core = "0.15.0"
 noodles-fasta = "0.40.0"
 noodles-bgzf = "0.31.0"
+lru = "0.12.3"
 
 # serialize
 rust-lapper = { version = "1.0.1", features = ["with_serde"] }
