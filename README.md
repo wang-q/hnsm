@@ -35,9 +35,12 @@ Usage: hnsm [COMMAND]
 Commands:
   count     Count base statistics in FA file(s)
   filter    Filter records in FA file(s)
+  gz        Compressing a file using the blocked gzip format (BGZF)
   masked    Masked regions in FA file(s)
+  n50       Count total bases in FA file(s)
   one       Extract one FA record
   order     Extract some FA records by the given order
+  range     Extract sequences defined by the range(s)
   rc        Reverse complement a FA file
   replace   Replace headers of a FA file
   sixframe  Six-Frame Translation
@@ -53,6 +56,7 @@ Options:
 
 * <infiles> are paths to fasta files, .fa.gz is supported
     * infile == stdin means reading from STDIN
+    * `hnsm gz` writes out the BGZF format and `hnsm range` reads it
 
 ```
 

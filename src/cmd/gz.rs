@@ -8,7 +8,7 @@ use noodles_bgzf as bgzf;
 // Create clap subcommand arguments
 pub fn make_subcommand() -> Command {
     Command::new("gz")
-        .about("Compressing and indexing a file using the blocked gzip format (BGZF)")
+        .about("Compressing a file using the blocked gzip format (BGZF)")
         .after_help(
             r###"
 * <infile> can be stdin but not gzipped
