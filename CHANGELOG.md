@@ -2,6 +2,8 @@
 
 ## Unreleased - ReleaseDate
 
+## 0.1.1 - 2024-07-13
+
 * Index Subcommands
     * gz
     * range
