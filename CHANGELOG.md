@@ -4,7 +4,7 @@
 
 ## 0.1.7 - 2024-07-13
 
-* LRU cahce for `hnsm range`
+* LRU cache for `hnsm range`
 * Tweaks publish.yml
 
 ## 0.1.1 - 2024-07-13
