@@ -2,8 +2,6 @@
 
 ## Unreleased - ReleaseDate
 
-## 0.1.7 - 2024-07-13
-
 * LRU cache for `hnsm range`
 * Tweaks publish.yml
 
