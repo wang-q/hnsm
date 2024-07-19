@@ -23,7 +23,7 @@ itertools = "0.12.1"
 
 crossbeam = "0.8.4"
 
-intspan = "0.7.5"
+intspan = "0.7.7"
 noodles = { version = "0.77.0", features = ["core", "fasta", "bgzf"] }
 noodles-core = "0.15.0"
 noodles-fasta = "0.40.0"
