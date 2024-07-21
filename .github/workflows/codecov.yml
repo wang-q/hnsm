@@ -16,9 +16,6 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v2
 
-      - name: redis
-        run: redis-server --appendonly no --dir tests/S288c/ &
-
       - name: Generate code coverage
         run: |
           cargo +nightly tarpaulin --verbose --bins --tests --follow-exec --engine llvm --out xml -- --test-threads 1
