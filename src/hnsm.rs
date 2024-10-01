@@ -22,6 +22,7 @@ fn main() -> anyhow::Result<()> {
         .subcommand(cmd::range::make_subcommand())
         .subcommand(cmd::rc::make_subcommand())
         .subcommand(cmd::replace::make_subcommand())
+        .subcommand(cmd::sketch::make_subcommand())
         .subcommand(cmd::sixframe::make_subcommand())
         .subcommand(cmd::size::make_subcommand())
         .subcommand(cmd::some::make_subcommand())
@@ -53,6 +54,8 @@ fn main() -> anyhow::Result<()> {
         // index
         Some(("gz", sub_matches)) => cmd::gz::execute(sub_matches),
         Some(("range", sub_matches)) => cmd::range::execute(sub_matches),
+        // clustering
+        Some(("sketch", sub_matches)) => cmd::sketch::execute(sub_matches),
         _ => unreachable!(),
     }
     .unwrap();

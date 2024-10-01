@@ -101,7 +101,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     }
 
     let opt_cache = *args.get_one::<num::NonZeroUsize>("cache").unwrap();
-    let mut cache : lru::LruCache<String, fasta::Record> = lru::LruCache::new(opt_cache);
+    let mut cache: lru::LruCache<String, fasta::Record> = lru::LruCache::new(opt_cache);
 
     //----------------------------
     // Open files
@@ -138,7 +138,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
             cache.put(seq_id.clone(), record);
         }
 
-        let record : &fasta::Record = cache.get(&seq_id).unwrap();
+        let record: &fasta::Record = cache.get(&seq_id).unwrap();
 
         // name only
         if *rg.start() == 0 {

@@ -17,7 +17,8 @@ cargo install --path . --force --offline
 cargo test -- --test-threads=1
 
 # build under WSL 2
-export CARGO_TARGET_DIR=/tmp
+mkdir -p /tmp/cargo
+export CARGO_TARGET_DIR=/tmp/cargo
 cargo build
 
 ```
@@ -119,6 +120,13 @@ samtools faidx tests/index/final.contigs.fa -r tests/index/sample.rg
 hnsm range tests/index/final.contigs.fa.gz \
     "k81_130" "k81_130:11-20" "k81_170:304-323" "k81_170(-):1-20" "k81_158:70001-70020"
 hnsm range tests/index/final.contigs.fa.gz -r tests/index/sample.rg
+
+```
+
+### Minimizers
+
+```shell
+cargo run --bin hnsm sketch tests/fasta/IBPA.fa
 
 ```
 
