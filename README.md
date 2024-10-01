@@ -126,7 +126,27 @@ hnsm range tests/index/final.contigs.fa.gz -r tests/index/sample.rg
 ### Minimizers
 
 ```shell
-cargo run --bin hnsm sketch tests/fasta/IBPA.fa
+cargo run --bin hnsm dist tests/fasta/IBPA.fa
+
+```
+
+```text
+[1] #IBPA_ECOLI
+[2] #IBPA_ECOLI_GA
+[3] #IBPA_ECOLI_GA_LV
+[4] #IBPA_ECOLI_GA_LV_ST
+[5] #IBPA_ECOLI_GA_LV_RK
+[6] #IBPA_ESCF3
+[7] #A0A192CFC5_ECO25
+
+[        1      2      3      4      5      6      7 ]
+[1]
+[2]  0.0602
+[3]  0.1750 0.1078
+[4]  0.2195 0.1493 0.0372
+[5]  0.3249 0.2472 0.1242 0.0837
+[6]  0.0000 0.0602 0.1750 0.2195 0.3249
+[7]  0.0000 0.0602 0.1750 0.2195 0.3249 0.0000
 
 ```
 

@@ -30,8 +30,8 @@ noodles-fasta = "0.40.0"
 noodles-bgzf = "0.31.0"
 lru = "0.12.3"
 
-minimizer-iter = "1.2.1"
 fxhash = "0.2"
+murmurhash3 = "=0.0.5"
 
 # serialize
 rust-lapper = { version = "1.0.1", features = ["with_serde"] }

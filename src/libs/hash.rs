@@ -9,10 +9,17 @@ pub trait Hasher: Clone {
 
 #[derive(Clone, Copy, Debug)]
 pub struct FxHash;
-
 impl Hasher for FxHash {
     fn hash(&self, t: &[u8]) -> u64 {
         fxhash::hash64(t)
+    }
+}
+
+#[derive(Clone, Copy, Debug)]
+pub struct MurmurHash3;
+impl Hasher for MurmurHash3 {
+    fn hash(&self, t: &[u8]) -> u64 {
+        murmurhash3::murmurhash3_x64_128(t, 42).0
     }
 }
 
