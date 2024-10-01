@@ -123,10 +123,10 @@ hnsm range tests/index/final.contigs.fa.gz -r tests/index/sample.rg
 
 ```
 
-### Minimizers
+### Clustering
 
 ```shell
-cargo run --bin hnsm dist tests/fasta/IBPA.fa
+cargo run --bin hnsm dist tests/fasta/IBPA.fa -k 7 -w 1
 
 ```
 

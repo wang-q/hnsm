@@ -2,6 +2,8 @@
 
 ## Unreleased - ReleaseDate
 
+* Add `hnsm dist`
+
 ## 0.1.8 - 2024-07-19
 
 * LRU cache for `hnsm range`
