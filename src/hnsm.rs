@@ -66,3 +66,4 @@ fn main() -> anyhow::Result<()> {
 // TODO:
 //  interleave
 //  sort
+//  matrix: convert the long format to matrix
