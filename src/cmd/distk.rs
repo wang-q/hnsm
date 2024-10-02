@@ -35,10 +35,10 @@ pub fn make_subcommand() -> Command {
                 .long("hasher")
                 .action(ArgAction::Set)
                 .value_parser([
-                    builder::PossibleValue::new("FxHash"),
-                    builder::PossibleValue::new("MurmurHash3"),
+                    builder::PossibleValue::new("fx"),
+                    builder::PossibleValue::new("murmur"),
                 ])
-                .default_value("FxHash")
+                .default_value("fx")
                 .help("Set the hash algorithm"),
         )
         .arg(
@@ -58,6 +58,12 @@ pub fn make_subcommand() -> Command {
                 .default_value("1")
                 .value_parser(value_parser!(usize))
                 .help("Window size"),
+        )
+        .arg(
+            Arg::new("sim")
+                .long("sim")
+                .action(ArgAction::SetTrue)
+                .help("Convert distance to similarity"),
         )
         .arg(
             Arg::new("parallel")
@@ -88,6 +94,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     let opt_hasher = args.get_one::<String>("hasher").unwrap();
     let opt_kmer = *args.get_one::<usize>("kmer").unwrap();
     let opt_window = *args.get_one::<usize>("window").unwrap();
+    let is_sim = args.get_flag("sim");
 
     let mut writer = intspan::writer(args.get_one::<String>("outfile").unwrap());
 
@@ -105,13 +112,13 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
         let seq = record.sequence();
 
         let minimizers = match opt_hasher.as_str() {
-            "FxHash" => hnsm::JumpingMinimizer {
+            "fx" => hnsm::JumpingMinimizer {
                 w: opt_window,
                 k: opt_kmer,
                 hasher: hnsm::FxHash,
             }
             .minimizer(&seq[..]),
-            "MurmurHash3" => hnsm::JumpingMinimizer {
+            "murmur" => hnsm::JumpingMinimizer {
                 w: opt_window,
                 k: opt_kmer,
                 hasher: hnsm::MurmurHash3,
@@ -144,7 +151,11 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
 
             writer.write_fmt(format_args!(
                 "{}\t{}\t{:.4}\t{:.4}\t{:.4}\n",
-                n1, n2, mash, jaccard, containment
+                n1,
+                n2,
+                if is_sim { 1.0 - mash } else { mash },
+                jaccard,
+                containment
             ))?;
         }
     }

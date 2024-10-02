@@ -67,6 +67,7 @@ fn main() -> anyhow::Result<()> {
 //  interleave
 //  sort
 //  matrix: convert the long format to matrix
+//  https://lh3.github.io/2018/11/25/on-the-definition-of-sequence-identity
 //  distp: accurate pairwise distances between DNA/protein sequences
 //  simv: vector similarities
 //  clust: dbscan clustering

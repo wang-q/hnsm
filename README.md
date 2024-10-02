@@ -126,19 +126,15 @@ hnsm range tests/index/final.contigs.fa.gz -r tests/index/sample.rg
 ### Clustering
 
 ```shell
-cargo run --bin hnsm dist tests/fasta/IBPA.fa -k 7 -w 1
+cargo run --bin hnsm distk tests/fasta/IBPA.fa -k 7 -w 1
 
 # distance matrix
 brew install csvtk
 brew install wang-q/tap/tsv-utils
 cargo install affinityprop
 
-cargo run --bin hnsm dist tests/fasta/IBPA.fa -k 7 -w 1 |
+cargo run --bin hnsm distk tests/fasta/IBPA.fa -k 7 -w 1 --sim |
     tsv-select -f 1-3 |
-    perl -nla -F"\t" -e '
-        $F[2] = 1 - $F[2];
-        print join(qq(\t), @F);
-    ' |
     csvtk spread -H -t -k 2 -v 3 |
     sed '1d' \
     > tests/fasta/IBPA.fa.sim
@@ -150,24 +146,28 @@ affinityprop -s 3 --damping 0.1 --input tests/fasta/IBPA.fa.sim
 Pairwise distances computed by MEGA
 
 ```text
-[1] #IBPA_ECOLI
-[2] #IBPA_ECOLI_GA
-[3] #IBPA_ECOLI_GA_LV
-[4] #IBPA_ECOLI_GA_LV_ST
-[5] #IBPA_ECOLI_GA_LV_RK
-[6] #IBPA_ESCF3
-[7] #A0A192CFC5_ECO25
-[8] #Q2QJL7_ACEAC
+[ 1] #IBPA_ECOLI
+[ 2] #IBPA_ECOLI_GA
+[ 3] #IBPA_ECOLI_GA_LV
+[ 4] #IBPA_ECOLI_GA_LV_ST
+[ 5] #IBPA_ECOLI_GA_LV_RK
+[ 6] #IBPA_ESCF3
+[ 7] #A0A192CFC5_ECO25
+[ 8] #Q2QJL7_ACEAC
+[ 9] #A0A010SUI8_PSEFL
+[10] #K1J4J6_9GAMM
 
-[        1      2      3      4      5      6      7      8 ]
-[1]
-[2]  0.0602
-[3]  0.1750 0.1078
-[4]  0.2195 0.1493 0.0372
-[5]  0.3249 0.2472 0.1242 0.0837
-[6]  0.0000 0.0602 0.1750 0.2195 0.3249
-[7]  0.0000 0.0602 0.1750 0.2195 0.3249 0.0000
-[8]  0.8522 0.9614 1.0840 1.0625 1.1991 0.8522 0.8522
+[         1      2      3      4      5      6      7      8      9     10 ]
+[ 1]
+[ 2]  0.0602
+[ 3]  0.1750 0.1078
+[ 4]  0.2195 0.1493 0.0372
+[ 5]  0.3249 0.2472 0.1242 0.0837
+[ 6]  0.0000 0.0602 0.1750 0.2195 0.3249
+[ 7]  0.0000 0.0602 0.1750 0.2195 0.3249 0.0000
+[ 8]  0.8522 0.9614 1.0840 1.0625 1.1991 0.8522 0.8522
+[ 9]  0.7768 0.8595 1.0080 1.0282 1.1133 0.7768 0.7841 0.9763
+[10]  0.4583 0.5306 0.6785 0.7230 0.8351 0.4583 0.4583 0.7230 0.7153
 
 ```
 
