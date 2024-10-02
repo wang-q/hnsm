@@ -6,7 +6,7 @@ use std::iter::FromIterator;
 
 // Create clap subcommand arguments
 pub fn make_subcommand() -> Command {
-    Command::new("distk")
+    Command::new("distance")
         .about("Estimate distances between DNA/protein sequences")
         .after_help(
             r###"

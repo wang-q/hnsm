@@ -1,7 +1,7 @@
 //! Subcommand modules for the `hnsm` binary.
 
 pub mod count;
-pub mod distk;
+pub mod distance;
 pub mod filter;
 pub mod gz;
 pub mod masked;

@@ -22,7 +22,7 @@ fn main() -> anyhow::Result<()> {
         .subcommand(cmd::range::make_subcommand())
         .subcommand(cmd::rc::make_subcommand())
         .subcommand(cmd::replace::make_subcommand())
-        .subcommand(cmd::distk::make_subcommand())
+        .subcommand(cmd::distance::make_subcommand())
         .subcommand(cmd::sixframe::make_subcommand())
         .subcommand(cmd::size::make_subcommand())
         .subcommand(cmd::some::make_subcommand())
@@ -55,7 +55,7 @@ fn main() -> anyhow::Result<()> {
         Some(("gz", sub_matches)) => cmd::gz::execute(sub_matches),
         Some(("range", sub_matches)) => cmd::range::execute(sub_matches),
         // clustering
-        Some(("distk", sub_matches)) => cmd::distk::execute(sub_matches),
+        Some(("distance", sub_matches)) => cmd::distance::execute(sub_matches),
         _ => unreachable!(),
     }
     .unwrap();
@@ -68,6 +68,6 @@ fn main() -> anyhow::Result<()> {
 //  sort
 //  matrix: convert the long format to matrix
 //  https://lh3.github.io/2018/11/25/on-the-definition-of-sequence-identity
-//  distp: accurate pairwise distances between DNA/protein sequences
-//  simv: vector similarities
+//  identity: accurate pairwise sequence identity
+//  similarity: vector similarities
 //  clust: dbscan clustering
