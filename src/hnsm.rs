@@ -22,7 +22,7 @@ fn main() -> anyhow::Result<()> {
         .subcommand(cmd::range::make_subcommand())
         .subcommand(cmd::rc::make_subcommand())
         .subcommand(cmd::replace::make_subcommand())
-        .subcommand(cmd::dist::make_subcommand())
+        .subcommand(cmd::distk::make_subcommand())
         .subcommand(cmd::sixframe::make_subcommand())
         .subcommand(cmd::size::make_subcommand())
         .subcommand(cmd::some::make_subcommand())
@@ -55,7 +55,7 @@ fn main() -> anyhow::Result<()> {
         Some(("gz", sub_matches)) => cmd::gz::execute(sub_matches),
         Some(("range", sub_matches)) => cmd::range::execute(sub_matches),
         // clustering
-        Some(("dist", sub_matches)) => cmd::dist::execute(sub_matches),
+        Some(("distk", sub_matches)) => cmd::distk::execute(sub_matches),
         _ => unreachable!(),
     }
     .unwrap();
@@ -67,3 +67,6 @@ fn main() -> anyhow::Result<()> {
 //  interleave
 //  sort
 //  matrix: convert the long format to matrix
+//  distp: accurate pairwise distances between DNA/protein sequences
+//  simv: vector similarities
+//  clust: dbscan clustering

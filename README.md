@@ -147,6 +147,8 @@ affinityprop -s 3 --damping 0.1 --input tests/fasta/IBPA.fa.sim
 
 ```
 
+Pairwise distances computed by MEGA
+
 ```text
 [1] #IBPA_ECOLI
 [2] #IBPA_ECOLI_GA
