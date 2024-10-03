@@ -11,15 +11,26 @@
 Current release: 0.1.8
 
 ```shell
-cargo install --path . --force --offline
+rustup update -- nightly
+cargo +nightly install --path . --force --offline
+
+# local repo
+# cargo clean
+# rm Cargo.lock
 
 # test
-cargo test -- --test-threads=1
+cargo +nightly test -- --test-threads=1
 
 # build under WSL 2
 mkdir -p /tmp/cargo
 export CARGO_TARGET_DIR=/tmp/cargo
-cargo build
+cargo +nightly build
+
+# build for CentOS 7
+# rustup target add x86_64-unknown-linux-gnu
+# pip3 install cargo-zigbuild
+cargo +nightly zigbuild --target x86_64-unknown-linux-gnu.2.17 --release
+ll $CARGO_TARGET_DIR/x86_64-unknown-linux-gnu/release/
 
 ```
 
@@ -125,8 +136,57 @@ hnsm range tests/index/final.contigs.fa.gz -r tests/index/sample.rg
 
 ### Clustering
 
+#### Similarity and dissimilarity (distance) of vectors
+
 ```shell
-cargo run --bin hnsm distk tests/fasta/IBPA.fa -k 7 -w 1
+# rustup update -- nightly
+cargo +nightly bench --bench simd
+
+cargo run --bin nwr similarity tests/assembly/domain.tsv --mode euclid --bin
+
+cargo run --bin nwr similarity tests/assembly/domain.tsv --mode cosine --bin
+
+cargo run --bin nwr similarity tests/assembly/domain.tsv --mode jaccard --bin
+
+hyperfine --warmup 1 \
+    -n p1 \
+    'nwr similarity data/Domian_content_1000.tsv --parallel 1 --mode jaccard --bin > /dev/null' \
+    -n p2 \
+    'nwr similarity data/Domian_content_1000.tsv --parallel 2 --mode jaccard --bin > /dev/null' \
+    -n p3 \
+    'nwr similarity data/Domian_content_1000.tsv --parallel 3 --mode jaccard --bin > /dev/null' \
+    -n p4 \
+    'nwr similarity data/Domian_content_1000.tsv --parallel 4 --mode jaccard --bin > /dev/null' \
+    -n p6 \
+    'nwr similarity data/Domian_content_1000.tsv --parallel 6 --mode jaccard --bin > /dev/null' \
+    -n p8 \
+    'nwr similarity data/Domian_content_1000.tsv --parallel 8 --mode jaccard --bin > /dev/null' \
+    --export-markdown sim.md.tmp
+
+```
+
+| Command |       Mean [s] | Min [s] | Max [s] |    Relative |
+|:--------|---------------:|--------:|--------:|------------:|
+| `p1`    | 17.364 ± 1.244 |  16.065 |  20.367 | 2.11 ± 0.18 |
+| `p2`    | 10.467 ± 1.405 |   9.421 |  14.045 | 1.27 ± 0.18 |
+| `p3`    |  8.226 ± 0.380 |   7.615 |   8.722 |        1.00 |
+| `p4`    |  8.430 ± 0.842 |   7.777 |  10.614 | 1.02 ± 0.11 |
+| `p6`    |  8.330 ± 0.827 |   7.648 |  10.371 | 1.01 ± 0.11 |
+| `p8`    | 10.268 ± 2.407 |   8.415 |  15.486 | 1.25 ± 0.30 |
+
+| Command |       Mean [s] | Min [s] | Max [s] |    Relative |
+|:--------|---------------:|--------:|--------:|------------:|
+| `p1`    | 27.631 ± 0.533 |  27.123 |  29.022 | 6.92 ± 0.17 |
+| `p2`    | 14.673 ± 0.241 |  14.417 |  15.138 | 3.67 ± 0.08 |
+| `p3`    |  9.778 ± 0.075 |   9.635 |   9.885 | 2.45 ± 0.04 |
+| `p4`    |  7.472 ± 0.160 |   7.260 |   7.686 | 1.87 ± 0.05 |
+| `p6`    |  5.151 ± 0.123 |   4.975 |   5.397 | 1.29 ± 0.04 |
+| `p8`    |  3.995 ± 0.062 |   3.915 |   4.105 |        1.00 |
+
+#### Pairwise distances computed by MEGA
+
+```shell
+cargo run --bin hnsm distance tests/fasta/IBPA.fa -k 7 -w 1
 
 # distance matrix
 brew install csvtk
@@ -142,8 +202,6 @@ cargo run --bin hnsm distk tests/fasta/IBPA.fa -k 7 -w 1 --sim |
 affinityprop -s 3 --damping 0.1 --input tests/fasta/IBPA.fa.sim
 
 ```
-
-Pairwise distances computed by MEGA
 
 ```text
 [ 1] #IBPA_ECOLI

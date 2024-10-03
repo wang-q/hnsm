@@ -53,5 +53,9 @@ approx = "0.5.1"
 criterion = "0.5.1"
 rand = "0.8.5"
 
+[[bench]]
+name = "simd"
+harness = false # Allows Criterion to control the benchmarking process
+
 [profile.release]
 lto = true
