@@ -8,7 +8,7 @@ fn main() -> anyhow::Result<()> {
     let app = Command::new("hnsm")
         .version(crate_version!())
         .author(crate_authors!())
-        .about("Homogeneous Nucleic acid Smart Matching")
+        .about("Homogeneous Nucleic acids Smart Matching")
         .propagate_version(true)
         .arg_required_else_help(true)
         .color(ColorChoice::Auto)

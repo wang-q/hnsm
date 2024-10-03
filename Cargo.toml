@@ -2,8 +2,8 @@
 name = "hnsm"
 version = "0.1.8"
 authors = ["wang-q <wang-q@outlook.com>"]
-edition = "2018"
-description = "Homogeneous Nucleic acid Smart Matching"
+edition = "2021"
+description = "Homogeneous Nucleic acids Smart Matching"
 documentation = "https://github.com/wang-q/hnsm"
 readme = "README.md"
 homepage = "https://github.com/wang-q/hnsm"

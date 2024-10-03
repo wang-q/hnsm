@@ -4,7 +4,7 @@
 [![codecov](https://codecov.io/gh/wang-q/hnsm/branch/master/graph/badge.svg?token=8toyNHCsVU)](https://codecov.io/gh/wang-q/hnsm)
 [![license](https://img.shields.io/github/license/wang-q/hnsm)](https://github.com//wang-q/hnsm)
 
-`hnsm` - **H**omogeneous **N**ucleic acid **S**mart **M**atching
+`hnsm` - **H**omogeneous **N**ucleic acids **S**mart **M**atching
 
 ## Install
 
