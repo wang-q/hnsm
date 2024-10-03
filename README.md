@@ -86,12 +86,12 @@ hnsm one tests/fasta/ufasta.fa read12
 hnsm some tests/fasta/ufasta.fa tests/fasta/list.txt
 hnsm order tests/fasta/ufasta.fa tests/fasta/list.txt
 
-hnsm replace tests/fasta/ufasta.fa tests/fasta/replace.tsv
-hnsm rc tests/fasta/ufasta.fa
-
 hnsm filter -a 10 -z 50 -U tests/fasta/ufasta.fa
 hnsm filter -a 1 -u tests/fasta/ufasta.fa tests/fasta/ufasta.fa.gz
 hnsm filter --iupac --upper tests/fasta/filter.fa
+
+hnsm replace tests/fasta/ufasta.fa tests/fasta/replace.tsv
+hnsm rc tests/fasta/ufasta.fa
 
 hnsm filter -a 400 tests/fasta/ufasta.fa |
     hnsm split name stdin -o tmp
