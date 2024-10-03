@@ -1,5 +1,6 @@
 use itertools::Itertools;
 
+// This code is adapted from https://curiouscoding.nl/posts/fast-minimizers/
 pub trait Hasher: Clone {
     fn hash(&self, t: &[u8]) -> u64;
     fn hash_kmers(&mut self, k: usize, t: &[u8]) -> Vec<u64> {

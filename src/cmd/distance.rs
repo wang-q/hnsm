@@ -19,8 +19,9 @@ pub fn make_subcommand() -> Command {
     minimal hash (for some given hash function) is the minimizer.
 
 * We use minimizers here to sample kmers
-    * For proteins, the length is short, so the window size can be set small: `-k 7 -w 1`
+    * For proteins, the length is short, so the window size can be set as: `-k 7 -w 1`
     * DNA: `-k 21 -w 5`
+    * Increasing the window size speeds up processing
 
 "###,
         )
