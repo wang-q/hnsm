@@ -1,5 +1,9 @@
-extern crate clap;
+#![feature(array_chunks)]
+#![feature(slice_as_chunks)]
+// Add these imports to use the stdsimd library
+#![feature(portable_simd)]
 
+extern crate clap;
 use clap::*;
 
 mod cmd;
@@ -23,6 +27,7 @@ fn main() -> anyhow::Result<()> {
         .subcommand(cmd::rc::make_subcommand())
         .subcommand(cmd::replace::make_subcommand())
         .subcommand(cmd::distance::make_subcommand())
+        .subcommand(cmd::similarity::make_subcommand())
         .subcommand(cmd::sixframe::make_subcommand())
         .subcommand(cmd::size::make_subcommand())
         .subcommand(cmd::some::make_subcommand())
@@ -32,6 +37,9 @@ fn main() -> anyhow::Result<()> {
 * <infiles> are paths to fasta files, .fa.gz is supported
     * infile == stdin means reading from STDIN
     * `hnsm gz` writes out the BGZF format and `hnsm range` reads it
+
+* Vectors
+    * similarity: euclid/cosine/jaccard
 
 "###,
         );
@@ -56,6 +64,7 @@ fn main() -> anyhow::Result<()> {
         Some(("range", sub_matches)) => cmd::range::execute(sub_matches),
         // clustering
         Some(("distance", sub_matches)) => cmd::distance::execute(sub_matches),
+        Some(("similarity", sub_matches)) => cmd::similarity::execute(sub_matches),
         _ => unreachable!(),
     }
     .unwrap();
