@@ -39,32 +39,45 @@ ll $CARGO_TARGET_DIR/x86_64-unknown-linux-gnu/release/
 ### `hnsm help`
 
 ```text
-$ hnsm help
-Homogeneous Nucleic acid Smart Matching
+Homogeneous Nucleic acids Smart Matching
 
 Usage: hnsm [COMMAND]
 
 Commands:
-  count     Count base statistics in FA file(s)
-  filter    Filter records in FA file(s)
-  gz        Compressing a file using the blocked gzip format (BGZF)
-  masked    Masked regions in FA file(s)
-  n50       Count total bases in FA file(s)
-  one       Extract one FA record
-  order     Extract some FA records by the given order
-  range     Extract sequences defined by the range(s)
-  rc        Reverse complement a FA file
-  replace   Replace headers of a FA file
-  sixframe  Six-Frame Translation
-  size      Count total bases in FA file(s)
-  some      Extract some FA records
-  split     Split FA file(s) into several files
-  help      Print this message or the help of the given subcommand(s)
+  count       Count base statistics in FA file(s)
+  distance    Estimate distances between DNA/protein sequences
+  filter      Filter records in FA file(s)
+  gz          Compressing a file using the blocked gzip format (BGZF)
+  masked      Masked regions in FA file(s)
+  n50         Count total bases in FA file(s)
+  one         Extract one FA record
+  order       Extract some FA records by the given order
+  range       Extract sequences defined by the range(s)
+  rc          Reverse complement a FA file
+  replace     Replace headers of a FA file
+  similarity  Similarity of vectors
+  sixframe    Six-Frame Translation
+  size        Count total bases in FA file(s)
+  some        Extract some FA records
+  split       Split FA file(s) into several files
+  help        Print this message or the help of the given subcommand(s)
 
 Options:
   -h, --help     Print help
   -V, --version  Print version
 
+
+Subcommand groups:
+
+* Fasta files
+    * info: size / count / masked / n50
+    * records: one / some / order / split
+    * transform: replace / rc / filter
+    * indexing: gz / range
+
+* Clustering
+    * vectors: similarity
+    * DNA/protein: distance / identity
 
 * <infiles> are paths to fasta files, .fa.gz is supported
     * infile == stdin means reading from STDIN
