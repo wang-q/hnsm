@@ -12,7 +12,7 @@ Current release: 0.1.8
 
 ```shell
 rustup update -- nightly
-cargo +nightly install --path . --force --offline
+cargo +nightly install --path . --force #--offline
 
 # local repo
 # cargo clean

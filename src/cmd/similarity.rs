@@ -124,7 +124,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     };
 
     // Channel 1 - Entries
-    let (snd1, rcv1) = crossbeam::channel::bounded::<(&nwr::AsmEntry, &nwr::AsmEntry)>(10);
+    let (snd1, rcv1) = crossbeam::channel::bounded::<(&hnsm::AsmEntry, &hnsm::AsmEntry)>(10);
     // Channel 2 - Results
     let (snd2, rcv2) = crossbeam::channel::bounded::<String>(10);
 
@@ -153,8 +153,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
                 // Receive until channel closes
                 for (e1, e2) in recvr.iter() {
                     let score = calc(e1.list(), e2.list(), opt_mode, is_sim, is_dis);
-                    let out_string =
-                        format!("{}\t{}\t{:.4}\n", e1.name(), e2.name(), score);
+                    let out_string = format!("{}\t{}\t{:.4}\n", e1.name(), e2.name(), score);
                     sendr.send(out_string).unwrap();
                 }
             });
@@ -174,11 +173,11 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     Ok(())
 }
 
-fn load_file(infile: &str, is_bin: bool) -> Vec<nwr::AsmEntry> {
+fn load_file(infile: &str, is_bin: bool) -> Vec<hnsm::AsmEntry> {
     let mut entries = vec![];
     let reader = intspan::reader(infile);
     'LINE: for line in reader.lines().map_while(Result::ok) {
-        let mut entry = nwr::AsmEntry::parse(&line);
+        let mut entry = hnsm::AsmEntry::parse(&line);
         if entry.name().is_empty() {
             continue 'LINE;
         }
@@ -188,7 +187,7 @@ fn load_file(infile: &str, is_bin: bool) -> Vec<nwr::AsmEntry> {
                 .iter()
                 .map(|e| if *e > 0.0 { 1.0 } else { 0.0 })
                 .collect::<Vec<f32>>();
-            entry = nwr::AsmEntry::from(entry.name(), &bin_list);
+            entry = hnsm::AsmEntry::from(entry.name(), &bin_list);
         }
         entries.push(entry);
     }
@@ -289,7 +288,7 @@ fn jaccard_intersection(a: &[f32], b: &[f32]) -> f32 {
 
     let mut sums = f32x8::from_array(sums);
     std::iter::zip(a_chunks, b_chunks).for_each(|(x, y)| {
-        sums += f32x8::simd_min( f32x8::from_array(*x), f32x8::from_array(*y));
+        sums += f32x8::simd_min(f32x8::from_array(*x), f32x8::from_array(*y));
     });
 
     sums.reduce_sum()
@@ -306,7 +305,7 @@ fn jaccard_union(a: &[f32], b: &[f32]) -> f32 {
 
     let mut sums = f32x8::from_array(sums);
     std::iter::zip(a_chunks, b_chunks).for_each(|(x, y)| {
-        sums += f32x8::simd_max( f32x8::from_array(*x), f32x8::from_array(*y));
+        sums += f32x8::simd_max(f32x8::from_array(*x), f32x8::from_array(*y));
     });
 
     sums.reduce_sum()

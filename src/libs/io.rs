@@ -52,8 +52,7 @@ impl AsmEntry {
         if fields.len() == 2 {
             let name = fields[0].to_string();
             let parts: Vec<&str> = fields[1].split(',').collect();
-            let list: Vec<f32> =
-                parts.iter().map(|e| e.parse::<f32>().unwrap()).collect();
+            let list: Vec<f32> = parts.iter().map(|e| e.parse::<f32>().unwrap()).collect();
             Self::from(&name, &list)
         } else {
             Self::new()
