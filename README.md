@@ -155,25 +155,25 @@ hnsm range tests/index/final.contigs.fa.gz -r tests/index/sample.rg
 # rustup update -- nightly
 cargo +nightly bench --bench simd
 
-cargo run --bin nwr similarity tests/assembly/domain.tsv --mode euclid --bin
+cargo run --bin hnsm similarity tests/clust/domain.tsv --mode euclid --bin
 
-cargo run --bin nwr similarity tests/assembly/domain.tsv --mode cosine --bin
+cargo run --bin hnsm similarity tests/clust/domain.tsv --mode cosine --bin
 
-cargo run --bin nwr similarity tests/assembly/domain.tsv --mode jaccard --bin
+cargo run --bin hnsm similarity tests/clust/domain.tsv --mode jaccard --bin
 
 hyperfine --warmup 1 \
     -n p1 \
-    'nwr similarity data/Domian_content_1000.tsv --parallel 1 --mode jaccard --bin > /dev/null' \
+    'hnsm similarity data/Domian_content_1000.tsv --parallel 1 --mode jaccard --bin > /dev/null' \
     -n p2 \
-    'nwr similarity data/Domian_content_1000.tsv --parallel 2 --mode jaccard --bin > /dev/null' \
+    'hnsm similarity data/Domian_content_1000.tsv --parallel 2 --mode jaccard --bin > /dev/null' \
     -n p3 \
-    'nwr similarity data/Domian_content_1000.tsv --parallel 3 --mode jaccard --bin > /dev/null' \
+    'hnsm similarity data/Domian_content_1000.tsv --parallel 3 --mode jaccard --bin > /dev/null' \
     -n p4 \
-    'nwr similarity data/Domian_content_1000.tsv --parallel 4 --mode jaccard --bin > /dev/null' \
+    'hnsm similarity data/Domian_content_1000.tsv --parallel 4 --mode jaccard --bin > /dev/null' \
     -n p6 \
-    'nwr similarity data/Domian_content_1000.tsv --parallel 6 --mode jaccard --bin > /dev/null' \
+    'hnsm similarity data/Domian_content_1000.tsv --parallel 6 --mode jaccard --bin > /dev/null' \
     -n p8 \
-    'nwr similarity data/Domian_content_1000.tsv --parallel 8 --mode jaccard --bin > /dev/null' \
+    'hnsm similarity data/Domian_content_1000.tsv --parallel 8 --mode jaccard --bin > /dev/null' \
     --export-markdown sim.md.tmp
 
 ```
@@ -199,20 +199,22 @@ hyperfine --warmup 1 \
 #### Pairwise distances computed by MEGA
 
 ```shell
-cargo run --bin hnsm distance tests/fasta/IBPA.fa -k 7 -w 1
+cargo run --bin hnsm distance tests/clust/IBPA.fa -k 7 -w 1
 
 # distance matrix
 brew install csvtk
 brew install wang-q/tap/tsv-utils
 cargo install affinityprop
 
-cargo run --bin hnsm distk tests/fasta/IBPA.fa -k 7 -w 1 --sim |
+cargo run --bin hnsm cluster tests/clust/IBPA.fa.tsv
+
+cargo run --bin hnsm distance tests/clust/IBPA.fa -k 7 -w 1 --sim |
     tsv-select -f 1-3 |
     csvtk spread -H -t -k 2 -v 3 |
     sed '1d' \
     > tests/fasta/IBPA.fa.sim
 
-affinityprop -s 3 --damping 0.1 --input tests/fasta/IBPA.fa.sim
+affinityprop -s 3 --damping 0.1 --input tests/clust/IBPA.fa.sim
 
 ```
 

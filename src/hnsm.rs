@@ -16,6 +16,7 @@ fn main() -> anyhow::Result<()> {
         .propagate_version(true)
         .arg_required_else_help(true)
         .color(ColorChoice::Auto)
+        .subcommand(cmd::cluster::make_subcommand())
         .subcommand(cmd::count::make_subcommand())
         .subcommand(cmd::distance::make_subcommand())
         .subcommand(cmd::filter::make_subcommand())
@@ -77,6 +78,7 @@ Subcommand groups:
         // clustering
         Some(("distance", sub_matches)) => cmd::distance::execute(sub_matches),
         Some(("similarity", sub_matches)) => cmd::similarity::execute(sub_matches),
+        Some(("cluster", sub_matches)) => cmd::cluster::execute(sub_matches),
         _ => unreachable!(),
     }
     .unwrap();
@@ -87,8 +89,5 @@ Subcommand groups:
 // TODO:
 //  interleave
 //  sort
-//  matrix: convert the long format to matrix
-//  https://lh3.github.io/2018/11/25/on-the-definition-of-sequence-identity
 //  identity: accurate pairwise sequence identity
-//  similarity: vector similarities
-//  clust: dbscan clustering
+//    https://lh3.github.io/2018/11/25/on-the-definition-of-sequence-identity

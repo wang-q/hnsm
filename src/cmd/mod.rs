@@ -1,5 +1,6 @@
 //! Subcommand modules for the `hnsm` binary.
 
+pub mod cluster;
 pub mod count;
 pub mod distance;
 pub mod filter;
