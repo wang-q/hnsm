@@ -48,7 +48,7 @@ fn command_distance() -> anyhow::Result<()> {
 }
 
 #[test]
-fn command_cluster() -> anyhow::Result<()> {
+fn command_cluster_matrix() -> anyhow::Result<()> {
     let mut cmd = Command::cargo_bin("hnsm")?;
     let output = cmd
         .arg("cluster")
@@ -61,6 +61,28 @@ fn command_cluster() -> anyhow::Result<()> {
 
     assert_eq!(stdout.lines().count(), 10);
     assert!(stdout.contains("IBPA_ECOLI\t0\t0.0669"));
+
+    Ok(())
+}
+
+#[test]
+fn command_cluster_dbscan() -> anyhow::Result<()> {
+    let mut cmd = Command::cargo_bin("hnsm")?;
+    let output = cmd
+        .arg("cluster")
+        .arg("tests/clust/IBPA.fa.tsv")
+        .arg("--mode")
+        .arg("dbscan")
+        .arg("--eps")
+        .arg("0.05")
+        .arg("--min_points")
+        .arg("2")
+        .output()
+        .unwrap();
+    let stdout = String::from_utf8(output.stdout).unwrap();
+
+    assert_eq!(stdout.lines().count(), 7);
+    assert!(stdout.contains("IBPA_ECOLI\tIBPA_ESCF3\tA0A192CFC5_ECO25"));
 
     Ok(())
 }

@@ -2,7 +2,7 @@
 //! clustering algorithm.
 // Adopt from https://blog.petrzemek.net/2017/01/01/implementing-dbscan-from-distance-matrix-in-rust/
 use crate::SymmetricMatrix;
-use std::collections::VecDeque;
+use std::collections::{HashMap, VecDeque};
 
 #[derive(Debug)]
 pub struct DBSCAN<T> {
@@ -15,7 +15,7 @@ pub struct DBSCAN<T> {
 
 impl<T> DBSCAN<T>
 where
-    T: Default + Copy + PartialOrd,
+    T: Default + Copy + PartialOrd + std::ops::AddAssign + num_traits::ToPrimitive,
 {
     /// Creates a new DBSCAN instance.
     ///
@@ -125,6 +125,75 @@ where
             }
         }
         neighbors
+    }
+
+    fn all_clusters(&self) -> (HashMap<usize, Vec<usize>>, Vec<usize>) {
+        let mut cluster_map: HashMap<usize, Vec<usize>> = HashMap::new();
+        let mut noise_points: Vec<usize> = Vec::new();
+
+        for (point, cluster) in self.clusters.iter().enumerate() {
+            match cluster {
+                Some(cluster_id) => {
+                    cluster_map
+                        .entry(*cluster_id)
+                        .or_insert(Vec::new())
+                        .push(point);
+                }
+                None => {
+                    noise_points.push(point);
+                }
+            }
+        }
+        (cluster_map, noise_points)
+    }
+
+    pub fn results_cluster(&self) -> Vec<Vec<usize>> {
+        let (cluster_map, noise_points) = self.all_clusters();
+        let mut res: Vec<Vec<usize>> = vec![];
+
+        for (_, points) in cluster_map.iter() {
+            res.push(points.clone());
+        }
+        for p in noise_points {
+            res.push(vec![p]);
+        }
+
+        res
+    }
+
+    /// Finds and prints the representative point of each cluster.
+    pub fn results_pair(&self, matrix: &SymmetricMatrix<T>) -> Vec<(usize, usize)> {
+        let (cluster_map, noise_points) = self.all_clusters();
+
+        // representative point, point
+        let mut res: Vec<(usize, usize)> = vec![];
+
+        for (_, points) in cluster_map.iter() {
+            let mut sum_distance_of: HashMap<usize, f64> = HashMap::new();
+            for &point in points {
+                // Calculate the sum of distances from this point to all others in the cluster
+                let mut sum_distance = T::default();
+                for &other_point in points {
+                    sum_distance += matrix.get(point, other_point);
+                }
+                sum_distance_of.insert(point, sum_distance.to_f64().unwrap());
+            }
+            let representative = sum_distance_of
+                .iter()
+                .min_by(|a, b| a.1.partial_cmp(b.1).unwrap())
+                .map(|(&key, _)| key)
+                .unwrap();
+
+            for &point in points {
+                res.push((representative, point));
+            }
+        }
+
+        for p in noise_points {
+            res.push((p, p));
+        }
+
+        res
     }
 }
 

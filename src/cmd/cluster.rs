@@ -12,6 +12,10 @@ modes:
     * matrix: write out a distance matrix
     * dbscan
 
+format:
+    * cluster: a line contains points of one cluster
+    * pair: lines of multiple (representative point, cluster member) pairs
+
 "###,
         )
         .arg(
@@ -32,6 +36,33 @@ modes:
                 .help("Clustering method"),
         )
         .arg(
+            Arg::new("format")
+                .long("format")
+                .action(ArgAction::Set)
+                .value_parser([
+                    builder::PossibleValue::new("cluster"),
+                    builder::PossibleValue::new("pair"),
+                ])
+                .default_value("cluster")
+                .help("Output formats"),
+        )
+        .arg(
+            Arg::new("eps")
+                .long("eps")
+                .num_args(1)
+                .default_value("0.05")
+                .value_parser(value_parser!(f32))
+                .help("The maximum distance between two points"),
+        )
+        .arg(
+            Arg::new("min_points")
+                .long("min_points")
+                .num_args(1)
+                .default_value("1")
+                .value_parser(value_parser!(usize))
+                .help("core point"),
+        )
+        .arg(
             Arg::new("outfile")
                 .long("outfile")
                 .short('o')
@@ -48,6 +79,10 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     //----------------------------
     let infile = args.get_one::<String>("infile").unwrap();
     let opt_mode = args.get_one::<String>("mode").unwrap();
+    let opt_format = args.get_one::<String>("format").unwrap();
+
+    let opt_eps = *args.get_one::<f32>("eps").unwrap();
+    let opt_min_points = *args.get_one::<usize>("min_points").unwrap();
 
     let mut writer = intspan::writer(args.get_one::<String>("outfile").unwrap());
 
@@ -68,6 +103,35 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
                     writer.write_fmt(format_args!("{}\t", matrix.get(i, j)))?;
                 }
                 writer.write_fmt(format_args!("\n"))?;
+            }
+        }
+        "dbscan" => {
+            let mut dbscan = hnsm::DBSCAN::new(opt_eps, opt_min_points);
+            let _ = dbscan.perform_clustering(&matrix);
+            match opt_format.as_str() {
+                "cluster" => {
+                    let clusters = dbscan.results_cluster();
+                    for c in clusters {
+                        writer.write_fmt(format_args!(
+                            "{}\n",
+                            c.iter()
+                                .map(|&num| index_name.get(num).unwrap().to_string())
+                                .collect::<Vec<_>>()
+                                .join("\t")
+                        ))?;
+                    }
+                }
+                "pair" => {
+                    let rep_points = dbscan.results_pair(&matrix);
+                    for (rep, point) in rep_points {
+                        writer.write_fmt(format_args!(
+                            "{}\t{}\n",
+                            index_name.get(rep).unwrap(),
+                            index_name.get(point).unwrap()
+                        ))?;
+                    }
+                }
+                _ => unreachable!(),
             }
         }
         _ => unreachable!(),

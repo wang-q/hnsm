@@ -201,20 +201,7 @@ hyperfine --warmup 1 \
 ```shell
 cargo run --bin hnsm distance tests/clust/IBPA.fa -k 7 -w 1
 
-# distance matrix
-brew install csvtk
-brew install wang-q/tap/tsv-utils
-cargo install affinityprop
-
-cargo run --bin hnsm cluster tests/clust/IBPA.fa.tsv
-
-cargo run --bin hnsm distance tests/clust/IBPA.fa -k 7 -w 1 --sim |
-    tsv-select -f 1-3 |
-    csvtk spread -H -t -k 2 -v 3 |
-    sed '1d' \
-    > tests/fasta/IBPA.fa.sim
-
-affinityprop -s 3 --damping 0.1 --input tests/clust/IBPA.fa.sim
+cargo run --bin hnsm cluster tests/clust/IBPA.fa.tsv --mode dbscan --eps 0.05 --min_points 2
 
 ```
 
