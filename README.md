@@ -199,10 +199,19 @@ hyperfine --warmup 1 \
 
 #### Pairwise distances by Minimizer
 
-```shell
-cargo run --bin hnsm distance tests/clust/IBPA.fa -k 7 -w 1
-
-cargo run --bin hnsm cluster tests/clust/IBPA.fa.tsv --mode dbscan --eps 0.05 --min_points 2
+```text
+hnsm distance tests/clust/IBPA.fa -k 7 -w 1 |
+    hnsm cluster stdin --mode matrix
+IBPA_ECOLI      0       0.0669  0.2014  0.2106  0.4405  0       0.0011  0.7124  0.5454  0.3675
+IBPA_ECOLI_GA   0.0669  0       0.114   0.1464  0.2917  0.0669  0.068   1       0.7023  0.5974
+IBPA_ECOLI_GA_LV        0.2014  0.114   0       0.0344  0.132   0.2014  0.2024  1       0.7023  1
+IBPA_ECOLI_GA_LV_ST     0.2106  0.1464  0.0344  0       0.0895  0.2106  0.2117  1       0.7023  1
+IBPA_ECOLI_GA_LV_RK     0.4405  0.2917  0.132   0.0895  0       0.4405  0.4416  1       0.7023  1
+IBPA_ESCF3      0       0.0669  0.2014  0.2106  0.4405  0       0.0011  0.7124  0.5454  0.3675
+A0A192CFC5_ECO25        0.0011  0.068   0.2024  0.2117  0.4416  0.0011  0       0.7134  0.5464  0.3686
+Q2QJL7_ACEAC    0.7124  1       1       1       1       0.7124  0.7134  0       1       0.6134
+A0A010SUI8_PSEFL        0.5454  0.7023  0.7023  0.7023  0.7023  0.5454  0.5464  1       0       0.7023
+K1J4J6_9GAMM    0.3675  0.5974  1       1       1       0.3675  0.3686  0.6134  0.7023  0
 
 ```
 
@@ -219,6 +228,13 @@ A0A192CFC5_ECO25    0.000000 0.058394 0.160584 0.197080 0.277372 0.000000 0.0000
 Q2QJL7_ACEAC        0.583942 0.627737 0.671533 0.656934 0.700730 0.583942 0.589928 0.000000 0.628378 0.518248
 A0A010SUI8_PSEFL    0.540146 0.576642 0.635036 0.642336 0.671533 0.540146 0.546763 0.628378 0.000000 0.496350
 K1J4J6_9GAMM        0.372263 0.416058 0.496350 0.518248 0.569343 0.372263 0.372263 0.518248 0.496350 0.000000
+
+```
+
+#### DBSCAN
+
+```shell
+hnsm cluster tests/clust/IBPA.fa.tsv --mode dbscan --eps 0.05 --min_points 2
 
 ```
 
