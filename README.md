@@ -44,6 +44,7 @@ Homogeneous Nucleic acids Smart Matching
 Usage: hnsm [COMMAND]
 
 Commands:
+  cluster     Clustering based on pairwise distances
   count       Count base statistics in FA file(s)
   distance    Estimate distances between DNA/protein sequences
   filter      Filter records in FA file(s)
