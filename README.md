@@ -11,25 +11,24 @@
 Current release: 0.1.9
 
 ```shell
-rustup update -- nightly
-cargo +nightly install --path . --force #--offline
+cargo install --path . --force #--offline
 
 # local repo
 # cargo clean
 # rm Cargo.lock
 
 # test
-cargo +nightly test -- --test-threads=1
+cargo test -- --test-threads=1
 
 # build under WSL 2
 mkdir -p /tmp/cargo
 export CARGO_TARGET_DIR=/tmp/cargo
-cargo +nightly build
+cargo build
 
 # build for CentOS 7
 # rustup target add x86_64-unknown-linux-gnu
 # pip3 install cargo-zigbuild
-cargo +nightly zigbuild --target x86_64-unknown-linux-gnu.2.17 --release
+cargo zigbuild --target x86_64-unknown-linux-gnu.2.17 --release
 ll $CARGO_TARGET_DIR/x86_64-unknown-linux-gnu/release/
 
 ```
@@ -154,8 +153,7 @@ hnsm range tests/index/final.contigs.fa.gz -r tests/index/sample.rg
 #### Similarity and dissimilarity (distance) of vectors
 
 ```shell
-# rustup update -- nightly
-cargo +nightly bench --bench simd
+cargo bench --bench simd
 
 cargo run --bin hnsm similarity tests/clust/domain.tsv --mode euclid --bin
 

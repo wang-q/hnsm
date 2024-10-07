@@ -12,20 +12,18 @@ permissions:
 jobs:
   linux-gnu:
     runs-on: ubuntu-latest
-    # Use a container with GLIBC 2.17
-    # container: quay.io/pypa/manylinux2014_x86_64
     steps:
       - name: Show GLIBC
         run: ldd --version
-
       - name: Checkout sources
         uses: actions/checkout@v4
-
       - name: Setup Rust Toolchain for GitHub CI
         uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          rustflags: ""
 
       - name: Build
-        run: cargo +nightly build --verbose --release
+        run: cargo build --verbose --release
       - name: Create tarball
         run: tar cvfz hnsm.tar.gz target/release/hnsm
         shell: bash
@@ -39,10 +37,13 @@ jobs:
   macos:
     runs-on: macOS-latest
     steps:
-      - uses: hecrj/setup-rust-action@v1
+      - name: Checkout sources
+        uses: actions/checkout@v4
+      - name: Setup Rust Toolchain for GitHub CI
+        uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
-          rust-version: stable
-      - uses: actions/checkout@v1
+          rustflags: ""
+
       - name: Build
         env:
           MACOSX_DEPLOYMENT_TARGET: 10.12
@@ -60,10 +61,13 @@ jobs:
   windows:
     runs-on: windows-latest
     steps:
-      - uses: hecrj/setup-rust-action@v1
+      - name: Checkout sources
+        uses: actions/checkout@v4
+      - name: Setup Rust Toolchain for GitHub CI
+        uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
-          rust-version: stable
-      - uses: actions/checkout@v1
+          rustflags: ""
+
       - name: Enable static CRT linkage
         run: |
           mkdir .cargo
