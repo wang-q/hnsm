@@ -79,6 +79,7 @@ Subcommand groups:
 * Clustering
     * vectors: similarity
     * DNA/protein: distance / identity
+    * cluster
 
 * <infiles> are paths to fasta files, .fa.gz is supported
     * infile == stdin means reading from STDIN
