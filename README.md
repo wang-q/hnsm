@@ -4,7 +4,7 @@
 [![codecov](https://codecov.io/gh/wang-q/hnsm/branch/master/graph/badge.svg?token=8toyNHCsVU)](https://codecov.io/gh/wang-q/hnsm)
 [![license](https://img.shields.io/github/license/wang-q/hnsm)](https://github.com//wang-q/hnsm)
 
-`hnsm` - **H**omogeneous **N**ucleic acids **S**mart **M**atching
+`hnsm` - **H**omogeneous **N**ucleic acids/amino acids **S**mart **M**atching
 
 ## Install
 
@@ -199,7 +199,7 @@ hyperfine --warmup 1 \
 #### Pairwise distances by Minimizer
 
 ```text
-hnsm distance tests/clust/IBPA.fa -k 7 -w 1 |
+$ hnsm distance tests/clust/IBPA.fa -k 7 -w 1 |
     hnsm cluster stdin --mode matrix
 IBPA_ECOLI      0       0.0669  0.2014  0.2106  0.4405  0       0.0011  0.7124  0.5454  0.3675
 IBPA_ECOLI_GA   0.0669  0       0.114   0.1464  0.2917  0.0669  0.068   1       0.7023  0.5974

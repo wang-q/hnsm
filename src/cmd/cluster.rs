@@ -106,7 +106,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
             }
         }
         "dbscan" => {
-            let mut dbscan = hnsm::DBSCAN::new(opt_eps, opt_min_points);
+            let mut dbscan = hnsm::Dbscan::new(opt_eps, opt_min_points);
             let _ = dbscan.perform_clustering(&matrix);
             match opt_format.as_str() {
                 "cluster" => {
@@ -140,9 +140,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     Ok(())
 }
 
-fn populate(
-    pair_scores: &Vec<((String, String), f32)>,
-) -> (hnsm::SymmetricMatrix<f32>, Vec<String>) {
+fn populate(pair_scores: &Vec<((String, String), f32)>) -> (hnsm::ScoringMatrix<f32>, Vec<String>) {
     // Create a mapping from string identifiers to indices
     let mut index_map = HashMap::new();
     let mut index_name = vec![];
@@ -165,7 +163,7 @@ fn populate(
     let size = index_map.len();
 
     // Create a new scoring matrix
-    let mut matrix: hnsm::SymmetricMatrix<f32> = hnsm::SymmetricMatrix::new(size);
+    let mut matrix: hnsm::ScoringMatrix<f32> = hnsm::ScoringMatrix::new(size, 0.0, 1.0);
 
     // Populate the scoring matrix with the pair scores
     for ((n1, n2), score) in pair_scores {
