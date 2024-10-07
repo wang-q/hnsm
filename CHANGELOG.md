@@ -2,7 +2,9 @@
 
 ## Unreleased - ReleaseDate
 
-* Add `hnsm dist`
+* Add `hnsm similarity`
+* Add `hnsm distance`
+* Add `hnsm cluster`
 
 ## 0.1.8 - 2024-07-19
 

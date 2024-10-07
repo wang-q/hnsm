@@ -216,7 +216,7 @@ K1J4J6_9GAMM    0.3675  0.5974  1       1       1       0.3675  0.3686  0.6134  
 ```
 
 ```text
-$ clustalo -i tests/clust/IBPA.fa --auto --full --distmat-out=stdout
+$ clustalo -i tests/clust/IBPA.fa --auto --full --distmat-out=tmp.dist
 10
 IBPA_ECOLI          0.000000 0.058394 0.160584 0.197080 0.277372 0.000000 0.000000 0.583942 0.540146 0.372263
 IBPA_ECOLI_GA       0.058394 0.000000 0.102190 0.138686 0.218978 0.058394 0.058394 0.627737 0.576642 0.416058
