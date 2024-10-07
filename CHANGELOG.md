@@ -2,6 +2,8 @@
 
 ## Unreleased - ReleaseDate
 
+* Use HashMap<(usize, usize), T> to store distances
+
 ## 0.1.10 - 2024-10-07
 
 * Add `hnsm similarity`
