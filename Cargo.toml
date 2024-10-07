@@ -1,6 +1,6 @@
 [package]
 name = "hnsm"
-version = "0.1.8"
+version = "0.1.9"
 authors = ["wang-q <wang-q@outlook.com>"]
 edition = "2021"
 description = "Homogeneous Nucleic acids Smart Matching"

@@ -8,7 +8,7 @@
 
 ## Install
 
-Current release: 0.1.8
+Current release: 0.1.9
 
 ```shell
 rustup update -- nightly
