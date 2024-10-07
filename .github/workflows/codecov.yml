@@ -21,7 +21,7 @@ jobs:
           cargo +nightly tarpaulin --bins --tests --follow-exec --engine llvm --out xml -- --test-threads 1
 
       - name: Upload to codecov.io
-        uses: codecov/codecov-action@v4.0.1
+        uses: codecov/codecov-action@v4
         with:
           fail_ci_if_error: true
-          token: ${{secrets.CODECOV_TOKEN}}
+#          token: ${{secrets.CODECOV_TOKEN}}
