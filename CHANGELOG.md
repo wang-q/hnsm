@@ -2,6 +2,8 @@
 
 ## Unreleased - ReleaseDate
 
+## 0.1.10 - 2024-10-07
+
 * Add `hnsm similarity`
 * Add `hnsm distance`
 * Add `hnsm cluster`
