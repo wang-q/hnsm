@@ -28,6 +28,7 @@ fn main() -> anyhow::Result<()> {
         .subcommand(cmd::range::make_subcommand())
         .subcommand(cmd::rc::make_subcommand())
         .subcommand(cmd::replace::make_subcommand())
+        .subcommand(cmd::manifold::make_subcommand())
         .subcommand(cmd::similarity::make_subcommand())
         .subcommand(cmd::sixframe::make_subcommand())
         .subcommand(cmd::size::make_subcommand())
@@ -47,6 +48,7 @@ Subcommand groups:
     * vectors: similarity
     * DNA/protein: distance / identity
     * cluster
+    * reduction
 
 * <infiles> are paths to fasta files, .fa.gz is supported
     * infile == stdin means reading from STDIN
@@ -80,6 +82,7 @@ Subcommand groups:
         Some(("distance", sub_matches)) => cmd::distance::execute(sub_matches),
         Some(("similarity", sub_matches)) => cmd::similarity::execute(sub_matches),
         Some(("cluster", sub_matches)) => cmd::cluster::execute(sub_matches),
+        Some(("manifold", sub_matches)) => cmd::manifold::execute(sub_matches),
         _ => unreachable!(),
     }
     .unwrap();

@@ -1,5 +1,6 @@
 //! A *symmetric* scoring matrix to be used for clustering.
 
+use ndarray::Array2;
 use std::collections::HashMap;
 
 #[derive(Debug)]
@@ -59,8 +60,7 @@ where
             *self.data.get(&(row, col)).unwrap_or(&self.missing)
         } else if row == col {
             *self.data.get(&(row, col)).unwrap_or(&self.same)
-        }
-        else {
+        } else {
             *self.data.get(&(col, row)).unwrap_or(&self.missing)
         }
     }
@@ -72,5 +72,32 @@ where
         } else {
             self.data.insert((col, row), value);
         }
+    }
+
+    /// Converts the scoring matrix to an Array2
+    ///
+    /// ```
+    /// # use hnsm::ScoringMatrix;
+    /// let mut m: ScoringMatrix<i32> = ScoringMatrix::new(3, 0, -1);
+    /// m.set(0, 1, 5);
+    /// m.set(1, 2, 10);
+    /// let matrix = m.to_arr2();
+    /// let exp = ndarray::arr2(&[
+    ///     [0, 5, -1,],
+    ///     [5, 0, 10,],
+    ///     [-1, 10, 0,],
+    /// ]);
+    /// assert_eq!(matrix, exp);
+    /// ```
+    pub fn to_arr2(&self) -> Array2<T> {
+        let mut matrix = Array2::<T>::default((self.size, self.size));
+
+        for row in 0..self.size {
+            for col in 0..self.size {
+                matrix[[row, col]] = self.get(row, col);
+            }
+        }
+
+        matrix
     }
 }

@@ -5,6 +5,7 @@ pub mod count;
 pub mod distance;
 pub mod filter;
 pub mod gz;
+pub mod manifold;
 pub mod masked;
 pub mod n50;
 pub mod one;

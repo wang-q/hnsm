@@ -237,6 +237,13 @@ hnsm cluster tests/clust/IBPA.fa.tsv --mode dbscan --eps 0.05 --min_points 2
 
 ```
 
+#### PCoA
+
+```shell
+cargo run --bin hnsm manifold tests/clust/IBPA.fa.tsv --mode pcoa --dim 2
+
+```
+
 ## Author
 
 Qiang Wang <wang-q@outlook.com>
