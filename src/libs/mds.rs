@@ -41,7 +41,7 @@ fit$x
 */
 //
 // use ndarray::{Array2, Axis, Zip};
-// use ndarray_linalg::Eigh;
+// use ndarray_linalg::{Eigh, UPLO};
 //
 // pub struct Mds {
 //     dim: usize,
@@ -52,7 +52,7 @@ fit$x
 //         Mds { dim }
 //     }
 //
-//     pub fn double_centering(&mut self, matrix: &mut Array2<f32>) {
+//     pub fn double_centering(&self, matrix: &mut Array2<f32>) {
 //         matrix.mapv_inplace(|v| -(v * v) / 2.);
 //
 //         let row_means = matrix.mean_axis(Axis(0)).unwrap();
@@ -64,7 +64,10 @@ fit$x
 //         });
 //     }
 //
-//     pub fn eigen(&mut self) {
+//     pub fn eigen(&self, matrix: &mut Array2<f32>) {
+//         let (eigvals, eigvecs) = matrix.eigh(UPLO::Lower)?;
+//
+//         eprintln!("eigvals = {:#?}", eigvals);
 //
 //     }
 // }
