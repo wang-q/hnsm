@@ -18,6 +18,7 @@ fn main() -> anyhow::Result<()> {
         .color(ColorChoice::Auto)
         .subcommand(cmd::cluster::make_subcommand())
         .subcommand(cmd::count::make_subcommand())
+        .subcommand(cmd::das::make_subcommand())
         .subcommand(cmd::distance::make_subcommand())
         .subcommand(cmd::filter::make_subcommand())
         .subcommand(cmd::gz::make_subcommand())
@@ -50,6 +51,8 @@ Subcommand groups:
     * cluster
     * reduction
 
+* Synteny
+    * das
 * <infiles> are paths to fasta files, .fa.gz is supported
     * infile == stdin means reading from STDIN
     * `hnsm gz` writes out the BGZF format and `hnsm range` reads it
@@ -83,6 +86,8 @@ Subcommand groups:
         Some(("similarity", sub_matches)) => cmd::similarity::execute(sub_matches),
         Some(("cluster", sub_matches)) => cmd::cluster::execute(sub_matches),
         Some(("manifold", sub_matches)) => cmd::manifold::execute(sub_matches),
+        // Synteny
+        Some(("das", sub_matches)) => cmd::das::execute(sub_matches),
         _ => unreachable!(),
     }
     .unwrap();
