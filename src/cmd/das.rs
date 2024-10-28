@@ -228,7 +228,7 @@ fn align(
             sa.push(s[i - 1].to_string());
             ta.push("-".to_string());
             i -= 1;
-        }else {
+        } else {
             let p = compare(&s[i - 1], &t[j - 1], das_opt);
 
             if mat[i][j] == mat[i - 1][j - 1] + p {

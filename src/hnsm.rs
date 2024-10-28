@@ -16,6 +16,7 @@ fn main() -> anyhow::Result<()> {
         .propagate_version(true)
         .arg_required_else_help(true)
         .color(ColorChoice::Auto)
+        .subcommand(cmd::chain::make_subcommand())
         .subcommand(cmd::cluster::make_subcommand())
         .subcommand(cmd::count::make_subcommand())
         .subcommand(cmd::das::make_subcommand())
@@ -53,6 +54,8 @@ Subcommand groups:
 
 * Synteny
     * das
+    * chain
+
 * <infiles> are paths to fasta files, .fa.gz is supported
     * infile == stdin means reading from STDIN
     * `hnsm gz` writes out the BGZF format and `hnsm range` reads it
@@ -88,6 +91,7 @@ Subcommand groups:
         Some(("manifold", sub_matches)) => cmd::manifold::execute(sub_matches),
         // Synteny
         Some(("das", sub_matches)) => cmd::das::execute(sub_matches),
+        Some(("chain", sub_matches)) => cmd::chain::execute(sub_matches),
         _ => unreachable!(),
     }
     .unwrap();
