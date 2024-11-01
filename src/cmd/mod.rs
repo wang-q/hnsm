@@ -4,6 +4,7 @@ pub mod chain;
 pub mod cluster;
 pub mod count;
 pub mod das;
+pub mod dedup;
 pub mod distance;
 pub mod filter;
 pub mod gz;

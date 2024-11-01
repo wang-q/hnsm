@@ -328,6 +328,88 @@ fn command_filter_fmt() -> anyhow::Result<()> {
 }
 
 #[test]
+fn command_dedup() -> anyhow::Result<()> {
+    let mut cmd = Command::cargo_bin("hnsm")?;
+    let output = cmd
+        .arg("dedup")
+        .arg("tests/fasta/dedup.fa")
+        .output()
+        .unwrap();
+    let stdout = String::from_utf8(output.stdout).unwrap();
+
+    assert_eq!(stdout.lines().count(), 8);
+    assert!(!stdout.contains(">read0 some text"));
+
+    let mut cmd = Command::cargo_bin("hnsm")?;
+    let output = cmd
+        .arg("dedup")
+        .arg("tests/fasta/dedup.fa")
+        .arg("--desc")
+        .output()
+        .unwrap();
+    let stdout = String::from_utf8(output.stdout).unwrap();
+
+    assert_eq!(stdout.lines().count(), 10);
+    assert!(stdout.contains(">read0 some text"));
+
+    let mut cmd = Command::cargo_bin("hnsm")?;
+    let output = cmd
+        .arg("dedup")
+        .arg("tests/fasta/dedup.fa")
+        .arg("--seq")
+        .output()
+        .unwrap();
+    let stdout = String::from_utf8(output.stdout).unwrap();
+
+    assert_eq!(stdout.lines().count(), 6);
+    assert!(!stdout.contains(">read1"));
+
+    let mut cmd = Command::cargo_bin("hnsm")?;
+    let output = cmd
+        .arg("dedup")
+        .arg("tests/fasta/dedup.fa")
+        .arg("--seq")
+        .arg("--case")
+        .output()
+        .unwrap();
+    let stdout = String::from_utf8(output.stdout).unwrap();
+
+    assert_eq!(stdout.lines().count(), 4);
+    assert!(!stdout.contains(">read2"));
+
+    let mut cmd = Command::cargo_bin("hnsm")?;
+    let output = cmd
+        .arg("dedup")
+        .arg("tests/fasta/dedup.fa")
+        .arg("--seq")
+        .arg("--both")
+        .output()
+        .unwrap();
+    let stdout = String::from_utf8(output.stdout).unwrap();
+
+    assert_eq!(stdout.lines().count(), 2);
+    assert!(!stdout.contains(">read3"));
+
+    let mut cmd = Command::cargo_bin("hnsm")?;
+    let output = cmd
+        .arg("dedup")
+        .arg("tests/fasta/dedup.fa")
+        .arg("--seq")
+        .arg("--both")
+        .arg("--file")
+        .arg("stdout")
+        .output()
+        .unwrap();
+    let stdout = String::from_utf8(output.stdout).unwrap();
+
+    assert_eq!(stdout.lines().count(), 7);
+    assert!(stdout.contains(">read0"));
+    assert!(stdout.contains("read0\tread3"));
+
+    Ok(())
+}
+
+#[test]
 fn command_split_name() -> anyhow::Result<()> {
     let tempdir = TempDir::new().unwrap();
     let tempdir_str = tempdir.path().to_str().unwrap();

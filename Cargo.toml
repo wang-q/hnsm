@@ -33,6 +33,7 @@ lru = "0.12.3"
 fxhash = "0.2"
 murmurhash3 = "=0.0.5"
 num-traits = "0.2.19"
+xxhash-rust = { version = "0.8.12", features = ["xxh3"] }
 
 nalgebra = "0.33.0"
 ndarray = "0.16.1"

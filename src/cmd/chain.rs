@@ -365,7 +365,6 @@ fn adjust_scores(mut scores: Vec<Score>) -> anyhow::Result<Vec<Score>> {
 
 //  Find and output highest scoring chains in scores treating it as a DAG
 fn print_chains(scores: &mut Vec<Score>, options: &ChainOpt) {
-
     loop {
         let mut updated = false;
 

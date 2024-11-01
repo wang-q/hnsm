@@ -20,6 +20,7 @@ fn main() -> anyhow::Result<()> {
         .subcommand(cmd::cluster::make_subcommand())
         .subcommand(cmd::count::make_subcommand())
         .subcommand(cmd::das::make_subcommand())
+        .subcommand(cmd::dedup::make_subcommand())
         .subcommand(cmd::distance::make_subcommand())
         .subcommand(cmd::filter::make_subcommand())
         .subcommand(cmd::gz::make_subcommand())
@@ -43,7 +44,7 @@ Subcommand groups:
 * Fasta files
     * info: size / count / masked / n50
     * records: one / some / order / split
-    * transform: replace / rc / filter
+    * transform: replace / rc / filter / dedup
     * indexing: gz / range
 
 * Clustering
@@ -79,6 +80,7 @@ Subcommand groups:
         Some(("replace", sub_matches)) => cmd::replace::execute(sub_matches),
         Some(("rc", sub_matches)) => cmd::rc::execute(sub_matches),
         Some(("filter", sub_matches)) => cmd::filter::execute(sub_matches),
+        Some(("dedup", sub_matches)) => cmd::dedup::execute(sub_matches),
         //
         Some(("sixframe", sub_matches)) => cmd::sixframe::execute(sub_matches),
         // index
