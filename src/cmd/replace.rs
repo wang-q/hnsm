@@ -91,7 +91,7 @@ fn read_replaces(input: &str) -> HashMap<String, Vec<String>> {
         let mut fields: Vec<&str> = line.split('\t').collect();
 
         let key = fields[0].to_string();
-        let mut left = fields
+        let mut others = fields
             .split_off(1)
             .iter()
             .map(|s| (*s).to_string())
@@ -101,7 +101,7 @@ fn read_replaces(input: &str) -> HashMap<String, Vec<String>> {
         replaces
             .entry(key.clone())
             .or_insert_with(Vec::new)
-            .append(&mut left);
+            .append(&mut others);
     }
 
     replaces
