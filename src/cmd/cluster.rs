@@ -9,6 +9,7 @@ pub fn make_subcommand() -> Command {
 modes:
     * matrix: write out a distance matrix
     * dbscan
+    * cc: connected components
 
 format:
     * cluster: a line contains points of one cluster
@@ -29,6 +30,7 @@ format:
                 .value_parser([
                     builder::PossibleValue::new("matrix"),
                     builder::PossibleValue::new("dbscan"),
+                    builder::PossibleValue::new("cc"),
                 ])
                 .default_value("matrix")
                 .help("Clustering method"),
