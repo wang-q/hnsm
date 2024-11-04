@@ -6,6 +6,23 @@
 
 `hnsm` - **H**omogeneous **N**ucleic acids/amino acids **S**mart **M**atching
 
+<!-- TOC -->
+* [hnsm](#hnsm)
+  * [Install](#install)
+  * [Synopsis](#synopsis)
+    * [`hnsm help`](#hnsm-help)
+  * [Examples](#examples)
+    * [Fasta files](#fasta-files)
+    * [Index](#index)
+    * [Clustering](#clustering)
+      * [Similarity and dissimilarity (distance) of vectors](#similarity-and-dissimilarity-distance-of-vectors)
+      * [Pairwise distances by Minimizer](#pairwise-distances-by-minimizer)
+      * [DBSCAN](#dbscan)
+      * [PCoA](#pcoa)
+  * [Author](#author)
+  * [License](#license)
+<!-- TOC -->
+
 ## Install
 
 Current release: 0.1.10
@@ -237,6 +254,10 @@ K1J4J6_9GAMM        0.372263 0.416058 0.496350 0.518248 0.569343 0.372263 0.3722
 
 ```shell
 hnsm cluster tests/clust/IBPA.fa.tsv --mode dbscan --eps 0.05 --min_points 2
+
+cat tests/clust/IBPA.fa.tsv |
+    tsv-filter --le 3:0.05 |
+    cargo run --bin hnsm cluster stdin --mode cc
 
 ```
 

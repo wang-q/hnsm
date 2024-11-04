@@ -32,6 +32,22 @@ format:
                 .help("Reduction method"),
         )
         .arg(
+            Arg::new("same")
+                .long("same")
+                .num_args(1)
+                .default_value("0.0")
+                .value_parser(value_parser!(f32))
+                .help("Default score of identical element pairs"),
+        )
+        .arg(
+            Arg::new("missing")
+                .long("missing")
+                .num_args(1)
+                .default_value("1.0")
+                .value_parser(value_parser!(f32))
+                .help("Default score of missing pairs"),
+        )
+        .arg(
             Arg::new("dim")
                 .long("dim")
                 .num_args(1)
@@ -57,6 +73,9 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     let infile = args.get_one::<String>("infile").unwrap();
     let opt_mode = args.get_one::<String>("mode").unwrap();
 
+    let opt_same = *args.get_one::<f32>("same").unwrap();
+    let opt_missing = *args.get_one::<f32>("missing").unwrap();
+
     let opt_dim = *args.get_one::<usize>("dim").unwrap();
 
     let mut writer = intspan::writer(args.get_one::<String>("outfile").unwrap());
@@ -65,8 +84,8 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     // Ops
     //----------------------------
     // Read pair scores from a TSV file
-    let pair_scores = hnsm::load_file(infile);
-    let (matrix, index_name) = hnsm::populate(&pair_scores);
+    let (pair_scores, index_name) = hnsm::load_pair_scores(infile);
+    let matrix = hnsm::populate_matrix(&pair_scores, &index_name, opt_same, opt_missing);
     let size = matrix.size();
 
     match opt_mode.as_str() {

@@ -1,4 +1,5 @@
 use clap::*;
+use hnsm::ScoringMatrix;
 
 // Create clap subcommand arguments
 pub fn make_subcommand() -> Command {
@@ -9,7 +10,7 @@ pub fn make_subcommand() -> Command {
 modes:
     * matrix: write out a distance matrix
     * dbscan
-    * cc: connected components
+    * cc: ignore scores and write all connected components
 
 format:
     * cluster: a line contains points of one cluster
@@ -47,6 +48,22 @@ format:
                 .help("Output formats"),
         )
         .arg(
+            Arg::new("same")
+                .long("same")
+                .num_args(1)
+                .default_value("0.0")
+                .value_parser(value_parser!(f32))
+                .help("Default score of identical element pairs"),
+        )
+        .arg(
+            Arg::new("missing")
+                .long("missing")
+                .num_args(1)
+                .default_value("1.0")
+                .value_parser(value_parser!(f32))
+                .help("Default score of missing pairs"),
+        )
+        .arg(
             Arg::new("eps")
                 .long("eps")
                 .num_args(1)
@@ -81,6 +98,9 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     let opt_mode = args.get_one::<String>("mode").unwrap();
     let opt_format = args.get_one::<String>("format").unwrap();
 
+    let opt_same = *args.get_one::<f32>("same").unwrap();
+    let opt_missing = *args.get_one::<f32>("missing").unwrap();
+
     let opt_eps = *args.get_one::<f32>("eps").unwrap();
     let opt_min_points = *args.get_one::<usize>("min_points").unwrap();
 
@@ -89,13 +109,14 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     //----------------------------
     // Ops
     //----------------------------
-    // Read pair scores from a TSV file
-    let pair_scores = hnsm::load_file(infile);
-    let (matrix, index_name) = hnsm::populate(&pair_scores);
-    let size = matrix.size();
+    // Reading pair scores from a TSV file
+    let (pair_scores, index_name) = hnsm::load_pair_scores(infile);
 
     match opt_mode.as_str() {
         "matrix" => {
+            let matrix = hnsm::populate_matrix(&pair_scores, &index_name, opt_same, opt_missing);
+            let size = matrix.size();
+
             // Print the scoring matrix
             for i in 0..size {
                 writer.write_fmt(format_args!("{}\t", index_name.get(i).unwrap()))?;
@@ -106,6 +127,8 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
             }
         }
         "dbscan" => {
+            let matrix = hnsm::populate_matrix(&pair_scores, &index_name, opt_same, opt_missing);
+
             let mut dbscan = hnsm::Dbscan::new(opt_eps, opt_min_points);
             let _ = dbscan.perform_clustering(&matrix);
             match opt_format.as_str() {
@@ -132,6 +155,17 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
                     }
                 }
                 _ => unreachable!(),
+            }
+        }
+        "cc" => {
+            let mut graph = petgraph::prelude::UnGraphMap::new();
+            // graph will borrow strings in index_name
+            for ((i, j), _) in &pair_scores {
+                graph.add_edge(index_name[*i].as_str(), index_name[*j].as_str(), ());
+            }
+            let scc = petgraph::algo::tarjan_scc(&graph);
+            for cc in &scc {
+                writer.write_fmt(format_args!("{}\n", cc.join("\t")))?;
             }
         }
         _ => unreachable!(),
