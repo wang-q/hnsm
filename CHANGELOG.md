@@ -2,7 +2,13 @@
 
 ## Unreleased - ReleaseDate
 
-* Use HashMap<(usize, usize), T> to store distances
+* Add `hnsm dedup`
+
+* Unfinished `hnsm das`
+* Unfinished `hnsm chain`
+* Unfinished `hnsm manifold`
+
+* Add `--mode cc` to `hnsm cluster`
 
 ## 0.1.10 - 2024-10-07
 
