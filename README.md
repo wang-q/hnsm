@@ -17,7 +17,7 @@
     * [Clustering](#clustering)
       * [Similarity and dissimilarity (distance) of vectors](#similarity-and-dissimilarity-distance-of-vectors)
       * [Pairwise distances by Minimizer](#pairwise-distances-by-minimizer)
-      * [DBSCAN](#dbscan)
+      * [Matrix conversion and DBSCAN](#matrix-conversion-and-dbscan)
       * [PCoA](#pcoa)
   * [Author](#author)
   * [License](#license)
@@ -235,7 +235,7 @@ K1J4J6_9GAMM    0.3675  0.5974  1       1       1       0.3675  0.3686  0.6134  
 ```
 
 ```text
-$ clustalo -i tests/clust/IBPA.fa --auto --full --distmat-out=tmp.dist
+$ clustalo -i tests/clust/IBPA.fa --auto --full --distmat-out=tests/clust/IBPA.mat
 10
 IBPA_ECOLI          0.000000 0.058394 0.160584 0.197080 0.277372 0.000000 0.000000 0.583942 0.540146 0.372263
 IBPA_ECOLI_GA       0.058394 0.000000 0.102190 0.138686 0.218978 0.058394 0.058394 0.627737 0.576642 0.416058
@@ -250,9 +250,13 @@ K1J4J6_9GAMM        0.372263 0.416058 0.496350 0.518248 0.569343 0.372263 0.3722
 
 ```
 
-#### DBSCAN
+#### Matrix conversion and DBSCAN
 
 ```shell
+cargo run --bin hnsm cluster tests/clust/IBPA.fa.tsv --mode matrix
+
+cargo run --bin hnsm cluster tests/clust/IBPA.mat --mode pair
+
 hnsm cluster tests/clust/IBPA.fa.tsv --mode dbscan --eps 0.05 --min_points 2
 
 cat tests/clust/IBPA.fa.tsv |

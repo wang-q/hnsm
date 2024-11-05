@@ -1,5 +1,5 @@
 use std::collections::HashMap;
-use std::io::BufRead;
+use std::io::{BufRead, Write};
 
 //----------------------------
 // AsmEntry

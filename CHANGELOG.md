@@ -2,6 +2,8 @@
 
 ## Unreleased - ReleaseDate
 
+* Add `--mode pair` to `hnsm cluster`
+
 ## 0.1.11 - 2024-11-04
 
 * Add `hnsm dedup`
