@@ -18,6 +18,7 @@ fn main() -> anyhow::Result<()> {
         .color(ColorChoice::Auto)
         .subcommand(cmd::chain::make_subcommand())
         .subcommand(cmd::cluster::make_subcommand())
+        .subcommand(cmd::convert::make_subcommand())
         .subcommand(cmd::count::make_subcommand())
         .subcommand(cmd::das::make_subcommand())
         .subcommand(cmd::dedup::make_subcommand())
@@ -89,6 +90,7 @@ Subcommand groups:
         // clustering
         Some(("distance", sub_matches)) => cmd::distance::execute(sub_matches),
         Some(("similarity", sub_matches)) => cmd::similarity::execute(sub_matches),
+        Some(("convert", sub_matches)) => cmd::convert::execute(sub_matches),
         Some(("cluster", sub_matches)) => cmd::cluster::execute(sub_matches),
         Some(("manifold", sub_matches)) => cmd::manifold::execute(sub_matches),
         // Synteny

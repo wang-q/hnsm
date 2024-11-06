@@ -48,10 +48,10 @@ fn command_distance() -> anyhow::Result<()> {
 }
 
 #[test]
-fn command_cluster_matrix() -> anyhow::Result<()> {
+fn command_convert_matrix() -> anyhow::Result<()> {
     let mut cmd = Command::cargo_bin("hnsm")?;
     let output = cmd
-        .arg("cluster")
+        .arg("convert")
         .arg("tests/clust/IBPA.fa.tsv")
         .arg("--mode")
         .arg("matrix")
@@ -66,10 +66,29 @@ fn command_cluster_matrix() -> anyhow::Result<()> {
 }
 
 #[test]
-fn command_cluster_pair() -> anyhow::Result<()> {
+fn command_convert_lower() -> anyhow::Result<()> {
     let mut cmd = Command::cargo_bin("hnsm")?;
     let output = cmd
-        .arg("cluster")
+        .arg("convert")
+        .arg("tests/clust/IBPA.fa.tsv")
+        .arg("--mode")
+        .arg("lower")
+        .output()
+        .unwrap();
+    let stdout = String::from_utf8(output.stdout).unwrap();
+
+    assert_eq!(stdout.lines().count(), 10);
+    assert!(stdout.contains("IBPA_ECOLI\n"));
+    assert!(stdout.contains("IBPA_ECOLI_GA\t0.0669\n"));
+
+    Ok(())
+}
+
+#[test]
+fn command_convert_pair() -> anyhow::Result<()> {
+    let mut cmd = Command::cargo_bin("hnsm")?;
+    let output = cmd
+        .arg("convert")
         .arg("tests/clust/IBPA.mat")
         .arg("--mode")
         .arg("pair")

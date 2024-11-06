@@ -250,13 +250,20 @@ K1J4J6_9GAMM        0.372263 0.416058 0.496350 0.518248 0.569343 0.372263 0.3722
 
 ```
 
-#### Matrix conversion and DBSCAN
+#### Matrix conversion
 
 ```shell
-cargo run --bin hnsm cluster tests/clust/IBPA.fa.tsv --mode matrix
+cargo run --bin hnsm convert tests/clust/IBPA.fa.tsv --mode matrix
 
-cargo run --bin hnsm cluster tests/clust/IBPA.mat --mode pair
+cargo run --bin hnsm convert tests/clust/IBPA.fa.tsv --mode lower
 
+cargo run --bin hnsm convert tests/clust/IBPA.mat --mode pair
+
+```
+
+#### DBSCAN
+
+```shell
 hnsm cluster tests/clust/IBPA.fa.tsv --mode dbscan --eps 0.05 --min_points 2
 
 cat tests/clust/IBPA.fa.tsv |

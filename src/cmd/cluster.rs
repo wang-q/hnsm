@@ -9,8 +9,6 @@ pub fn make_subcommand() -> Command {
         .after_help(
             r###"
 modes:
-    * matrix: write out a distance matrix
-    * pair: the input is a (lower-triangular) relaxed phylip distance matrix, and outputs pairwise distances
     * dbscan
     * cc: ignore scores and write all connected components
 
@@ -31,8 +29,6 @@ format:
                 .long("mode")
                 .action(ArgAction::Set)
                 .value_parser([
-                    builder::PossibleValue::new("matrix"),
-                    builder::PossibleValue::new("pair"),
                     builder::PossibleValue::new("dbscan"),
                     builder::PossibleValue::new("cc"),
                 ])
@@ -112,45 +108,10 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     //----------------------------
     // Ops
     //----------------------------
-    if opt_mode.as_str() == "pair" {
-        let reader = intspan::reader(infile);
-        let mut lines = reader.lines();
-        let mut names = Vec::new();
-
-        // Attempt to read the first line as the number of sequences
-        let first_line = lines.next();
-        if let Some(Ok(line)) = first_line {
-            if let Ok(_) = line.trim().parse::<usize>() {
-                // If the first line is a number, skip it
-            } else {
-                // If the first line is not a number, treat it as a data line
-                process_phylip_line(&line, &mut names, &mut writer)?;
-            }
-        }
-        for line in lines.map_while(Result::ok) {
-            process_phylip_line(&line, &mut names, &mut writer)?;
-        }
-
-        return Ok(());
-    }
-
     // Reading pair scores from a TSV file
     let (pair_scores, index_name) = hnsm::load_pair_scores(infile);
 
     match opt_mode.as_str() {
-        "matrix" => {
-            let matrix = hnsm::populate_matrix(&pair_scores, &index_name, opt_same, opt_missing);
-            let size = matrix.size();
-
-            // Print the scoring matrix
-            for i in 0..size {
-                writer.write_fmt(format_args!("{}\t", index_name.get(i).unwrap()))?;
-                for j in 0..size {
-                    writer.write_fmt(format_args!("{}\t", matrix.get(i, j)))?;
-                }
-                writer.write_fmt(format_args!("\n"))?;
-            }
-        }
         "dbscan" => {
             let matrix = hnsm::populate_matrix(&pair_scores, &index_name, opt_same, opt_missing);
 
@@ -194,27 +155,6 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
             }
         }
         _ => unreachable!(),
-    }
-
-    Ok(())
-}
-
-// Process a single line of the PHYLIP matrix and output pairwise distances
-fn process_phylip_line(line: &str, names: &mut Vec<String>, writer: &mut Box<dyn Write>) -> anyhow::Result<()> {
-    let parts: Vec<&str> = line.trim().split_whitespace().collect();
-    if parts.len() >= 2 {
-        let name = parts[0].to_string();
-        names.push(name.clone());
-
-        // read lower-triangle
-        let distances: Vec<f32> = parts[1..=names.len()]
-            .iter()
-            .map(|&s| s.parse().unwrap())
-            .collect();
-
-        for (i, &distance) in distances.iter().enumerate() {
-            writer.write_fmt(format_args!("{}\t{}\t{}\n", names[i], name, distance))?;
-        }
     }
 
     Ok(())
