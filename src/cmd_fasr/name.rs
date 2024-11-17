@@ -1,5 +1,4 @@
 use clap::*;
-use intspan::*;
 use std::collections::BTreeMap;
 
 // Create clap subcommand arguments
@@ -42,7 +41,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     //----------------------------
     // Args
     //----------------------------
-    let mut writer = writer(args.get_one::<String>("outfile").unwrap());
+    let mut writer = intspan::writer(args.get_one::<String>("outfile").unwrap());
     let is_count = args.get_flag("count");
 
     let mut names: Vec<String> = vec![];
@@ -52,9 +51,9 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     // Operating
     //----------------------------
     for infile in args.get_many::<String>("infiles").unwrap() {
-        let mut reader = reader(infile);
+        let mut reader = intspan::reader(infile);
 
-        while let Ok(block) = next_fas_block(&mut reader) {
+        while let Ok(block) = fasr::next_fas_block(&mut reader) {
             for entry in &block.entries {
                 let range = entry.range();
 

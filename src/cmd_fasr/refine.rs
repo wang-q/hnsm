@@ -1,6 +1,5 @@
 use clap::*;
 use crossbeam::channel::bounded;
-use intspan::*;
 use std::string::String;
 
 // Create clap subcommand arguments
@@ -106,11 +105,11 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     // Operating
     //----------------------------
     if parallel == 1 {
-        let mut writer = writer(args.get_one::<String>("outfile").unwrap());
+        let mut writer = intspan::writer(args.get_one::<String>("outfile").unwrap());
 
         for infile in args.get_many::<String>("infiles").unwrap() {
-            let mut reader = reader(infile);
-            while let Ok(block) = next_fas_block(&mut reader) {
+            let mut reader = intspan::reader(infile);
+            while let Ok(block) = fasr::next_fas_block(&mut reader) {
                 let out_string = proc_block(&block, args)?;
                 writer.write_all(out_string.as_ref())?;
             }
@@ -122,7 +121,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     Ok(())
 }
 
-fn proc_block(block: &FasBlock, args: &ArgMatches) -> anyhow::Result<String> {
+fn proc_block(block: &fasr::FasBlock, args: &ArgMatches) -> anyhow::Result<String> {
     //----------------------------
     // Args
     //----------------------------
@@ -150,23 +149,23 @@ fn proc_block(block: &FasBlock, args: &ArgMatches) -> anyhow::Result<String> {
         }
     } else {
         if is_quick {
-            aligned = align_seqs_quick(&seqs, msa, pad as i32, fill as i32)?;
+            aligned = fasr::align_seqs_quick(&seqs, msa, pad as i32, fill as i32)?;
         } else {
-            aligned = align_seqs(&seqs, msa)?;
+            aligned = fasr::align_seqs(&seqs, msa)?;
         }
     };
 
     //----------------------------
     // Trimming
     //----------------------------
-    trim_pure_dash(&mut aligned);
+    fasr::trim_pure_dash(&mut aligned);
     if has_outgroup {
-        trim_outgroup(&mut aligned);
-        let _ = trim_complex_indel(&mut aligned);
+        fasr::trim_outgroup(&mut aligned);
+        let _ = fasr::trim_complex_indel(&mut aligned);
     }
 
     if chop > 0 {
-        trim_head_tail(&mut aligned, &mut ranges, chop);
+        fasr::trim_head_tail(&mut aligned, &mut ranges, chop);
     }
 
     //----------------------------
@@ -187,10 +186,10 @@ fn proc_block(block: &FasBlock, args: &ArgMatches) -> anyhow::Result<String> {
 // Adopt from https://rust-lang-nursery.github.io/rust-cookbook/concurrency/threads.html#create-a-parallel-pipeline
 fn proc_block_p(args: &ArgMatches) -> anyhow::Result<()> {
     let parallel = *args.get_one::<usize>("parallel").unwrap();
-    let mut writer = writer(args.get_one::<String>("outfile").unwrap());
+    let mut writer = intspan::writer(args.get_one::<String>("outfile").unwrap());
 
     // Channel 1 - Read files to blocks
-    let (snd1, rcv1) = bounded::<FasBlock>(10);
+    let (snd1, rcv1) = bounded::<fasr::FasBlock>(10);
     // Channel 2 - Results
     let (snd2, rcv2) = bounded(10);
 
@@ -200,8 +199,8 @@ fn proc_block_p(args: &ArgMatches) -> anyhow::Result<()> {
         //----------------------------
         s.spawn(|_| {
             for infile in args.get_many::<String>("infiles").unwrap() {
-                let mut reader = reader(infile);
-                while let Ok(block) = next_fas_block(&mut reader) {
+                let mut reader = intspan::reader(infile);
+                while let Ok(block) = fasr::next_fas_block(&mut reader) {
                     snd1.send(block).unwrap();
                 }
             }

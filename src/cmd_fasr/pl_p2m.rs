@@ -40,6 +40,7 @@ pub fn make_subcommand() -> Command {
 }
 
 // command implementation
+#[allow(unused_assignments)]
 pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     //----------------------------
     // Args

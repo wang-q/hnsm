@@ -1,5 +1,4 @@
 use clap::*;
-use intspan::*;
 
 // Create clap subcommand arguments
 pub fn make_subcommand() -> Command {
@@ -34,15 +33,15 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     //----------------------------
     // Args
     //----------------------------
-    let mut writer = writer(args.get_one::<String>("outfile").unwrap());
+    let mut writer = intspan::writer(args.get_one::<String>("outfile").unwrap());
 
     //----------------------------
     // Operating
     //----------------------------
     for infile in args.get_many::<String>("infiles").unwrap() {
-        let mut reader = reader(infile);
+        let mut reader = intspan::reader(infile);
 
-        while let Ok(block) = next_maf_block(&mut reader) {
+        while let Ok(block) = fasr::next_maf_block(&mut reader) {
             // Can't use reference as entry.alignment does not Copy
             for entry in block.entries {
                 let range = entry.to_range();

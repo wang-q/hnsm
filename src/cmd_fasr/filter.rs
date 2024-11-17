@@ -1,5 +1,4 @@
 use clap::*;
-use intspan::*;
 
 // Create clap subcommand arguments
 pub fn make_subcommand() -> Command {
@@ -74,7 +73,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     //----------------------------
     // Args
     //----------------------------
-    let mut writer = writer(args.get_one::<String>("outfile").unwrap());
+    let mut writer = intspan::writer(args.get_one::<String>("outfile").unwrap());
     let is_upper = args.get_flag("upper");
     // let is_n = args.get_flag("N");
     let is_dash = args.get_flag("dash");
@@ -83,9 +82,9 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     // Operating
     //----------------------------
     for infile in args.get_many::<String>("infiles").unwrap() {
-        let mut reader = reader(infile);
+        let mut reader = intspan::reader(infile);
 
-        'BLOCK: while let Ok(block) = next_fas_block(&mut reader) {
+        'BLOCK: while let Ok(block) = fasr::next_fas_block(&mut reader) {
             // --name
             let idx = if args.contains_id("name") {
                 let name = args.get_one::<String>("name").unwrap();
@@ -134,7 +133,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
                 //----------------------------
                 // Output
                 //----------------------------
-                let out_entry = FasEntry::from(entry.range(), &out_seq);
+                let out_entry = fasr::FasEntry::from(entry.range(), &out_seq);
                 writer.write_all(out_entry.to_string().as_ref())?;
             }
 

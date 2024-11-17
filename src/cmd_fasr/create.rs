@@ -1,5 +1,4 @@
 use clap::*;
-use intspan::*;
 use std::io::BufRead;
 
 // Create clap subcommand arguments
@@ -60,7 +59,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     //----------------------------
     // Args
     //----------------------------
-    let mut writer = writer(args.get_one::<String>("outfile").unwrap());
+    let mut writer = intspan::writer(args.get_one::<String>("outfile").unwrap());
     let genome = args.get_one::<String>("genome.fa").unwrap();
     let is_multi = args.get_flag("multi");
 
@@ -68,12 +67,12 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     // Operating
     //----------------------------
     for infile in args.get_many::<String>("infiles").unwrap() {
-        let reader = reader(infile);
+        let reader = intspan::reader(infile);
         for line in reader.lines().map_while(Result::ok) {
             let parts: Vec<&str> = line.split('\t').collect();
 
             for part in &parts {
-                let mut range = Range::from_str(part);
+                let mut range = intspan::Range::from_str(part);
                 if !range.is_valid() {
                     continue;
                 }
@@ -102,9 +101,9 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     Ok(())
 }
 
-fn get_seq(range: &Range, genome: &str) -> anyhow::Result<String> {
+fn get_seq(range: &intspan::Range, genome: &str) -> anyhow::Result<String> {
     let pos = format!("{}:{}-{}", range.chr(), range.start(), range.end());
-    let mut gseq = get_seq_faidx(genome, &pos)?;
+    let mut gseq = intspan::get_seq_faidx(genome, &pos)?;
 
     if range.strand() == "-" {
         gseq = std::str::from_utf8(&bio::alphabets::dna::revcomp(gseq.bytes()))
@@ -115,7 +114,7 @@ fn get_seq(range: &Range, genome: &str) -> anyhow::Result<String> {
     Ok(gseq)
 }
 
-fn get_seq_multi(range: &Range, genome: &str) -> anyhow::Result<String> {
+fn get_seq_multi(range: &intspan::Range, genome: &str) -> anyhow::Result<String> {
     let pos = format!(
         "{}.{}:{}-{}",
         range.name(),
@@ -123,7 +122,7 @@ fn get_seq_multi(range: &Range, genome: &str) -> anyhow::Result<String> {
         range.start(),
         range.end()
     );
-    let mut gseq = get_seq_faidx(genome, &pos)?;
+    let mut gseq = intspan::get_seq_faidx(genome, &pos)?;
 
     if range.strand() == "-" {
         gseq = std::str::from_utf8(&bio::alphabets::dna::revcomp(gseq.bytes()))

@@ -1,5 +1,4 @@
 use clap::*;
-use intspan::*;
 
 // Create clap subcommand arguments
 pub fn make_subcommand() -> Command {
@@ -51,16 +50,16 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     //----------------------------
     // Args
     //----------------------------
-    let mut writer = writer(args.get_one::<String>("outfile").unwrap());
+    let mut writer = intspan::writer(args.get_one::<String>("outfile").unwrap());
     let genome = args.get_one::<String>("genome.fa").unwrap();
 
     //----------------------------
     // Operating
     //----------------------------
     for infile in args.get_many::<String>("infiles").unwrap() {
-        let mut reader = reader(infile);
+        let mut reader = intspan::reader(infile);
 
-        while let Ok(block) = next_fas_block(&mut reader) {
+        while let Ok(block) = fasr::next_fas_block(&mut reader) {
             let block_names = block.names;
 
             if args.contains_id("name") {
@@ -90,7 +89,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     Ok(())
 }
 
-fn check_seq(entry: &FasEntry, genome: &str) -> anyhow::Result<String> {
+fn check_seq(entry: &fasr::FasEntry, genome: &str) -> anyhow::Result<String> {
     let range = entry.range();
     let seq = if range.strand() == "-" {
         bio::alphabets::dna::revcomp(entry.seq())
@@ -104,7 +103,7 @@ fn check_seq(entry: &FasEntry, genome: &str) -> anyhow::Result<String> {
         .replace('-', "");
 
     let pos = format!("{}:{}-{}", range.chr(), range.start(), range.end());
-    let gseq = get_seq_faidx(genome, &pos)?.to_ascii_uppercase();
+    let gseq = intspan::get_seq_faidx(genome, &pos)?.to_ascii_uppercase();
 
     let status = if seq == gseq { "OK" } else { "FAILED" };
 

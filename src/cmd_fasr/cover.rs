@@ -1,5 +1,4 @@
 use clap::*;
-use intspan::*;
 use std::collections::BTreeMap;
 
 // Create clap subcommand arguments
@@ -49,16 +48,16 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     //----------------------------
     // Args
     //----------------------------
-    let mut res_of: BTreeMap<String, BTreeMap<String, IntSpan>> = BTreeMap::new();
+    let mut res_of: BTreeMap<String, BTreeMap<String, intspan::IntSpan>> = BTreeMap::new();
     let trim = *args.get_one::<i32>("trim").unwrap();
 
     //----------------------------
     // Operating
     //----------------------------
     for infile in args.get_many::<String>("infiles").unwrap() {
-        let mut reader = reader(infile);
+        let mut reader = intspan::reader(infile);
 
-        while let Ok(block) = next_fas_block(&mut reader) {
+        while let Ok(block) = fasr::next_fas_block(&mut reader) {
             let block_names = block.names;
 
             if args.contains_id("name") {
@@ -90,7 +89,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
                 let res = res_of.get_mut(entry.range().name()).unwrap();
 
                 if !res.contains_key(entry.range().chr()) {
-                    res.insert(entry.range().chr().to_string(), IntSpan::new());
+                    res.insert(entry.range().chr().to_string(), intspan::IntSpan::new());
                 }
 
                 let intspan = range.intspan().clone().trim(trim);
@@ -103,11 +102,11 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     // Output
     //----------------------------
     let out_json = if args.contains_id("name") {
-        set2json(res_of.first_key_value().unwrap().1)
+        intspan::set2json(res_of.first_key_value().unwrap().1)
     } else {
-        set2json_m(&res_of)
+        intspan::set2json_m(&res_of)
     };
-    write_json(args.get_one::<String>("outfile").unwrap(), &out_json)?;
+    intspan::write_json(args.get_one::<String>("outfile").unwrap(), &out_json)?;
 
     Ok(())
 }

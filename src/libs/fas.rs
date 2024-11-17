@@ -1,4 +1,4 @@
-use crate::Range;
+use intspan::Range;
 use std::collections::{BTreeMap, VecDeque};
 use std::{fmt, io, str};
 
@@ -316,7 +316,6 @@ pub fn parse_axt_block(
 
 #[cfg(test)]
 mod fas_tests {
-    use super::*;
     use std::io::BufReader;
 
     #[test]
@@ -340,7 +339,7 @@ GCATATAATATGAACCAATATCTATTTCATGGAGAGACTATGATAT-CCCCGTACTATTTCTA
 GC-TAAAATATGAA-CGATATTTA-CCTGTAGAGGGACTATGGGAT-CCCCATACTACTTT--
 ";
         let mut reader = BufReader::new(str.as_bytes());
-        let block = next_fas_block(&mut reader).unwrap();
+        let block = crate::next_fas_block(&mut reader).unwrap();
         assert_eq!(
             block.entries.get(0).unwrap().range.to_string(),
             "S288c.I(+):13267-13287".to_string()
@@ -350,7 +349,7 @@ GC-TAAAATATGAA-CGATATTTA-CCTGTAGAGGGACTATGGGAT-CCCCATACTACTTT--
             "RM11.gi_61385832(-):5590-5610".to_string()
         );
 
-        let block = next_fas_block(&mut reader).unwrap();
+        let block = crate::next_fas_block(&mut reader).unwrap();
         assert_eq!(
             String::from_utf8(block.entries.get(1).unwrap().seq.clone()).unwrap(),
             "GCGTATAATATGAACCAGTATCTTTTTCATGAAG-GGCTATGGTATACTCCATATTACTTCTA".to_string()

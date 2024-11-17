@@ -1,5 +1,4 @@
 use clap::*;
-use intspan::*;
 use itertools::Itertools;
 
 // Create clap subcommand arguments
@@ -47,7 +46,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     //----------------------------
     // Args
     //----------------------------
-    let mut writer = writer(args.get_one::<String>("outfile").unwrap());
+    let mut writer = intspan::writer(args.get_one::<String>("outfile").unwrap());
     let is_pair = args.get_flag("pair");
     let is_best = args.get_flag("best");
 
@@ -55,9 +54,9 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     // Operating
     //----------------------------
     for infile in args.get_many::<String>("infiles").unwrap() {
-        let mut reader = reader(infile);
+        let mut reader = intspan::reader(infile);
 
-        while let Ok(block) = next_fas_block(&mut reader) {
+        while let Ok(block) = fasr::next_fas_block(&mut reader) {
             let mut headers = vec![];
             for entry in &block.entries {
                 headers.push(entry.range().to_string());
@@ -80,7 +79,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
                         if i == j {
                             continue;
                         }
-                        let dist = pair_d(block.entries[i].seq(), block.entries[j].seq());
+                        let dist = fasr::pair_d(block.entries[i].seq(), block.entries[j].seq());
                         if dist < dist_idx.0 {
                             dist_idx = (dist, j);
                         }

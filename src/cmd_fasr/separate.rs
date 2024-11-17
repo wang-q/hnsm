@@ -1,5 +1,4 @@
 use clap::*;
-use intspan::*;
 use std::collections::BTreeMap;
 use std::fs;
 use std::fs::{File, OpenOptions};
@@ -71,9 +70,9 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     // Operating
     //----------------------------
     for infile in args.get_many::<String>("infiles").unwrap() {
-        let mut reader = reader(infile);
+        let mut reader = intspan::reader(infile);
 
-        while let Ok(block) = next_fas_block(&mut reader) {
+        while let Ok(block) = fasr::next_fas_block(&mut reader) {
             for entry in &block.entries {
                 let entry_name = entry.range().name(); // Don't borrow the following `range`
                 let mut range = entry.range().clone();

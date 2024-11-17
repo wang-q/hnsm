@@ -1,5 +1,4 @@
 use clap::*;
-use intspan::*;
 use std::collections::BTreeMap;
 use std::io::Write;
 
@@ -42,22 +41,22 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     //----------------------------
     // Args
     //----------------------------
-    let mut writer = writer(args.get_one::<String>("outfile").unwrap());
+    let mut writer = intspan::writer(args.get_one::<String>("outfile").unwrap());
 
     let mut name = if args.contains_id("name") {
         args.get_one::<String>("name").unwrap().to_string()
     } else {
         "".to_string()
     };
-    let mut block_of: BTreeMap<String, Vec<FasEntry>> = BTreeMap::new();
+    let mut block_of: BTreeMap<String, Vec<fasr::FasEntry>> = BTreeMap::new();
 
     //----------------------------
     // Operating
     //----------------------------
     for infile in args.get_many::<String>("infiles").unwrap() {
-        let mut reader = reader(infile);
+        let mut reader = intspan::reader(infile);
 
-        while let Ok(block) = next_fas_block(&mut reader) {
+        while let Ok(block) = fasr::next_fas_block(&mut reader) {
             if name.is_empty() {
                 name = block.names.first().unwrap().to_string();
             }

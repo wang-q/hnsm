@@ -1,5 +1,4 @@
 use clap::*;
-use intspan::*;
 use std::collections::BTreeMap;
 
 // Create clap subcommand arguments
@@ -51,10 +50,10 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     //----------------------------
     // Args
     //----------------------------
-    let mut writer = writer(args.get_one::<String>("outfile").unwrap());
+    let mut writer = intspan::writer(args.get_one::<String>("outfile").unwrap());
     let is_phylip = args.get_flag("phylip");
 
-    let needed = read_first_column(args.get_one::<String>("name.lst").unwrap());
+    let needed = intspan::read_first_column(args.get_one::<String>("name.lst").unwrap());
 
     let mut seq_of: BTreeMap<String, String> = BTreeMap::new();
     for name in &needed {
@@ -66,9 +65,9 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     // Operating
     //----------------------------
     for infile in args.get_many::<String>("infiles").unwrap() {
-        let mut reader = reader(infile);
+        let mut reader = intspan::reader(infile);
 
-        while let Ok(block) = next_fas_block(&mut reader) {
+        while let Ok(block) = fasr::next_fas_block(&mut reader) {
             let block_names = block.names;
             let length = block.entries.first().unwrap().seq().len();
 

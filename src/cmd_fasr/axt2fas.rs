@@ -1,5 +1,4 @@
 use clap::*;
-use intspan::*;
 
 // Create clap subcommand arguments
 pub fn make_subcommand() -> Command {
@@ -58,9 +57,9 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     //----------------------------
     // Args
     //----------------------------
-    let mut writer = writer(args.get_one::<String>("outfile").unwrap());
+    let mut writer = intspan::writer(args.get_one::<String>("outfile").unwrap());
 
-    let sizes = read_sizes(args.get_one::<String>("chr.sizes").unwrap());
+    let sizes = intspan::read_sizes(args.get_one::<String>("chr.sizes").unwrap());
 
     let tname = args.get_one::<String>("tname").unwrap();
     let qname = args.get_one::<String>("qname").unwrap();
@@ -69,9 +68,9 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     // Operating
     //----------------------------
     for infile in args.get_many::<String>("infiles").unwrap() {
-        let mut reader = reader(infile);
+        let mut reader = intspan::reader(infile);
 
-        while let Ok(block) = next_axt_block(&mut reader, &sizes, tname, qname) {
+        while let Ok(block) = fasr::next_axt_block(&mut reader, &sizes, tname, qname) {
             for entry in block.entries {
                 //----------------------------
                 // Output

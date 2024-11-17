@@ -1,5 +1,4 @@
 use clap::*;
-use intspan::*;
 use std::collections::BTreeMap;
 use std::io::Write;
 
@@ -49,10 +48,10 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     //----------------------------
     // Args
     //----------------------------
-    let mut writer = writer(args.get_one::<String>("outfile").unwrap());
+    let mut writer = intspan::writer(args.get_one::<String>("outfile").unwrap());
 
-    let json = read_json(args.get_one::<String>("runlist.json").unwrap());
-    let set = json2set(&json);
+    let json = intspan::read_json(args.get_one::<String>("runlist.json").unwrap());
+    let set = intspan::json2set(&json);
 
     let mut name = if args.contains_id("name") {
         args.get_one::<String>("name").unwrap().to_string()
@@ -64,9 +63,9 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     // Operating
     //----------------------------
     for infile in args.get_many::<String>("infiles").unwrap() {
-        let mut reader = reader(infile);
+        let mut reader = intspan::reader(infile);
 
-        while let Ok(block) = next_fas_block(&mut reader) {
+        while let Ok(block) = fasr::next_fas_block(&mut reader) {
             // the first name of the first block
             if name.is_empty() {
                 name = block.names.first().unwrap().to_string();
@@ -93,16 +92,16 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
             }
 
             // target sequence intspan
-            let t_ints_seq = seq_intspan(block.entries.get(idx.unwrap()).unwrap().seq());
+            let t_ints_seq = fasr::seq_intspan(block.entries.get(idx.unwrap()).unwrap().seq());
 
             // every sequence intspans
             let mut ints_seq_of = BTreeMap::new();
             // all indel region
-            let mut indel_ints = IntSpan::new();
+            let mut indel_ints = intspan::IntSpan::new();
             for (i, name) in block.names.iter().enumerate() {
                 let seq = block.entries.get(i).unwrap().seq();
-                ints_seq_of.insert(name.to_string(), seq_intspan(seq));
-                indel_ints.merge(&indel_intspan(seq));
+                ints_seq_of.insert(name.to_string(), fasr::seq_intspan(seq));
+                indel_ints.merge(&fasr::indel_intspan(seq));
             }
 
             // there may be more than one subslice intersect this alignment
@@ -110,13 +109,13 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
             for (lower, upper) in i_ints_chr.spans() {
                 // chr positions to align
                 let ss_start =
-                    chr_to_align(&t_ints_seq, lower, trange.start, trange.strand()).unwrap();
+                    fasr::chr_to_align(&t_ints_seq, lower, trange.start, trange.strand()).unwrap();
                 let ss_end =
-                    chr_to_align(&t_ints_seq, upper, trange.start, trange.strand()).unwrap();
+                    fasr::chr_to_align(&t_ints_seq, upper, trange.start, trange.strand()).unwrap();
                 if ss_start >= ss_end {
                     continue;
                 }
-                let mut ss_ints = IntSpan::from_pair(ss_start, ss_end);
+                let mut ss_ints = intspan::IntSpan::from_pair(ss_start, ss_end);
 
                 // borders of subslice inside an indel
                 for n in [ss_start, ss_end] {
@@ -136,22 +135,27 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
                 // align positions to chromosomes of difference species
                 for (i, name) in block.names.iter().enumerate() {
                     let range = block.entries.get(i).unwrap().range();
-                    let start = align_to_chr(
+                    let start = fasr::align_to_chr(
                         ints_seq_of.get(name).unwrap(),
                         ss_start,
                         range.start,
                         range.strand(),
                     )
                     .unwrap();
-                    let end = align_to_chr(
+                    let end = fasr::align_to_chr(
                         ints_seq_of.get(name).unwrap(),
                         ss_end,
                         range.start,
                         range.strand(),
                     )
                     .unwrap();
-                    let ss_range =
-                        Range::from_full(range.name(), range.chr(), range.strand(), start, end);
+                    let ss_range = intspan::Range::from_full(
+                        range.name(),
+                        range.chr(),
+                        range.strand(),
+                        start,
+                        end,
+                    );
 
                     // seq of this sub slice
                     let ss_seq = &block.entries.get(i).unwrap().seq()

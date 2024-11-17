@@ -1,6 +1,6 @@
-use crate::*;
 use anyhow::{anyhow, bail};
 use bio::io::fasta;
+use intspan::IntSpan;
 use itertools::Itertools;
 use std::cmp::min;
 use std::collections::{BTreeMap, HashSet};
@@ -752,7 +752,7 @@ pub fn align_seqs(seqs: &[String], aligner: &str) -> anyhow::Result<Vec<String>>
     for _ in 0..seqs.len() {
         out_seqs.push("".to_string());
     }
-    let reader = reader(seq_out_path.to_string_lossy().as_ref());
+    let reader = intspan::reader(seq_out_path.to_string_lossy().as_ref());
     let fa_in = fasta::Reader::new(reader);
     for result in fa_in.records() {
         // obtain record or fail with error
@@ -1186,7 +1186,7 @@ pub fn trim_complex_indel(seqs: &mut Vec<String>) -> String {
 /// assert_eq!(rangec[3].end, 19);
 ///
 /// ```
-pub fn trim_head_tail(seqs: &mut Vec<String>, ranges: &mut Vec<Range>, chop: usize) {
+pub fn trim_head_tail(seqs: &mut Vec<String>, ranges: &mut Vec<intspan::Range>, chop: usize) {
     let seq_count = seqs.len();
 
     if chop == 0 {
