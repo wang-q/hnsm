@@ -48,7 +48,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     } else {
         "".to_string()
     };
-    let mut block_of: BTreeMap<String, Vec<fasr::FasEntry>> = BTreeMap::new();
+    let mut block_of: BTreeMap<String, Vec<hnsm::FasEntry>> = BTreeMap::new();
 
     //----------------------------
     // Operating
@@ -56,7 +56,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     for infile in args.get_many::<String>("infiles").unwrap() {
         let mut reader = intspan::reader(infile);
 
-        while let Ok(block) = fasr::next_fas_block(&mut reader) {
+        while let Ok(block) = hnsm::next_fas_block(&mut reader) {
             if name.is_empty() {
                 name = block.names.first().unwrap().to_string();
             }

@@ -61,7 +61,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     for infile in args.get_many::<String>("infiles").unwrap() {
         let mut reader = intspan::reader(infile);
 
-        while let Ok(block) = fasr::next_fas_block(&mut reader) {
+        while let Ok(block) = hnsm::next_fas_block(&mut reader) {
             let target = block.entries.first().unwrap().range().to_string();
 
             let mut seqs: Vec<&[u8]> = vec![];
@@ -74,11 +74,11 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
             }
 
             // let (length, comparable, difference, gap, ambiguous, mean_d) = alignment_stat(&seqs);
-            let result = fasr::alignment_stat(&seqs);
+            let result = hnsm::alignment_stat(&seqs);
 
             let mut indel_ints = intspan::IntSpan::new();
             for seq in seqs {
-                indel_ints.merge(&fasr::indel_intspan(seq));
+                indel_ints.merge(&hnsm::indel_intspan(seq));
             }
 
             writer.write_all(

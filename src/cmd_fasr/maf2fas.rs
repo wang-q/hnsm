@@ -41,7 +41,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     for infile in args.get_many::<String>("infiles").unwrap() {
         let mut reader = intspan::reader(infile);
 
-        while let Ok(block) = fasr::next_maf_block(&mut reader) {
+        while let Ok(block) = hnsm::next_maf_block(&mut reader) {
             // Can't use reference as entry.alignment does not Copy
             for entry in block.entries {
                 let range = entry.to_range();

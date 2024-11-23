@@ -84,7 +84,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     for infile in args.get_many::<String>("infiles").unwrap() {
         let mut reader = intspan::reader(infile);
 
-        'BLOCK: while let Ok(block) = fasr::next_fas_block(&mut reader) {
+        'BLOCK: while let Ok(block) = hnsm::next_fas_block(&mut reader) {
             // --name
             let idx = if args.contains_id("name") {
                 let name = args.get_one::<String>("name").unwrap();
@@ -133,7 +133,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
                 //----------------------------
                 // Output
                 //----------------------------
-                let out_entry = fasr::FasEntry::from(entry.range(), &out_seq);
+                let out_entry = hnsm::FasEntry::from(entry.range(), &out_seq);
                 writer.write_all(out_entry.to_string().as_ref())?;
             }
 

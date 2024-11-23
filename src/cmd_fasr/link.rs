@@ -56,7 +56,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     for infile in args.get_many::<String>("infiles").unwrap() {
         let mut reader = intspan::reader(infile);
 
-        while let Ok(block) = fasr::next_fas_block(&mut reader) {
+        while let Ok(block) = hnsm::next_fas_block(&mut reader) {
             let mut headers = vec![];
             for entry in &block.entries {
                 headers.push(entry.range().to_string());
@@ -79,7 +79,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
                         if i == j {
                             continue;
                         }
-                        let dist = fasr::pair_d(block.entries[i].seq(), block.entries[j].seq());
+                        let dist = hnsm::pair_d(block.entries[i].seq(), block.entries[j].seq());
                         if dist < dist_idx.0 {
                             dist_idx = (dist, j);
                         }

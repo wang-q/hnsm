@@ -70,7 +70,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     for infile in args.get_many::<String>("infiles").unwrap() {
         let mut reader = intspan::reader(infile);
 
-        while let Ok(block) = fasr::next_axt_block(&mut reader, &sizes, tname, qname) {
+        while let Ok(block) = hnsm::next_axt_block(&mut reader, &sizes, tname, qname) {
             for entry in block.entries {
                 //----------------------------
                 // Output

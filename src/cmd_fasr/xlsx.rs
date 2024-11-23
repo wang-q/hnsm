@@ -78,7 +78,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     for infile in args.get_many::<String>("infiles").unwrap() {
         let mut reader = intspan::reader(infile);
 
-        while let Ok(block) = fasr::next_fas_block(&mut reader) {
+        while let Ok(block) = hnsm::next_fas_block(&mut reader) {
             let mut seqs: Vec<&[u8]> = vec![];
             for entry in &block.entries {
                 seqs.push(entry.seq().as_ref());
@@ -88,11 +88,11 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
             //   0,     1,     2,     3,         4,    5,       6,     7
             let mut seq_count = seqs.len();
             let subs = if has_outgroup {
-                let mut unpolarized = fasr::get_subs(&seqs[..(seq_count - 1)]).unwrap();
-                fasr::polarize_subs(&mut unpolarized, seqs[seq_count - 1]);
+                let mut unpolarized = hnsm::get_subs(&seqs[..(seq_count - 1)]).unwrap();
+                hnsm::polarize_subs(&mut unpolarized, seqs[seq_count - 1]);
                 unpolarized
             } else {
-                fasr::get_subs(&seqs).unwrap()
+                hnsm::get_subs(&seqs).unwrap()
             };
 
             let sec_height = seq_count + 2; // 1 for pos, 1 for spacing

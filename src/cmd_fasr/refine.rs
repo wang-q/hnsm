@@ -109,7 +109,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
 
         for infile in args.get_many::<String>("infiles").unwrap() {
             let mut reader = intspan::reader(infile);
-            while let Ok(block) = fasr::next_fas_block(&mut reader) {
+            while let Ok(block) = hnsm::next_fas_block(&mut reader) {
                 let out_string = proc_block(&block, args)?;
                 writer.write_all(out_string.as_ref())?;
             }
@@ -121,7 +121,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     Ok(())
 }
 
-fn proc_block(block: &fasr::FasBlock, args: &ArgMatches) -> anyhow::Result<String> {
+fn proc_block(block: &hnsm::FasBlock, args: &ArgMatches) -> anyhow::Result<String> {
     //----------------------------
     // Args
     //----------------------------
@@ -149,23 +149,23 @@ fn proc_block(block: &fasr::FasBlock, args: &ArgMatches) -> anyhow::Result<Strin
         }
     } else {
         if is_quick {
-            aligned = fasr::align_seqs_quick(&seqs, msa, pad as i32, fill as i32)?;
+            aligned = hnsm::align_seqs_quick(&seqs, msa, pad as i32, fill as i32)?;
         } else {
-            aligned = fasr::align_seqs(&seqs, msa)?;
+            aligned = hnsm::align_seqs(&seqs, msa)?;
         }
     };
 
     //----------------------------
     // Trimming
     //----------------------------
-    fasr::trim_pure_dash(&mut aligned);
+    hnsm::trim_pure_dash(&mut aligned);
     if has_outgroup {
-        fasr::trim_outgroup(&mut aligned);
-        let _ = fasr::trim_complex_indel(&mut aligned);
+        hnsm::trim_outgroup(&mut aligned);
+        let _ = hnsm::trim_complex_indel(&mut aligned);
     }
 
     if chop > 0 {
-        fasr::trim_head_tail(&mut aligned, &mut ranges, chop);
+        hnsm::trim_head_tail(&mut aligned, &mut ranges, chop);
     }
 
     //----------------------------
@@ -189,7 +189,7 @@ fn proc_block_p(args: &ArgMatches) -> anyhow::Result<()> {
     let mut writer = intspan::writer(args.get_one::<String>("outfile").unwrap());
 
     // Channel 1 - Read files to blocks
-    let (snd1, rcv1) = bounded::<fasr::FasBlock>(10);
+    let (snd1, rcv1) = bounded::<hnsm::FasBlock>(10);
     // Channel 2 - Results
     let (snd2, rcv2) = bounded(10);
 
@@ -200,7 +200,7 @@ fn proc_block_p(args: &ArgMatches) -> anyhow::Result<()> {
         s.spawn(|_| {
             for infile in args.get_many::<String>("infiles").unwrap() {
                 let mut reader = intspan::reader(infile);
-                while let Ok(block) = fasr::next_fas_block(&mut reader) {
+                while let Ok(block) = hnsm::next_fas_block(&mut reader) {
                     snd1.send(block).unwrap();
                 }
             }

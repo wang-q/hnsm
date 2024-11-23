@@ -104,6 +104,9 @@ Cargo.lock
 
 *.tsv
 *.lst
+*.sizes
+*.xlsx
 
+PL-*/
 /tmp/
 tmp.*

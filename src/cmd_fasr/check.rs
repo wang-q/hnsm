@@ -59,7 +59,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     for infile in args.get_many::<String>("infiles").unwrap() {
         let mut reader = intspan::reader(infile);
 
-        while let Ok(block) = fasr::next_fas_block(&mut reader) {
+        while let Ok(block) = hnsm::next_fas_block(&mut reader) {
             let block_names = block.names;
 
             if args.contains_id("name") {
@@ -89,7 +89,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     Ok(())
 }
 
-fn check_seq(entry: &fasr::FasEntry, genome: &str) -> anyhow::Result<String> {
+fn check_seq(entry: &hnsm::FasEntry, genome: &str) -> anyhow::Result<String> {
     let range = entry.range();
     let seq = if range.strand() == "-" {
         bio::alphabets::dna::revcomp(entry.seq())
