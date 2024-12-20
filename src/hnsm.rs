@@ -25,6 +25,7 @@ fn main() -> anyhow::Result<()> {
         .subcommand(cmd::distance::make_subcommand())
         .subcommand(cmd::filter::make_subcommand())
         .subcommand(cmd::gz::make_subcommand())
+        .subcommand(cmd::interleave::make_subcommand())
         .subcommand(cmd::masked::make_subcommand())
         .subcommand(cmd::n50::make_subcommand())
         .subcommand(cmd::one::make_subcommand())
@@ -82,6 +83,7 @@ Subcommand groups:
         Some(("rc", sub_matches)) => cmd::rc::execute(sub_matches),
         Some(("filter", sub_matches)) => cmd::filter::execute(sub_matches),
         Some(("dedup", sub_matches)) => cmd::dedup::execute(sub_matches),
+        Some(("interleave", sub_matches)) => cmd::interleave::execute(sub_matches),
         //
         Some(("sixframe", sub_matches)) => cmd::sixframe::execute(sub_matches),
         // index

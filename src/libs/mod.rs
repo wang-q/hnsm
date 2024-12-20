@@ -1,9 +1,9 @@
+pub mod alignment;
 pub mod dbscan;
+pub mod fas;
 pub mod hash;
 pub mod io;
 pub mod loc;
 pub mod matrix;
 pub mod mds;
 pub mod nt;
-pub mod alignment;
-pub mod fas;
