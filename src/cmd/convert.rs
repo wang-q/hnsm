@@ -1,6 +1,6 @@
 use clap::*;
-use std::io::{BufRead, Write};
 use hnsm::ScoringMatrix;
+use std::io::{BufRead, Write};
 
 // Create clap subcommand arguments
 pub fn make_subcommand() -> Command {
@@ -124,7 +124,11 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
 }
 
 // Process a single line of the PHYLIP matrix and output pairwise distances
-fn process_phylip_line(line: &str, names: &mut Vec<String>, writer: &mut Box<dyn Write>) -> anyhow::Result<()> {
+fn process_phylip_line(
+    line: &str,
+    names: &mut Vec<String>,
+    writer: &mut Box<dyn Write>,
+) -> anyhow::Result<()> {
     let parts: Vec<&str> = line.trim().split_whitespace().collect();
     if parts.len() >= 1 {
         let name = parts[0].to_string();

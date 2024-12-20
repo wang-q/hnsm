@@ -1,6 +1,6 @@
 use clap::*;
-use std::io::{BufRead, Write};
 use hnsm::ScoringMatrix;
+use std::io::{BufRead, Write};
 
 // Create clap subcommand arguments
 pub fn make_subcommand() -> Command {
