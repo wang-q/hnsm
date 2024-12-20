@@ -62,7 +62,7 @@ impl FasEntry {
     ///
     /// ```
     /// # use intspan::Range;
-    /// # use intspan::FasEntry;
+    /// # use hnsm::FasEntry;
     /// let range = Range::from("I", 1, 10);
     /// let seq = "ACAGCTGA-AA".as_bytes().to_vec();
     /// let entry = FasEntry::from(&range, &seq);
@@ -83,7 +83,7 @@ impl FasEntry {
 ///
 /// ```
 /// # use intspan::Range;
-/// # use intspan::FasEntry;
+/// # use hnsm::FasEntry;
 /// let range = Range::from("I", 1, 10);
 /// let seq = "ACAGCTGA-AA".as_bytes().to_vec();
 /// let entry = FasEntry::from(&range, &seq);
