@@ -53,16 +53,21 @@ cargo build
 ### `hnsm help`
 
 ```text
-Homogeneous Nucleic acids Smart Matching
+Homogeneous Nucleic acids/amino acids Smart Matching
 
 Usage: hnsm [COMMAND]
 
 Commands:
+  chain       Chains of syntenic genes
   cluster     Clustering based on pairwise distances
+  convert     Conversion between pairwise distances and a distance matrix
   count       Count base statistics in FA file(s)
+  das         Domain architecture similarity
+  dedup       Deduplicate records in FA file(s)
   distance    Estimate distances between DNA/protein sequences
   filter      Filter records in FA file(s)
   gz          Compressing a file using the blocked gzip format (BGZF)
+  interleave  Interleave two PE files
   masked      Masked regions in FA file(s)
   n50         Count total bases in FA file(s)
   one         Extract one FA record
@@ -70,6 +75,7 @@ Commands:
   range       Extract sequences defined by the range(s)
   rc          Reverse complement a FA file
   replace     Replace headers of a FA file
+  manifold    Manifold learning based on pairwise distances
   similarity  Similarity of vectors
   sixframe    Six-Frame Translation
   size        Count total bases in FA file(s)
@@ -87,13 +93,21 @@ Subcommand groups:
 * Fasta files
     * info: size / count / masked / n50
     * records: one / some / order / split
-    * transform: replace / rc / filter
+    * transform: replace / rc / filter / dedup
     * indexing: gz / range
+
+* Fastq files
+    * interleave
 
 * Clustering
     * vectors: similarity
     * DNA/protein: distance / identity
     * cluster
+    * reduction
+
+* Synteny
+    * das
+    * chain
 
 * <infiles> are paths to fasta files, .fa.gz is supported
     * infile == stdin means reading from STDIN
