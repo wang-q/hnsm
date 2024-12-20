@@ -15,6 +15,7 @@
   * [Examples](#examples)
     * [Fasta files](#fasta-files)
     * [Index](#index)
+    * [Fastq](#fastq)
     * [Clustering](#clustering)
       * [Similarity and dissimilarity (distance) of vectors](#similarity-and-dissimilarity-distance-of-vectors)
       * [Pairwise distances by Minimizer](#pairwise-distances-by-minimizer)
@@ -120,8 +121,8 @@ hnsm filter -a 10 -z 50 -U tests/fasta/ufasta.fa
 hnsm filter -a 1 -u tests/fasta/ufasta.fa tests/fasta/ufasta.fa.gz
 hnsm filter --iupac --upper tests/fasta/filter.fa
 
-cargo run --bin hnsm dedup tests/fasta/dedup.fa
-cargo run --bin hnsm dedup tests/fasta/dedup.fa -s -b -f stdout
+hnsm dedup tests/fasta/dedup.fa
+hnsm dedup tests/fasta/dedup.fa -s -b -f stdout
 
 hnsm replace tests/fasta/ufasta.fa tests/fasta/replace.tsv
 hnsm rc tests/fasta/ufasta.fa
@@ -164,6 +165,21 @@ samtools faidx tests/index/final.contigs.fa -r tests/index/sample.rg
 hnsm range tests/index/final.contigs.fa.gz \
     "k81_130" "k81_130:11-20" "k81_170:304-323" "k81_170(-):1-20" "k81_158:70001-70020"
 hnsm range tests/index/final.contigs.fa.gz -r tests/index/sample.rg
+
+```
+
+### Fastq
+
+```shell
+hnsm interleave tests/fasta/ufasta.fa.gz tests/fasta/ufasta.fa
+
+hnsm interleave tests/fasta/ufasta.fa
+
+hnsm interleave --fq tests/fasta/ufasta.fa
+
+hnsm interleave --fq tests/fastq/R1.fq.gz tests/fastq/R2.fq.gz
+
+hnsm interleave --fq tests/fastq/R1.fq.gz
 
 ```
 
@@ -252,11 +268,11 @@ K1J4J6_9GAMM        0.372263 0.416058 0.496350 0.518248 0.569343 0.372263 0.3722
 #### Matrix conversion
 
 ```shell
-cargo run --bin hnsm convert tests/clust/IBPA.fa.tsv --mode matrix
+hnsm convert tests/clust/IBPA.fa.tsv --mode matrix
 
-cargo run --bin hnsm convert tests/clust/IBPA.fa.tsv --mode lower
+hnsm convert tests/clust/IBPA.fa.tsv --mode lower
 
-cargo run --bin hnsm convert tests/clust/IBPA.mat --mode pair
+hnsm convert tests/clust/IBPA.mat --mode pair
 
 ```
 
@@ -267,7 +283,7 @@ hnsm cluster tests/clust/IBPA.fa.tsv --mode dbscan --eps 0.05 --min_points 2
 
 cat tests/clust/IBPA.fa.tsv |
     tsv-filter --le 3:0.05 |
-    cargo run --bin hnsm cluster stdin --mode cc
+    hnsm cluster stdin --mode cc
 
 ```
 
@@ -296,13 +312,13 @@ fasr cover tests/fasr/example.fas --name S288c --trim 10
 fasr concat tests/fasr/name.lst tests/fasr/example.fas
 
 fasr subset tests/fasr/name.lst tests/fasr/example.fas
-cargo run --bin fasr subset tests/fasr/name.lst tests/fasr/refine.fas --required
+fasr subset tests/fasr/name.lst tests/fasr/refine.fas --required
 
 fasr link tests/fasr/example.fas --pair
 fasr link tests/fasr/example.fas --best
 
-cargo run --bin fasr replace tests/fasr/replace.tsv tests/fasr/example.fas
-cargo run --bin fasr replace tests/fasr/replace.fail.tsv tests/fasr/example.fas
+fasr replace tests/fasr/replace.tsv tests/fasr/example.fas
+fasr replace tests/fasr/replace.fail.tsv tests/fasr/example.fas
 
 samtools faidx tests/fasr/NC_000932.fa NC_000932:1-10
 

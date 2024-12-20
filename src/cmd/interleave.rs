@@ -1,5 +1,4 @@
 use clap::*;
-use noodles_fastq::Record;
 use std::io::Write;
 
 // Create clap subcommand arguments
@@ -155,7 +154,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
                     write_fa(
                         &mut writer,
                         &format!("{}{}/2", opt_prefix, opt_start),
-                        b"\n",
+                        b"N",
                     )?;
                 }
 
@@ -169,7 +168,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
             let reader = intspan::reader(infiles[1]);
             let mut seq2_in = noodles_fastq::io::Reader::new(reader);
 
-            let mut zipped = std::iter::zip(seq1_in.records(), seq2_in.records());
+            let zipped = std::iter::zip(seq1_in.records(), seq2_in.records());
 
             for (result1, result2) in zipped {
                 // obtain record or fail with error
@@ -218,7 +217,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
             let reader = intspan::reader(infiles[1]);
             let mut seq2_in = noodles_fasta::io::Reader::new(reader);
 
-            let mut zipped = std::iter::zip(seq1_in.records(), seq2_in.records());
+            let zipped = std::iter::zip(seq1_in.records(), seq2_in.records());
 
             for (result1, result2) in zipped {
                 // obtain record or fail with error
