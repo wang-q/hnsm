@@ -59,7 +59,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     let writer = intspan::writer(args.get_one::<String>("outfile").unwrap());
     let mut fa_out = fasta::io::writer::Builder::default()
         .set_line_base_count(usize::MAX)
-        .build_with_writer(writer);
+        .build_from_writer(writer);
 
     for result in fa_in.records() {
         // obtain record or fail with error

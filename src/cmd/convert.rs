@@ -1,5 +1,4 @@
 use clap::*;
-use hnsm::ScoringMatrix;
 use std::io::{BufRead, Write};
 
 // Create clap subcommand arguments
