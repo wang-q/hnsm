@@ -49,6 +49,9 @@ Subcommand groups:
     * transform: replace / rc / filter / dedup
     * indexing: gz / range
 
+* Fastq files
+    * interleave
+
 * Clustering
     * vectors: similarity
     * DNA/protein: distance / identity
