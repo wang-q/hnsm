@@ -382,6 +382,14 @@ cargo run --bin fasr pl-p2m tests/fasr/S288cvsRM11_1a.slice.fas tests/fasr/S288c
 
 ```
 
+### Genomes
+
+```shell
+cargo run --bin pgr rept tests/pgr/mg1655.fa.gz
+
+
+```
+
 ## Author
 
 Qiang Wang <wang-q@outlook.com>

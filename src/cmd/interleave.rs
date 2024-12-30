@@ -151,11 +151,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
                     )?;
 
                     // R2
-                    write_fa(
-                        &mut writer,
-                        &format!("{}{}/2", opt_prefix, opt_start),
-                        b"N",
-                    )?;
+                    write_fa(&mut writer, &format!("{}{}/2", opt_prefix, opt_start), b"N")?;
                 }
 
                 opt_start += 1;

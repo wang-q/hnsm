@@ -24,7 +24,7 @@ tera = "1.20.0"
 
 crossbeam = "0.8.4"
 
-intspan = "0.8.0"
+intspan = "0.8.4"
 noodles = { version = "0.86.0", features = ["core", "fasta", "fastq", "bgzf"] }
 noodles-core = "0.15.0"
 noodles-fasta = "0.46.0"
@@ -63,6 +63,10 @@ path = "src/hnsm.rs"
 [[bin]]
 name = "fasr"
 path = "src/fasr.rs"
+
+[[bin]]
+name = "pgr"
+path = "src/pgr.rs"
 
 [build-dependencies]
 

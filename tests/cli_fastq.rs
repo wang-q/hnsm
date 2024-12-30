@@ -57,8 +57,22 @@ fn command_interleave_fq() -> anyhow::Result<()> {
 
     assert_eq!(stdout.lines().into_iter().filter(|e| *e == "!").count(), 0);
     assert_eq!(stdout.lines().into_iter().filter(|e| *e == "+").count(), 50);
-    assert_eq!(stdout.lines().into_iter().filter(|e| e.ends_with("/1") ).count(), 25);
-    assert_eq!(stdout.lines().into_iter().filter(|e| e.ends_with("/2") ).count(), 25);
+    assert_eq!(
+        stdout
+            .lines()
+            .into_iter()
+            .filter(|e| e.ends_with("/1"))
+            .count(),
+        25
+    );
+    assert_eq!(
+        stdout
+            .lines()
+            .into_iter()
+            .filter(|e| e.ends_with("/2"))
+            .count(),
+        25
+    );
 
     // fq (single)
     let mut cmd = Command::cargo_bin("hnsm")?;
@@ -72,8 +86,22 @@ fn command_interleave_fq() -> anyhow::Result<()> {
 
     assert_eq!(stdout.lines().into_iter().filter(|e| *e == "!").count(), 25);
     assert_eq!(stdout.lines().into_iter().filter(|e| *e == "+").count(), 50);
-    assert_eq!(stdout.lines().into_iter().filter(|e| e.ends_with("/1") ).count(), 25);
-    assert_eq!(stdout.lines().into_iter().filter(|e| e.ends_with("/2") ).count(), 25);
+    assert_eq!(
+        stdout
+            .lines()
+            .into_iter()
+            .filter(|e| e.ends_with("/1"))
+            .count(),
+        25
+    );
+    assert_eq!(
+        stdout
+            .lines()
+            .into_iter()
+            .filter(|e| e.ends_with("/2"))
+            .count(),
+        25
+    );
 
     Ok(())
 }

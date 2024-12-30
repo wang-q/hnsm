@@ -2,6 +2,9 @@
 
 ## Unreleased - ReleaseDate
 
+* New binary `pgr`
+    * `pgr rept`
+
 ## 0.2.0 - 2024-12-20
 
 * New binary `fasr`, ported from `App::Fasops`
