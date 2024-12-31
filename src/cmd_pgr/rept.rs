@@ -112,7 +112,12 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     run_cmd!(info "==> Switch to outdir")?;
     env::set_current_dir(tempdir_str)?;
 
-    run_cmd!(info "==> chr.sizes")?;
+    run_cmd!(info "==> FastK")?;
+    run_cmd!(
+        FastK -p -k${opt_kmer} -Ngenome ${abs_infile}
+    )?;
+
+    run_cmd!(info "==> Process each chromosomes")?;
     run_cmd!(
         hnsm size ${abs_infile} -o chr.sizes
     )?;
@@ -125,12 +130,6 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
         }
     }
 
-    run_cmd!(info "==> FastK")?;
-    run_cmd!(
-        FastK -p -k${opt_kmer} -Ngenome ${abs_infile}
-    )?;
-
-    run_cmd!(info "==> Process each chromosomes")?;
     let re_prof: regex::Regex = regex::Regex::new(
         r"(?xi)
             (?<start>\d+)       # start
@@ -172,11 +171,10 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
 
     run_cmd!(info "==> Outputs")?;
     run_cmd!(
-    cat $[rg_files] |
-        spanr cover stdin |
-        spanr span --op fill -n ${opt_fk} stdin |
-        spanr span --op excise -n ${opt_min} stdin |
-        spanr span --op fill -n ${opt_ff} stdin -o ${abs_outfile}
+        spanr cover $[rg_files] |
+            spanr span --op fill -n ${opt_fk} stdin |
+            spanr span --op excise -n ${opt_min} stdin |
+            spanr span --op fill -n ${opt_ff} stdin -o ${abs_outfile}
     )?;
 
     //----------------------------
