@@ -12,11 +12,15 @@ fn main() -> anyhow::Result<()> {
         .arg_required_else_help(true)
         .color(ColorChoice::Auto)
         .subcommand(cmd_pgr::rept::make_subcommand())
+        .subcommand(cmd_pgr::trf::make_subcommand())
         .after_help(
             r###"
 Reimplementation of PopCOGenT (populations as clusters of gene transfer)
 
 Subcommand groups:
+
+* External binary wrapper:
+    * rept / trf
 
 "###,
         );
@@ -24,6 +28,7 @@ Subcommand groups:
     // Check which subcomamnd the user ran...
     match app.get_matches().subcommand() {
         Some(("rept", sub_matches)) => cmd_pgr::rept::execute(sub_matches),
+        Some(("trf", sub_matches)) => cmd_pgr::trf::execute(sub_matches),
         _ => unreachable!(),
     }
     .unwrap();
@@ -31,5 +36,4 @@ Subcommand groups:
     Ok(())
 }
 
-// TODO: rept
 // TODO: paralog
