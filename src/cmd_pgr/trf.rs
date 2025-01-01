@@ -135,7 +135,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     //----------------------------
     // Ops
     //----------------------------
-    run_cmd!(info "==> Switch to outdir")?;
+    run_cmd!(info "==> Switch to tempdir")?;
     env::set_current_dir(tempdir_str)?;
 
     run_cmd!(info "==> Split by names")?;
