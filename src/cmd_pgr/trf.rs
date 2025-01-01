@@ -26,7 +26,7 @@ This command identifies tandem repeats in a genome via `trf`.
                 .required(true)
                 .num_args(1)
                 .index(1)
-                .help("Input file to process."),
+                .help("Input file to process"),
         )
         .arg(
             Arg::new("match")
@@ -143,7 +143,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
         hnsm split name ${abs_infile} -o .
     )?;
 
-    run_cmd!(info "==> Process each chromosomes")?;
+    run_cmd!(info "==> Process each chromosome")?;
     run_cmd!(
         hnsm size ${abs_infile} -o chr.sizes
     )?;
@@ -205,15 +205,3 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     Ok(())
 }
 
-// use std::io::{Read, Write};
-// fn pause() {
-//     let mut stdin = std::io::stdin();
-//     let mut stdout = std::io::stdout();
-//
-//     // We want the cursor to stay at the end of the line, so we print without a newline and flush manually.
-//     write!(stdout, "Press any key to continue...").unwrap();
-//     stdout.flush().unwrap();
-//
-//     // Read a single byte and discard
-//     let _ = stdin.read(&mut [0u8]).unwrap();
-// }
