@@ -26,6 +26,7 @@ fn main() -> anyhow::Result<()> {
         .subcommand(cmd::filter::make_subcommand())
         .subcommand(cmd::gz::make_subcommand())
         .subcommand(cmd::interleave::make_subcommand())
+        .subcommand(cmd::mask::make_subcommand())
         .subcommand(cmd::masked::make_subcommand())
         .subcommand(cmd::n50::make_subcommand())
         .subcommand(cmd::one::make_subcommand())
@@ -46,7 +47,7 @@ Subcommand groups:
 * Fasta files
     * info: size / count / masked / n50
     * records: one / some / order / split
-    * transform: replace / rc / filter / dedup
+    * transform: replace / rc / filter / dedup / mask
     * indexing: gz / range
 
 * Fastq files
@@ -86,12 +87,14 @@ Subcommand groups:
         Some(("rc", sub_matches)) => cmd::rc::execute(sub_matches),
         Some(("filter", sub_matches)) => cmd::filter::execute(sub_matches),
         Some(("dedup", sub_matches)) => cmd::dedup::execute(sub_matches),
-        Some(("interleave", sub_matches)) => cmd::interleave::execute(sub_matches),
+        Some(("mask", sub_matches)) => cmd::mask::execute(sub_matches),
         //
         Some(("sixframe", sub_matches)) => cmd::sixframe::execute(sub_matches),
         // index
         Some(("gz", sub_matches)) => cmd::gz::execute(sub_matches),
         Some(("range", sub_matches)) => cmd::range::execute(sub_matches),
+        // fastq
+        Some(("interleave", sub_matches)) => cmd::interleave::execute(sub_matches),
         // clustering
         Some(("distance", sub_matches)) => cmd::distance::execute(sub_matches),
         Some(("similarity", sub_matches)) => cmd::similarity::execute(sub_matches),
@@ -109,7 +112,6 @@ Subcommand groups:
 }
 
 // TODO:
-//  interleave
 //  sort
 //  identity: accurate pairwise sequence identity
 //    https://lh3.github.io/2018/11/25/on-the-definition-of-sequence-identity

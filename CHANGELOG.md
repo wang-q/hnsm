@@ -7,6 +7,8 @@
     * `pgr trf`
     * `pgr ir`
 
+* Add `hnsm mask`
+
 ## 0.2.0 - 2024-12-20
 
 * New binary `fasr`, ported from `App::Fasops`

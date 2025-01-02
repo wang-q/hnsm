@@ -163,6 +163,36 @@ fn command_masked() -> anyhow::Result<()> {
 }
 
 #[test]
+fn command_mask() -> anyhow::Result<()> {
+    let mut cmd = Command::cargo_bin("hnsm")?;
+    let output = cmd
+        .arg("mask")
+        .arg("tests/fasta/ufasta.fa")
+        .arg("tests/fasta/mask.json")
+        .output()
+        .unwrap();
+    let stdout = String::from_utf8(output.stdout).unwrap();
+
+    assert!(stdout.contains("read0\ntcgtttaacccaaatcaagg"), "read0");
+    assert!(stdout.contains("read2\natagcaagct"), "read2");
+
+    let mut cmd = Command::cargo_bin("hnsm")?;
+    let output = cmd
+        .arg("mask")
+        .arg("--hard")
+        .arg("tests/fasta/ufasta.fa")
+        .arg("tests/fasta/mask.json")
+        .output()
+        .unwrap();
+    let stdout = String::from_utf8(output.stdout).unwrap();
+
+    assert!(stdout.contains("read0\nNNNNNNNNNNNNNNNNNNNN"), "read0");
+    assert!(stdout.contains("read2\nNNNNNNNNNN"), "read2");
+
+    Ok(())
+}
+
+#[test]
 fn command_rc() -> anyhow::Result<()> {
     let mut cmd = Command::cargo_bin("hnsm")?;
     let output = cmd.arg("rc").arg("tests/fasta/ufasta.fa").output().unwrap();
