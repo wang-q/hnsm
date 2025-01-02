@@ -138,6 +138,8 @@ hnsm filter --iupac --upper tests/fasta/filter.fa
 hnsm dedup tests/fasta/dedup.fa
 hnsm dedup tests/fasta/dedup.fa -s -b -f stdout
 
+hnsm mask --hard tests/fasta/ufasta.fa tests/fasta/mask.json
+
 hnsm replace tests/fasta/ufasta.fa tests/fasta/replace.tsv
 hnsm rc tests/fasta/ufasta.fa
 
