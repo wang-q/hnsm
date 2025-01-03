@@ -1,4 +1,4 @@
-##aligner=lastz.v1.04.00
+##aligner=lastz.v1.04.41 --nochain 
 ##matrix=blastz 16 91,-114,-31,-123,-114,100,-125,-31,-31,-125,100,-114,-123,-31,-114,91
 ##gapPenalties=blastz O=400 E=30
 ##blastzParms=O=400,E=30,K=3000,L=3000,M=0
