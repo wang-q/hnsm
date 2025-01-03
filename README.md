@@ -401,9 +401,18 @@ cargo run --bin pgr trf tests/pgr/mg1655.fa.gz \
 spanr stat tests/pgr/mg1655.chr.sizes tests/pgr/mg1655.rm.json
 spanr statop tests/pgr/mg1655.chr.sizes tests/pgr/mg1655.ir.json tests/pgr/mg1655.rm.json
 
-hnsm size tests/pgr/tncentral.fa.gz
-
 cargo run --bin pgr chain tests/pgr/pseudocat.fa tests/pgr/pseudopig.fa tests/pgr/lastz.psl
+
+```
+
+* genomes
+
+```shell
+curl -L https://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/000/005/845/GCF_000005845.2_ASM584v2/GCF_000005845.2_ASM584v2_genomic.fna.gz \
+    > tests/pgr/mg1655.fa.gz
+
+curl -L https://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/000/008/865/GCF_000008865.2_ASM886v2/GCF_000008865.2_ASM886v2_genomic.fna.gz \
+    > tests/pgr/sakai.fa.gz
 
 ```
 
@@ -415,6 +424,8 @@ curl -LO https://tncentral.ncc.unesp.br/api/download_blast/nc/tn_in_is
 
 unzip -j tn_in_is 'tncentral_integrall_isfinder.fa'
 gzip -9 -c 'tncentral_integrall_isfinder.fa' > tncentral.fa.gz
+
+hnsm size tests/pgr/tncentral.fa.gz
 
 # RepBase for RepeatMasker
 curl -LO https://github.com/wang-q/ubuntu/releases/download/20190906/repeatmaskerlibraries-20140131.tar.gz
@@ -440,7 +451,6 @@ singularity run ~/bin/repeatmasker_master.sif /app/RepeatMasker/util/rmOutToGFF3
 spanr gff tests/pgr/mg1655.rm.gff -o tests/pgr/mg1655.rm.json
 
 ```
-
 
 ## Author
 

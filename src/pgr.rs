@@ -7,7 +7,7 @@ fn main() -> anyhow::Result<()> {
     let app = Command::new("pgr")
         .version(crate_version!())
         .author(crate_authors!())
-        .about("`pgr` - populations defined by gene transfer")
+        .about("`pgr` - Population Genomes Refiner")
         .propagate_version(true)
         .arg_required_else_help(true)
         .color(ColorChoice::Auto)
@@ -17,11 +17,13 @@ fn main() -> anyhow::Result<()> {
         .subcommand(cmd_pgr::trf::make_subcommand())
         .after_help(
             r###"
-Reimplementation of PopCOGenT (populations as clusters of gene transfer)
+`pgr` can also refer to `Populations defined by Gene transfeR`,
+as a reimplementation of PopCOGenT (populations as clusters of gene transfer)
 
 Subcommand groups:
 
-* Chain:
+* Genome alignments:
+    * lastz
     * chain
 
 * Repeats:
