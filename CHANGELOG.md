@@ -6,6 +6,7 @@
     * `pgr rept`
     * `pgr trf`
     * `pgr ir`
+    * `pgr chain`
 
 * Add `hnsm mask`
 

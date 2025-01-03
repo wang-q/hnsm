@@ -403,6 +403,8 @@ spanr statop tests/pgr/mg1655.chr.sizes tests/pgr/mg1655.ir.json tests/pgr/mg165
 
 hnsm size tests/pgr/tncentral.fa.gz
 
+cargo run --bin pgr chain tests/pgr/pseudocat.fa tests/pgr/pseudopig.fa tests/pgr/lastz.psl
+
 ```
 
 * repeats

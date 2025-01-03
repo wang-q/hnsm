@@ -43,8 +43,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     let reader = intspan::reader(args.get_one::<String>("infile").unwrap());
     let mut fa_in = fasta::io::Reader::new(reader);
 
-    let json =
-        intspan::read_json(args.get_one::<String>("runlist").unwrap());
+    let json = intspan::read_json(args.get_one::<String>("runlist").unwrap());
     let runlists = intspan::json2set(&json);
 
     let is_hard = args.get_flag("hard");
