@@ -7,19 +7,19 @@ pub fn make_subcommand() -> Command {
         .about("UCSC chain/net pipeline")
         .after_help(
             r###"
-This command implements the UCSC pipeline of pairwise psl-chain-net-axt-maf.
+This command implements the UCSC pipeline for pairwise genome alignments, psl-chain-net-axt-maf.
 
 * <target> and <query> are fasta files
-* <psl> can be a .psl file, or a directory containing .psl files
-* Default names of target and query in .maf are defined by the basename of <target> and <query>
+* <psl> can be a .psl file or a directory containing multiple .psl files
+* Default names of target and query in the output .maf are derived from the basename of <target> and <query>
 
 * `--lineargap` and `--minscore`:
-    * Human18vsChimp2 use loose and 1000
-    * Human19vsChimp3 use medium and 5000
-    * loose is chicken/human linear gap costs
-    * medium is mouse/human linear gap costs
+    * Human18vsChimp2 use `loose` and 1000
+    * Human19vsChimp3 use `medium` and 5000
+    * `loose` corresponds to chicken/human linear gap costs
+    * `medium` corresponds to mouse/human linear gap costs
 
-* Many binaries from kent-tools are needed and should be found in $PATH:
+* The following binaries from the kent-tools are required and should be found in $PATH:
     * axtChain
     * chainAntiRepeat
     * chainMergeSort
@@ -41,7 +41,7 @@ Definitions:
 * The *query* is some other genome sequence
 
 * A *chain* is a sequence of non-overlapping gapless blocks, with single- or double-sided gaps between blocks.
-  Within a chain, target and query coords are monotonically non-decreasing
+  Within a chain, target and query coords are monotonically non-decreasing.
 * A *net* is a hierarchical collection of chains.
 
 References:
@@ -56,21 +56,21 @@ References:
                 .required(true)
                 .num_args(1)
                 .index(1)
-                .help("Input file to process"),
+                .help("Path to the target genome FA file"),
         )
         .arg(
             Arg::new("query")
                 .required(true)
                 .num_args(1)
                 .index(2)
-                .help("Input file to process"),
+                .help("Path to the query genome FA file"),
         )
         .arg(
             Arg::new("psl")
                 .required(true)
                 .num_args(1)
                 .index(3)
-                .help("Input file to process"),
+                .help("Path to the PSL file or directory containing PSL files"),
         )
         .arg(
             Arg::new("lineargap")
@@ -81,7 +81,7 @@ References:
                     builder::PossibleValue::new("medium"),
                 ])
                 .default_value("loose")
-                .help("axtChain linearGap"),
+                .help("Linear gap cost setting for axtChain"),
         )
         .arg(
             Arg::new("minscore")
@@ -89,27 +89,27 @@ References:
                 .num_args(1)
                 .default_value("1000")
                 .value_parser(value_parser!(usize))
-                .help("Minimum score for axtChain"),
+                .help("Minimum alignment score for axtChain"),
         )
         .arg(
             Arg::new("tname")
                 .long("tname")
                 .short('t')
                 .num_args(1)
-                .help("Target name"),
+                .help("Custom name for the target genome"),
         )
         .arg(
             Arg::new("qname")
                 .long("qname")
                 .short('q')
                 .num_args(1)
-                .help("Query name"),
+                .help("Custom name for the query genome"),
         )
         .arg(
             Arg::new("syn")
                 .long("syn")
                 .action(ArgAction::SetTrue)
-                .help("Create .synNet.maf instead of .net.maf"),
+                .help("Generate syntenic alignments"),
         )
         .arg(
             Arg::new("outdir")

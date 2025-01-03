@@ -37,8 +37,7 @@ Subcommand groups:
         Some(("rept", sub_matches)) => cmd_pgr::rept::execute(sub_matches),
         Some(("trf", sub_matches)) => cmd_pgr::trf::execute(sub_matches),
         _ => unreachable!(),
-    }
-    .unwrap();
+    }?;
 
     Ok(())
 }
