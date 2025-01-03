@@ -401,11 +401,15 @@ cargo run --bin pgr trf tests/pgr/mg1655.fa.gz \
 spanr stat tests/pgr/mg1655.chr.sizes tests/pgr/mg1655.rm.json
 spanr statop tests/pgr/mg1655.chr.sizes tests/pgr/mg1655.ir.json tests/pgr/mg1655.rm.json
 
-lastz --nochain tests/pgr/pseudocat.fa tests/pgr/pseudopig.fa |
+lastz tests/pgr/pseudocat.fa tests/pgr/pseudopig.fa |
     lavToPsl stdin stdout \
     > tests/pgr/lastz.psl
 
 cargo run --bin pgr chain tests/pgr/pseudocat.fa tests/pgr/pseudopig.fa tests/pgr/lastz.psl
+
+lastz <(gzip -dcf tests/pgr/mg1655.fa.gz)
+
+FastGA -v -psl tests/pgr/mg1655.fa.gz tests/pgr/sakai.fa.gz
 
 ```
 
