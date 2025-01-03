@@ -341,11 +341,11 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
             let stem = get_basename(&file).unwrap();
             if abs_outdir == "stdout" {
                 run_cmd!(
-                    axtToMaf -tPrefix=${opt_tname} -qPrefix=${opt_qname} ${file} target.chr.sizes query.chr.sizes stdout
+                    axtToMaf -tPrefix=${opt_tname}. -qPrefix=${opt_qname}. ${file} target.chr.sizes query.chr.sizes stdout
                 )?;
             } else {
                 run_cmd!(
-                    axtToMaf -tPrefix=${opt_tname} -qPrefix=${opt_qname} ${file} target.chr.sizes query.chr.sizes ${abs_outdir}/${stem}.maf
+                    axtToMaf -tPrefix=${opt_tname}. -qPrefix=${opt_qname}. ${file} target.chr.sizes query.chr.sizes ${abs_outdir}/${stem}.maf
                 )?;
             }
         }
@@ -384,13 +384,13 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
                 run_cmd!(
                     netToAxt ${file} ${chain_file} target.chr.2bit query.chr.2bit stdout |
                         axtSort stdin stdout |
-                        axtToMaf -tPrefix=${opt_tname} -qPrefix=${opt_qname} stdin target.chr.sizes query.chr.sizes stdout
+                        axtToMaf -tPrefix=${opt_tname}. -qPrefix=${opt_qname}. stdin target.chr.sizes query.chr.sizes stdout
                 )?;
             } else {
                 run_cmd!(
                     netToAxt ${file} ${chain_file} target.chr.2bit query.chr.2bit stdout |
                         axtSort stdin stdout |
-                        axtToMaf -tPrefix=${opt_tname} -qPrefix=${opt_qname} stdin target.chr.sizes query.chr.sizes ${abs_outdir}/${stem}.maf
+                        axtToMaf -tPrefix=${opt_tname}. -qPrefix=${opt_qname}. stdin target.chr.sizes query.chr.sizes ${abs_outdir}/${stem}.maf
                 )?;
             }
         }
