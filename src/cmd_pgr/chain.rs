@@ -303,7 +303,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
         //   netSplit in.net outDir
         std::fs::create_dir_all("net")?;
         run_cmd!(
-            netSplit noClass.net net
+            netSplit noClass.net net > /dev/null
         )?;
     }
 
@@ -363,7 +363,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
         //    netFilter in.net(s)
         run_cmd!(
             netFilter -syn noClass.net |
-                netSplit stdin synNet
+                netSplit stdin synNet > /dev/null
         )?;
 
         // chainSplit - Split chains up by target or query sequence

@@ -387,15 +387,15 @@ cargo run --bin fasr pl-p2m tests/fasr/S288cvsRM11_1a.slice.fas tests/fasr/S288c
 ### Genomes
 
 ```shell
-cargo run --bin pgr ir tests/pgr/tncentral.fa.gz tests/pgr/mg1655.fa.gz \
+pgr ir tests/pgr/tncentral.fa.gz tests/pgr/mg1655.fa.gz \
     > tests/pgr/mg1655.ir.json
 
 spanr stat tests/pgr/mg1655.chr.sizes tests/pgr/mg1655.ir.json
 
-cargo run --bin pgr rept tests/pgr/mg1655.fa.gz \
+pgr rept tests/pgr/mg1655.fa.gz \
     > tests/pgr/mg1655.rept.json
 
-cargo run --bin pgr trf tests/pgr/mg1655.fa.gz \
+pgr trf tests/pgr/mg1655.fa.gz \
     > tests/pgr/mg1655.trf.json
 
 spanr stat tests/pgr/mg1655.chr.sizes tests/pgr/mg1655.rm.json
@@ -405,11 +405,9 @@ lastz tests/pgr/pseudocat.fa tests/pgr/pseudopig.fa |
     lavToPsl stdin stdout \
     > tests/pgr/lastz.psl
 
-cargo run --bin pgr chain tests/pgr/pseudocat.fa tests/pgr/pseudopig.fa tests/pgr/lastz.psl
+pgr chain tests/pgr/pseudocat.fa tests/pgr/pseudopig.fa tests/pgr/lastz.psl
 
-lastz <(gzip -dcf tests/pgr/mg1655.fa.gz)
-
-FastGA -v -psl tests/pgr/mg1655.fa.gz tests/pgr/sakai.fa.gz
+lastz --self <(gzip -dcf tests/pgr/mg1655.fa.gz)
 
 ```
 
@@ -457,6 +455,26 @@ singularity run ~/bin/repeatmasker_master.sif /app/RepeatMasker/util/rmOutToGFF3
     ./genome.fa.out > mg1655.rm.gff
 
 spanr gff tests/pgr/mg1655.rm.gff -o tests/pgr/mg1655.rm.json
+
+```
+
+* plot
+
+```shell
+FastGA -v -psl tests/pgr/sakai.fa.gz tests/pgr/mg1655.fa.gz > tmp.psl
+pgr chain tests/pgr/mg1655.fa.gz tests/pgr/sakai.fa.gz tmp.psl > tmp.maf
+
+wgatools maf2paf tmp.maf -o - |
+    sed 's/sakai\.fa\.//g' |
+    sed 's/mg1655\.fa\.//g' \
+    > tmp.paf
+PAFtoALN tmp.paf tests/pgr/sakai.fa.gz tests/pgr/mg1655.fa.gz
+ALNplot tmp -p -n0
+
+wgatools dotplot tmp.maf > tmp.html
+
+FastGA -v -1:tmp tests/pgr/sakai.fa.gz tests/pgr/mg1655.fa.gz
+ALNplot tmp -p -n0
 
 ```
 
