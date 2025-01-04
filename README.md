@@ -483,6 +483,10 @@ wgatools dotplot tmp.syn.maf > tmp.syn.html
 
 ```
 
+![paf.png](images/paf.png)
+![chain.png](images/chain.png)
+![syn.png](images/syn.png)
+
 ## Author
 
 Qiang Wang <wang-q@outlook.com>
