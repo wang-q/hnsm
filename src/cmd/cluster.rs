@@ -1,6 +1,5 @@
 use clap::*;
-use hnsm::ScoringMatrix;
-use std::io::{BufRead, Write};
+use std::io::Write;
 
 // Create clap subcommand arguments
 pub fn make_subcommand() -> Command {
@@ -8,13 +7,13 @@ pub fn make_subcommand() -> Command {
         .about("Clustering based on pairwise distances")
         .after_help(
             r###"
-modes:
-    * dbscan
-    * cc: ignore scores and write all connected components
+Clustering modes:
+    * dbscan: Density-based spatial clustering of applications with noise (DBSCAN).
+    * cc: Connected components clustering. Ignores scores and writes all connected components.
 
-format:
-    * cluster: a line contains points of one cluster
-    * pair: lines of multiple (representative point, cluster member) pairs
+Output formats:
+    * cluster: Each line contains points of one cluster.
+    * pair: Each line contains a (representative point, cluster member) pair.
 
 "###,
         )
@@ -22,7 +21,7 @@ format:
             Arg::new("infile")
                 .required(true)
                 .index(1)
-                .help("Set the input file to use"),
+                .help("Input file containing pairwise distances in .tsv format"),
         )
         .arg(
             Arg::new("mode")
@@ -33,7 +32,7 @@ format:
                     builder::PossibleValue::new("cc"),
                 ])
                 .default_value("matrix")
-                .help("Clustering method"),
+                .help("Clustering method to use"),
         )
         .arg(
             Arg::new("format")
@@ -44,7 +43,7 @@ format:
                     builder::PossibleValue::new("pair"),
                 ])
                 .default_value("cluster")
-                .help("Output formats"),
+                .help("Output format for clustering results"),
         )
         .arg(
             Arg::new("same")
@@ -68,7 +67,7 @@ format:
                 .num_args(1)
                 .default_value("0.05")
                 .value_parser(value_parser!(f32))
-                .help("The maximum distance between two points"),
+                .help("The maximum distance between two points for DBSCAN clustering"),
         )
         .arg(
             Arg::new("min_points")
@@ -76,7 +75,7 @@ format:
                 .num_args(1)
                 .default_value("1")
                 .value_parser(value_parser!(usize))
-                .help("core point"),
+                .help("Minimum number of points to form a dense region in DBSCAN"),
         )
         .arg(
             Arg::new("outfile")
