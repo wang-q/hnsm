@@ -3,9 +3,7 @@ use clap::*;
 use itertools::Itertools;
 use std::cmp::Ordering;
 use std::collections::{HashMap, HashSet};
-use std::fs::File;
 use std::io::{self, BufRead};
-use std::path;
 
 // Create clap subcommand arguments
 pub fn make_subcommand() -> Command {
@@ -251,7 +249,7 @@ fn parse_input_file(
     HashMap<(String, String), f32>,
     HashMap<(String, String), Vec<(String, String)>>,
 )> {
-    let file = File::open(file_path)?;
+    let file = std::fs::File::open(file_path)?;
     let reader = io::BufReader::new(file);
 
     let mut acc_info: HashMap<String, Feature> = HashMap::new();
