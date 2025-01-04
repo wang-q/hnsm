@@ -23,6 +23,9 @@ pub fn make_subcommand() -> Command {
     * DNA: `-k 21 -w 5`
     * Increasing the window size speeds up processing
 
+* To get accurate pairwise sequence identities, use clustalo
+  https://lh3.github.io/2018/11/25/on-the-definition-of-sequence-identity
+
 "###,
         )
         .arg(
