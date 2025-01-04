@@ -464,8 +464,14 @@ spanr gff tests/pgr/mg1655.rm.gff -o tests/pgr/mg1655.rm.json
 ```shell
 FastGA -v -pafx tests/pgr/sakai.fa.gz tests/pgr/mg1655.fa.gz > tmp.paf
 FastGA -v -psl tests/pgr/sakai.fa.gz tests/pgr/mg1655.fa.gz > tmp.psl
+
 pgr chain tests/pgr/mg1655.fa.gz tests/pgr/sakai.fa.gz tmp.psl > tmp.chain.maf
 pgr chain --syn tests/pgr/mg1655.fa.gz tests/pgr/sakai.fa.gz tmp.psl > tmp.syn.maf
+
+lastz <(gzip -dcf tests/pgr/mg1655.fa.gz) <(gzip -dcf tests/pgr/sakai.fa.gz) |
+    lavToPsl stdin stdout \
+    > tmp.lastz.psl
+pgr chain --syn tests/pgr/mg1655.fa.gz tests/pgr/sakai.fa.gz tmp.lastz.psl > tmp.lastz.maf
 
 #wgatools maf2paf tmp.maf -o - |
 #    sed 's/sakai\.fa\.//g' |
@@ -477,6 +483,7 @@ pgr chain --syn tests/pgr/mg1655.fa.gz tests/pgr/sakai.fa.gz tmp.psl > tmp.syn.m
 wgatools dotplot -f paf tmp.paf > tmp.html
 wgatools dotplot tmp.chain.maf > tmp.chain.html
 wgatools dotplot tmp.syn.maf > tmp.syn.html
+wgatools dotplot tmp.lastz.maf > tmp.lastz.html
 
 #FastGA -v -1:tmp tests/pgr/sakai.fa.gz tests/pgr/mg1655.fa.gz
 #ALNplot tmp -p -n0
@@ -486,6 +493,7 @@ wgatools dotplot tmp.syn.maf > tmp.syn.html
 ![paf.png](images/paf.png)
 ![chain.png](images/chain.png)
 ![syn.png](images/syn.png)
+![lastz.png](images/lastz.png)
 
 ## Author
 
