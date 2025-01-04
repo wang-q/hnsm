@@ -7,10 +7,10 @@ pub fn make_subcommand() -> Command {
         .about("Conversion between pairwise distances and a distance matrix")
         .after_help(
             r###"
-modes:
-    * matrix: the inputs are pairwise and output a distance matrix
-    * lower: the inputs are pairwise and output a lower-triangular matrix
-    * pair: the input is a (lower-triangular) relaxed phylip distance matrix, and outputs pairwise distances
+Conversion modes:
+    * matrix: Convert pairwise distances to a full distance matrix.
+    * lower: Convert pairwise distances to a lower-triangular matrix.
+    * pair: Convert a (lower-triangular) relaxed PHYLIP distance matrix to pairwise distances.
 
 "###,
         )
@@ -18,7 +18,7 @@ modes:
             Arg::new("infile")
                 .required(true)
                 .index(1)
-                .help("Set the input file to use"),
+                .help("Input file containing pairwise distances or a PHYLIP distance matrix"),
         )
         .arg(
             Arg::new("mode")
@@ -30,7 +30,7 @@ modes:
                     builder::PossibleValue::new("pair"),
                 ])
                 .default_value("matrix")
-                .help("Output format"),
+                .help("Conversion mode"),
         )
         .arg(
             Arg::new("same")
@@ -75,20 +75,19 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     // Ops
     //----------------------------
     if opt_mode.as_str() == "pair" {
+        // Process PHYLIP matrix to pairwise distances
         let reader = intspan::reader(infile);
         let mut lines = reader.lines();
         let mut names = Vec::new();
 
         // Attempt to read the first line as the number of sequences
-        let first_line = lines.next();
-        if let Some(Ok(line)) = first_line {
-            if let Ok(_) = line.trim().parse::<usize>() {
-                // If the first line is a number, skip it
-            } else {
+        if let Some(Ok(line)) = lines.next() {
+            if line.trim().parse::<usize>().is_err() {
                 // If the first line is not a number, treat it as a data line
                 process_phylip_line(&line, &mut names, &mut writer)?;
             }
         }
+
         for line in lines.map_while(Result::ok) {
             process_phylip_line(&line, &mut names, &mut writer)?;
         }
@@ -96,7 +95,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
         return Ok(());
     }
 
-    // Reading pair scores from a TSV file
+    // Convert pairwise distances to a matrix
     let (pair_scores, index_name) = hnsm::load_pair_scores(infile);
     let matrix = hnsm::populate_matrix(&pair_scores, &index_name, opt_same, opt_missing);
     let size = matrix.size();
@@ -129,11 +128,11 @@ fn process_phylip_line(
     writer: &mut Box<dyn Write>,
 ) -> anyhow::Result<()> {
     let parts: Vec<&str> = line.trim().split_whitespace().collect();
-    if parts.len() >= 1 {
+    if !parts.is_empty() {
         let name = parts[0].to_string();
         names.push(name.clone());
 
-        // read lower-triangle
+        // Read lower-triangle distances
         let distances: Vec<f32> = parts[1..=names.len()]
             .iter()
             .map(|&s| s.parse().unwrap())
