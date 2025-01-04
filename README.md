@@ -490,10 +490,21 @@ wgatools dotplot tmp.lastz.maf > tmp.lastz.html
 
 ```
 
-![paf.png](images/paf.png)
-![chain.png](images/chain.png)
-![syn.png](images/syn.png)
-![lastz.png](images/lastz.png)
+| ![paf.png](images/paf.png) |
+|:--------------------------:|
+|            paf             |
+
+| ![chain.png](images/chain.png) |
+|:------------------------------:|
+|             chain              |
+
+| ![syn.png](images/syn.png) |
+|:--------------------------:|
+|            syn             |
+
+| ![lastz.png](images/lastz.png) |
+|:------------------------------:|
+|             lastz              |
 
 ## Author
 
