@@ -49,15 +49,16 @@ Subcommand groups:
     * records: one / some / order / split
     * transform: replace / rc / filter / dedup / mask
     * indexing: gz / range
+        * `hnsm gz` writes out the BGZF format and `hnsm range` reads it
 
 * Fastq files
     * interleave
 
 * Clustering
     * vectors: similarity
-    * DNA/protein: distance / identity
+    * DNA/protein: distance
     * cluster
-    * reduction
+    * manifold
 
 * Synteny
     * das
@@ -65,12 +66,11 @@ Subcommand groups:
 
 * <infiles> are paths to fasta files, .fa.gz is supported
     * infile == stdin means reading from STDIN
-    * `hnsm gz` writes out the BGZF format and `hnsm range` reads it
 
 "###,
         );
 
-    // Check which subcomamnd the user ran...
+    // Check which subcommand the user ran...
     match app.get_matches().subcommand() {
         // info
         Some(("size", sub_matches)) => cmd::size::execute(sub_matches),
@@ -105,13 +105,7 @@ Subcommand groups:
         Some(("das", sub_matches)) => cmd::das::execute(sub_matches),
         Some(("chain", sub_matches)) => cmd::chain::execute(sub_matches),
         _ => unreachable!(),
-    }
-    .unwrap();
+    }?;
 
     Ok(())
 }
-
-// TODO:
-//  sort
-//  identity: accurate pairwise sequence identity
-//    https://lh3.github.io/2018/11/25/on-the-definition-of-sequence-identity
