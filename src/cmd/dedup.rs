@@ -8,18 +8,32 @@ pub fn make_subcommand() -> Command {
         .about("Deduplicate records in FA file(s)")
         .after_help(
             r###"
+This command removes duplicate records from one or more FA files based on name, description, or sequence.
+
 * The default behavior is the same as `hnsm filter -u`
 * By default, only the forward strand is compared, setting `-b` compares both strands
-* `-b` implies `-c`
-
-TODO:
-* Remove fully contained sequences
 
  sequence name
  | |
 >sq0 LN:13
      |   |
      description
+
+Examples:
+    1. Deduplicate by name (default):
+       hnsm dedup input.fa
+
+    2. Deduplicate by sequence:
+       hnsm dedup input.fa -s
+
+    3. Deduplicate by name and description:
+       hnsm dedup input.fa -d
+
+    4. Compare both strands:
+       hnsm dedup input.fa -b
+
+    5. Save duplicated names to a file:
+       hnsm dedup input.fa -f duplicates.txt
 
 "###,
         )
@@ -28,35 +42,35 @@ TODO:
                 .required(true)
                 .num_args(1..)
                 .index(1)
-                .help("Set the input files to use"),
+                .help("Input FA file(s) to process"),
         )
         .arg(
             Arg::new("desc")
                 .long("desc")
                 .short('d')
                 .action(ArgAction::SetTrue)
-                .help("By name and description"),
+                .help("Deduplicate by name and description"),
         )
         .arg(
             Arg::new("seq")
                 .long("seq")
                 .short('s')
                 .action(ArgAction::SetTrue)
-                .help("By sequence"),
+                .help("Deduplicate by sequence"),
         )
         .arg(
             Arg::new("both")
                 .long("both")
                 .short('b')
                 .action(ArgAction::SetTrue)
-                .help("Compares both strands"),
+                .help("Compare both strands (implies --case)"),
         )
         .arg(
             Arg::new("case")
                 .long("case")
                 .short('c')
                 .action(ArgAction::SetTrue)
-                .help("Case insensitive"),
+                .help("Case insensitive comparison"),
         )
         .arg(
             Arg::new("file")
@@ -77,6 +91,9 @@ TODO:
 
 // command implementation
 pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
+    //----------------------------
+    // Args
+    //----------------------------
     let is_desc = args.get_flag("desc");
     let is_seq = args.get_flag("seq");
     let is_both = args.get_flag("both");
@@ -87,6 +104,9 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
         .set_line_base_count(usize::MAX)
         .build_from_writer(writer);
 
+    //----------------------------
+    // Ops
+    //----------------------------
     let mut subject_map: HashMap<u64, Vec<String>> = HashMap::new();
     for infile in args.get_many::<String>("infiles").unwrap() {
         let reader = intspan::reader(infile);
@@ -100,7 +120,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
             let desc = record.description();
             let seq = record.sequence();
 
-            let name_str = String::from_utf8(record.name().into()).unwrap();
+            let name_str = String::from_utf8(record.name().into())?;
 
             // filters
             let mut flag_pass = true;
