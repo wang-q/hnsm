@@ -23,6 +23,7 @@
       * [DBSCAN](#dbscan)
       * [PCoA](#pcoa)
     * [Block Fasta files](#block-fasta-files)
+    * [Genomes](#genomes)
   * [Author](#author)
   * [License](#license)
 <!-- TOC -->
@@ -461,20 +462,24 @@ spanr gff tests/pgr/mg1655.rm.gff -o tests/pgr/mg1655.rm.json
 * plot
 
 ```shell
+FastGA -v -pafx tests/pgr/sakai.fa.gz tests/pgr/mg1655.fa.gz > tmp.paf
 FastGA -v -psl tests/pgr/sakai.fa.gz tests/pgr/mg1655.fa.gz > tmp.psl
-pgr chain tests/pgr/mg1655.fa.gz tests/pgr/sakai.fa.gz tmp.psl > tmp.maf
+pgr chain tests/pgr/mg1655.fa.gz tests/pgr/sakai.fa.gz tmp.psl > tmp.chain.maf
+pgr chain --syn tests/pgr/mg1655.fa.gz tests/pgr/sakai.fa.gz tmp.psl > tmp.syn.maf
 
-wgatools maf2paf tmp.maf -o - |
-    sed 's/sakai\.fa\.//g' |
-    sed 's/mg1655\.fa\.//g' \
-    > tmp.paf
-PAFtoALN tmp.paf tests/pgr/sakai.fa.gz tests/pgr/mg1655.fa.gz
-ALNplot tmp -p -n0
+#wgatools maf2paf tmp.maf -o - |
+#    sed 's/sakai\.fa\.//g' |
+#    sed 's/mg1655\.fa\.//g' \
+#    > tmp.paf
+#PAFtoALN tmp.paf tests/pgr/sakai.fa.gz tests/pgr/mg1655.fa.gz
+#ALNplot tmp -p -n0
 
-wgatools dotplot tmp.maf > tmp.html
+wgatools dotplot -f paf tmp.paf > tmp.html
+wgatools dotplot tmp.chain.maf > tmp.chain.html
+wgatools dotplot tmp.syn.maf > tmp.syn.html
 
-FastGA -v -1:tmp tests/pgr/sakai.fa.gz tests/pgr/mg1655.fa.gz
-ALNplot tmp -p -n0
+#FastGA -v -1:tmp tests/pgr/sakai.fa.gz tests/pgr/mg1655.fa.gz
+#ALNplot tmp -p -n0
 
 ```
 

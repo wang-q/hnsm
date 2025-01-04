@@ -157,10 +157,24 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
         .display()
         .to_string();
 
-    let binding = get_basename(&abs_target).unwrap();
-    let opt_tname = args.get_one::<String>("tname").unwrap_or(&binding);
-    let binding = get_basename(&abs_query).unwrap();
-    let opt_qname = args.get_one::<String>("qname").unwrap_or(&binding);
+    let opt_tname = if let Some(tname) = args.get_one::<String>("tname") {
+        if tname.is_empty() {
+            "".to_string()
+        } else {
+            format!("{}.", tname)
+        }
+    } else {
+        format!("{}.", get_basename(&abs_target).unwrap())
+    };
+    let opt_qname = if let Some(qname) = args.get_one::<String>("qname") {
+        if qname.is_empty() {
+            "".to_string()
+        } else {
+            format!("{}.", qname)
+        }
+    } else {
+        format!("{}.", get_basename(&abs_query).unwrap())
+    };
 
     let abs_psl = intspan::absolute_path(args.get_one::<String>("psl").unwrap())?
         .display()
@@ -340,13 +354,25 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
         for file in files {
             let stem = get_basename(&file).unwrap();
             if abs_outdir == "stdout" {
-                run_cmd!(
-                    axtToMaf -tPrefix=${opt_tname}. -qPrefix=${opt_qname}. ${file} target.chr.sizes query.chr.sizes stdout
-                )?;
+                if opt_tname.is_empty() {
+                    run_cmd!(
+                        axtToMaf ${file} target.chr.sizes query.chr.sizes stdout
+                    )?;
+                } else {
+                    run_cmd!(
+                        axtToMaf -tPrefix=${opt_tname} -qPrefix=${opt_qname} ${file} target.chr.sizes query.chr.sizes stdout
+                    )?;
+                }
             } else {
-                run_cmd!(
-                    axtToMaf -tPrefix=${opt_tname}. -qPrefix=${opt_qname}. ${file} target.chr.sizes query.chr.sizes ${abs_outdir}/${stem}.maf
-                )?;
+                if opt_tname.is_empty() {
+                    run_cmd!(
+                        axtToMaf ${file} target.chr.sizes query.chr.sizes ${abs_outdir}/${stem}.maf
+                    )?;
+                } else {
+                    run_cmd!(
+                        axtToMaf -tPrefix=${opt_tname} -qPrefix=${opt_qname} ${file} target.chr.sizes query.chr.sizes ${abs_outdir}/${stem}.maf
+                    )?;
+                }
             }
         }
     } else {
@@ -373,25 +399,41 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
         //    -q  - Split on query (default is on target)
         //    -lump=N  Lump together so have only N split files.
         run_cmd!(
-            chainSplit chain all.chain
+            chainSplit synNet all.chain
         )?;
 
         let files = list_files_ext("synNet", "net")?;
         for file in files {
             let stem = get_basename(&file).unwrap();
-            let chain_file = format!("chain/{}.chain", stem);
+            let chain_file = format!("{}.chain", file.strip_suffix(".net").unwrap());
             if abs_outdir == "stdout" {
-                run_cmd!(
-                    netToAxt ${file} ${chain_file} target.chr.2bit query.chr.2bit stdout |
-                        axtSort stdin stdout |
-                        axtToMaf -tPrefix=${opt_tname}. -qPrefix=${opt_qname}. stdin target.chr.sizes query.chr.sizes stdout
-                )?;
+                if opt_tname.is_empty() {
+                    run_cmd!(
+                        netToAxt ${file} ${chain_file} target.chr.2bit query.chr.2bit stdout |
+                            axtSort stdin stdout |
+                            axtToMaf stdin target.chr.sizes query.chr.sizes stdout
+                    )?;
+                } else {
+                    run_cmd!(
+                        netToAxt ${file} ${chain_file} target.chr.2bit query.chr.2bit stdout |
+                            axtSort stdin stdout |
+                            axtToMaf -tPrefix=${opt_tname} -qPrefix=${opt_qname} stdin target.chr.sizes query.chr.sizes stdout
+                    )?;
+                }
             } else {
-                run_cmd!(
-                    netToAxt ${file} ${chain_file} target.chr.2bit query.chr.2bit stdout |
-                        axtSort stdin stdout |
-                        axtToMaf -tPrefix=${opt_tname}. -qPrefix=${opt_qname}. stdin target.chr.sizes query.chr.sizes ${abs_outdir}/${stem}.maf
-                )?;
+                if opt_tname.is_empty() {
+                    run_cmd!(
+                        netToAxt ${file} ${chain_file} target.chr.2bit query.chr.2bit stdout |
+                            axtSort stdin stdout |
+                            axtToMaf stdin target.chr.sizes query.chr.sizes ${abs_outdir}/${stem}.maf
+                    )?;
+                } else {
+                    run_cmd!(
+                        netToAxt ${file} ${chain_file} target.chr.2bit query.chr.2bit stdout |
+                            axtSort stdin stdout |
+                            axtToMaf -tPrefix=${opt_tname} -qPrefix=${opt_qname} stdin target.chr.sizes query.chr.sizes ${abs_outdir}/${stem}.maf
+                    )?;
+                }
             }
         }
     }
@@ -429,8 +471,8 @@ fn list_files_ext(dir: &str, extension: &str) -> Result<Vec<String>, std::io::Er
 fn get_basename(file_path: &str) -> Option<String> {
     let path = std::path::Path::new(file_path);
 
-    if let Some(file_name) = path.file_stem() {
-        return file_name.to_str().map(|s| s.to_string());
+    if let Some(file_name) = path.file_stem().and_then(std::ffi::OsStr::to_str) {
+        return Some(file_name.split('.').next().unwrap().to_string());
     }
 
     None
