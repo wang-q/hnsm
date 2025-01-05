@@ -5,12 +5,28 @@ use noodles_fasta as fasta;
 pub fn make_subcommand() -> Command {
     Command::new("size")
         .about("Count total bases in FA file(s)")
-        .arg(
+        .after_help(
+            r###"
+This command counts the total number of bases in one or more FA files. It outputs the sequence name
+and its length in a tab-separated format.
+
+Examples:
+    1. Count bases in a single FASTA file:
+       hnsm size input.fa
+
+    2. Count bases in multiple FASTA files:
+       hnsm size input1.fa input2.fa
+
+    3. Save the output to a file:
+       hnsm size input.fa -o output.tsv
+
+"###,
+        ).arg(
             Arg::new("infiles")
                 .required(true)
                 .num_args(1..)
                 .index(1)
-                .help("Set the input file to use"),
+                .help("Input FA file(s) to process"),
         )
         .arg(
             Arg::new("outfile")
