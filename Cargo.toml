@@ -23,6 +23,7 @@ flate2 = "1.0.35"
 tera = "1.20.0"
 
 crossbeam = "0.8.4"
+rayon = "1.10.0"
 
 intspan = "0.8.4"
 noodles = { version = "0.86.0", features = ["core", "fasta", "fastq", "bgzf"] }
@@ -80,6 +81,10 @@ rand = "0.8.5"
 [[bench]]
 name = "simd"
 harness = false # Allows Criterion to control the benchmarking process
+
+[[bench]]
+name = "jaccard"
+harness = false
 
 [profile.release]
 lto = true

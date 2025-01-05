@@ -42,6 +42,9 @@ cargo install --path . --force #--offline
 # test
 cargo test -- --test-threads=1
 
+# bench
+cargo bench --bench simd
+
 # build under WSL 2
 mkdir -p /tmp/cargo
 export CARGO_TARGET_DIR=/tmp/cargo
