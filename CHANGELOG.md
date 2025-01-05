@@ -10,6 +10,8 @@
 
 * Add `hnsm mask`
 
+* Improve help texts
+
 ## 0.2.0 - 2024-12-20
 
 * New binary `fasr`, ported from `App::Fasops`
