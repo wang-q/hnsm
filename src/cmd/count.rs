@@ -84,7 +84,13 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
 
             // Update total statistics
             total_len += len;
-            for &nt in &[hnsm::Nt::A, hnsm::Nt::C, hnsm::Nt::G, hnsm::Nt::T, hnsm::Nt::N] {
+            for &nt in &[
+                hnsm::Nt::A,
+                hnsm::Nt::C,
+                hnsm::Nt::G,
+                hnsm::Nt::T,
+                hnsm::Nt::N,
+            ] {
                 total_base_cnt[nt as usize] += base_cnt[nt as usize];
             }
         }

@@ -255,7 +255,7 @@ hyperfine --warmup 1 \
 
 ```text
 $ hnsm distance tests/clust/IBPA.fa -k 7 -w 1 |
-    hnsm cluster stdin --mode matrix
+    hnsm convert stdin --mode matrix
 IBPA_ECOLI      0       0.0669  0.2014  0.2106  0.4405  0       0.0011  0.7124  0.5454  0.3675
 IBPA_ECOLI_GA   0.0669  0       0.114   0.1464  0.2917  0.0669  0.068   1       0.7023  0.5974
 IBPA_ECOLI_GA_LV        0.2014  0.114   0       0.0344  0.132   0.2014  0.2024  1       0.7023  1
