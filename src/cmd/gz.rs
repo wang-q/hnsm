@@ -1,8 +1,6 @@
 use clap::*;
-
 use std::io::{self};
 use std::{fs, num, path, process};
-
 use noodles_bgzf as bgzf;
 
 // Create clap subcommand arguments
@@ -11,10 +9,21 @@ pub fn make_subcommand() -> Command {
         .about("Compressing a file using the blocked gzip format (BGZF)")
         .after_help(
             r###"
-* <infile> can be stdin but not gzipped
-* The upstream library `noodles` not yet implemented write .gzi
-* `bgzip -r` will be called to create .gzi
+This command compresses a file using the blocked gzip format (BGZF). It supports parallel compression
+and can read from stdin or a file, but not gzipped file.
+The output is saved as a .gz file, and an index file (.gzi) is created using the `bgzip -r` command.
+
 * The output is hardcoded as "outfile.gz" and "outfile.gz.gzi", for more flexible output use `bgzip`
+
+Examples:
+    1. Compress a file with default settings:
+       hnsm gz input.fa
+
+    2. Compress a file with 4 threads:
+       hnsm gz input.fa -p 4
+
+    3. Compress from stdin and specify output file:
+       cat input.fa | hnsm gz stdin -o output
 
 "###,
         )
@@ -22,7 +31,7 @@ pub fn make_subcommand() -> Command {
             Arg::new("infile")
                 .required(true)
                 .index(1)
-                .help("Set the input file to use"),
+                .help("Input FA file to compress"),
         )
         .arg(
             Arg::new("parallel")
@@ -31,7 +40,7 @@ pub fn make_subcommand() -> Command {
                 .value_parser(value_parser!(num::NonZeroUsize))
                 .num_args(1)
                 .default_value("1")
-                .help("Running in parallel mode, the number of threads"),
+                .help("Number of threads for parallel compression"),
         )
         .arg(
             Arg::new("outfile")
@@ -61,7 +70,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     );
 
     //----------------------------
-    // Open files
+    // Open file
     //----------------------------
     let mut reader: Box<dyn io::BufRead> = if infile == "stdin" {
         Box::new(io::BufReader::new(io::stdin()))
