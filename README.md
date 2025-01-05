@@ -68,22 +68,23 @@ Commands:
   count       Count base statistics in FA file(s)
   das         Domain architecture similarity
   dedup       Deduplicate records in FA file(s)
-  distance    Estimate distances between DNA/protein sequences
+  distance    Estimate distances between DNA/protein sequences using minimizers
   filter      Filter records in FA file(s)
   gz          Compressing a file using the blocked gzip format (BGZF)
   interleave  Interleave two PE files
-  masked      Masked regions in FA file(s)
+  mask        Soft/hard-masking regions in FA file(s)
+  masked      Identify masked regions in FA file(s
   n50         Count total bases in FA file(s)
-  one         Extract one FA record
-  order       Extract some FA records by the given order
+  one         Extract one FA record by name
+  order       Extract some FA records in the order specified by a list
   range       Extract sequences defined by the range(s)
   rc          Reverse complement a FA file
-  replace     Replace headers of a FA file
+  replace     Replace headers of a FA file based on a TSV mapping
   manifold    Manifold learning based on pairwise distances
   similarity  Similarity of vectors
   sixframe    Six-Frame Translation
   size        Count total bases in FA file(s)
-  some        Extract some FA records
+  some        Extract some FA records based on a list of names
   split       Split FA file(s) into several files
   help        Print this message or the help of the given subcommand(s)
 
@@ -97,17 +98,18 @@ Subcommand groups:
 * Fasta files
     * info: size / count / masked / n50
     * records: one / some / order / split
-    * transform: replace / rc / filter / dedup
+    * transform: replace / rc / filter / dedup / mask
     * indexing: gz / range
+        * `hnsm gz` writes out the BGZF format and `hnsm range` reads it
 
 * Fastq files
     * interleave
 
 * Clustering
     * vectors: similarity
-    * DNA/protein: distance / identity
+    * DNA/protein: distance
     * cluster
-    * reduction
+    * manifold
 
 * Synteny
     * das
@@ -115,7 +117,6 @@ Subcommand groups:
 
 * <infiles> are paths to fasta files, .fa.gz is supported
     * infile == stdin means reading from STDIN
-    * `hnsm gz` writes out the BGZF format and `hnsm range` reads it
 
 ```
 
