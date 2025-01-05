@@ -8,11 +8,42 @@ pub fn make_subcommand() -> Command {
         .about("Filter records in FA file(s)")
         .after_help(
             r###"
+This command filters records in one or more FASTA files based on various criteria.
+It can filter by sequence length, number of Ns, and more. It also supports formatting options.
+
 * Not all faFilter options have been implemented
   Wildcards for names can be easily implemented with `hnsm some`
 * This subcommand is also a formatter
     * -l is used to set the number of bases per line
     * -b/--block is not implemented here
+
+Examples:
+    1. Filter sequences by minimum size:
+       hnsm filter input.fa --minsize 100
+
+    2. Filter sequences by maximum size:
+       hnsm filter input.fa --maxsize 1000
+
+    3. Filter sequences by maximum number of Ns:
+       hnsm filter input.fa --maxn 10
+
+    4. Remove duplicate sequences:
+       hnsm filter input.fa --uniq
+
+    5. Convert sequences to upper case:
+       hnsm filter input.fa --upper
+
+    6. Convert IUPAC ambiguous codes to 'N':
+       hnsm filter input.fa --iupac
+
+    7. Remove dashes from sequences:
+       hnsm filter input.fa --dash
+
+    8. Simplify sequence names:
+       hnsm filter input.fa --simplify
+
+    9. Set sequence line length:
+       hnsm filter input.fa --line 80
 
 "###,
         )
@@ -21,7 +52,7 @@ pub fn make_subcommand() -> Command {
                 .required(true)
                 .num_args(1..)
                 .index(1)
-                .help("Set the input file to use"),
+                .help("Input FA file(s) to process"),
         )
         .arg(
             Arg::new("minsize")
@@ -102,26 +133,19 @@ pub fn make_subcommand() -> Command {
 
 // command implementation
 pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
-    let opt_minsize = if args.contains_id("minsize") {
-        *args.get_one::<usize>("minsize").unwrap()
-    } else {
-        usize::MAX
-    };
-    let opt_maxsize = if args.contains_id("maxsize") {
-        *args.get_one::<usize>("maxsize").unwrap()
-    } else {
-        usize::MAX
-    };
-    let opt_maxn = if args.contains_id("maxn") {
-        *args.get_one::<usize>("maxn").unwrap()
-    } else {
-        usize::MAX
-    };
-    let opt_line = if args.contains_id("line") {
-        *args.get_one::<usize>("line").unwrap()
-    } else {
-        usize::MAX
-    };
+    //----------------------------
+    // Args
+    //----------------------------
+    let opt_minsize = args
+        .get_one::<usize>("minsize")
+        .copied()
+        .unwrap_or(usize::MAX);
+    let opt_maxsize = args
+        .get_one::<usize>("maxsize")
+        .copied()
+        .unwrap_or(usize::MAX);
+    let opt_maxn = args.get_one::<usize>("maxn").copied().unwrap_or(usize::MAX);
+    let opt_line = args.get_one::<usize>("line").copied().unwrap_or(usize::MAX);
 
     let is_uniq = args.get_flag("uniq");
     let is_upper = args.get_flag("upper");
@@ -134,6 +158,9 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
         .set_line_base_count(opt_line)
         .build_from_writer(writer);
 
+    //----------------------------
+    // Ops
+    //----------------------------
     let mut set_list: BTreeSet<String> = BTreeSet::new();
     for infile in args.get_many::<String>("infiles").unwrap() {
         let reader = intspan::reader(infile);
@@ -143,7 +170,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
             // obtain record or fail with error
             let record = result?;
 
-            let mut name = String::from_utf8(record.name().into()).unwrap();
+            let mut name = String::from_utf8(record.name().into())?;
             if is_simplify {
                 if let Some(i) = name.find(&[' ', '.', ',', '-'][..]) {
                     name = name[..i].to_string();
@@ -151,29 +178,20 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
             }
             let seq = record.sequence();
 
-            // filters
-            let mut flag_pass = true;
-            if opt_minsize != usize::MAX && seq.len() < opt_minsize {
-                flag_pass = false;
-            } else if opt_maxsize != usize::MAX && seq.len() > opt_maxsize {
-                flag_pass = false;
-            } else if opt_maxn != usize::MAX {
-                if hnsm::count_n(seq.get(..).unwrap()) > opt_maxn {
-                    flag_pass = false;
-                }
-            } else if is_uniq {
-                // If the set did not previously contain an equal value, true is returned.
-                let seen = !set_list.insert(name.clone());
-                if seen {
-                    flag_pass = false;
-                }
-            }
-
-            if !flag_pass {
+            // Apply filters
+            if !pass_filters(
+                &seq,
+                opt_minsize,
+                opt_maxsize,
+                opt_maxn,
+                is_uniq,
+                &mut set_list,
+                &name,
+            ) {
                 continue;
             }
 
-            // formatters
+            // Apply formatters
             let mut seq_out = String::new();
             for nt in seq.get(..).unwrap().iter() {
                 if is_dash && *nt == b'-' {
@@ -202,4 +220,30 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     }
 
     Ok(())
+}
+
+// Check if a sequence passes all filters
+fn pass_filters(
+    seq: &fasta::record::Sequence,
+    minsize: usize,
+    maxsize: usize,
+    maxn: usize,
+    is_uniq: bool,
+    set_list: &mut BTreeSet<String>,
+    name: &str,
+) -> bool {
+    if minsize != usize::MAX && seq.len() < minsize {
+        return false;
+    }
+    if maxsize != usize::MAX && seq.len() > maxsize {
+        return false;
+    }
+    if maxn != usize::MAX && hnsm::count_n(seq.get(..).unwrap()) > maxn {
+        return false;
+    }
+    // If the set did not previously contain an equal value, true is returned
+    if is_uniq && !set_list.insert(name.to_string()) {
+        return false;
+    }
+    true
 }
