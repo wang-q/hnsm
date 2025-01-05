@@ -132,7 +132,7 @@ fn btree_jaccard2(c: &mut Criterion) {
             let set2 = vec.get(rng.sample(side)).unwrap();
 
             let inter = set1.intersection(set2).cloned().count();
-            let union = set1.len() + set2.len() + inter;
+            let union = set1.len() + set2.len() - inter;
 
             let jaccard = (inter as f64) / (union as f64);
             black_box(jaccard);
@@ -154,7 +154,7 @@ fn hashset_jaccard2(c: &mut Criterion) {
             let set2 = vec.get(rng.sample(side)).unwrap();
 
             let inter = set1.intersection(set2).count();
-            let union = set1.len() + set2.len() + inter;
+            let union = set1.len() + set2.len() - inter;
 
             let jaccard = (inter as f64) / (union as f64);
             black_box(jaccard);
