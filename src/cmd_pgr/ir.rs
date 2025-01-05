@@ -1,7 +1,6 @@
 use clap::*;
 use cmd_lib::*;
 use std::io::BufRead;
-use std::{env, vec};
 
 // Create clap subcommand arguments
 pub fn make_subcommand() -> Command {
@@ -94,8 +93,8 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     //----------------------------
     // Paths
     //----------------------------
-    let curdir = env::current_dir()?;
-    let pgr = env::current_exe()?.display().to_string();
+    let curdir = std::env::current_dir()?;
+    let pgr = std::env::current_exe()?.display().to_string();
     let tempdir = tempfile::Builder::new().prefix("pgr_rm_").tempdir()?;
     let tempdir_str = tempdir.path().to_str().unwrap();
 
@@ -121,7 +120,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     // Ops
     //----------------------------
     run_cmd!(info "==> Switch to tempdir")?;
-    env::set_current_dir(tempdir_str)?;
+    std::env::set_current_dir(tempdir_str)?;
 
     run_cmd!(info "==> FastK on repeat")?;
     run_cmd!(
@@ -190,7 +189,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     //----------------------------
     // Done
     //----------------------------
-    env::set_current_dir(&curdir)?;
+    std::env::set_current_dir(&curdir)?;
 
     Ok(())
 }

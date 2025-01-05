@@ -23,7 +23,6 @@ as a reimplementation of PopCOGenT (populations as clusters of gene transfer)
 Subcommand groups:
 
 * Genome alignments:
-    * lastz
     * chain
 
 * Repeats:
