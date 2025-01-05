@@ -5,17 +5,25 @@ use std::collections::HashMap;
 // Create clap subcommand arguments
 pub fn make_subcommand() -> Command {
     Command::new("replace")
-        .about("Replace headers of a FA file")
+        .about("Replace headers of a FA file based on a TSV mapping")
         .after_help(
             r###"
-* <replace.tsv> is a tab-separated file containing two or more fields
+This command replaces sequence headers in a FA file based on a TSV mapping file.
+The TSV file should contain two or more columns: the original name and the replacement name.
+If more than two columns are provided, the sequence will be duplicated for each replacement name.
+Multiple lines of the same original_name will also duplicate the record.
 
+The TSV file format:
         original_name   replace_name    more_replace_name
         original_name   replace_name
         original_name   another_replace_name
 
-* Three or more fields duplicates the record
-* Multiple lines of the same original_name will also duplicate the record
+Examples:
+    1. Replace headers using a TSV file:
+       hnsm replace input.fa replace.tsv -o output.fa
+
+    2. Only output sequences listed in the TSV file (like `hnsm some`):
+       hnsm replace input.fa replace.tsv -s -o output.fa
 
 "###,
         )
@@ -23,20 +31,20 @@ pub fn make_subcommand() -> Command {
             Arg::new("infile")
                 .required(true)
                 .index(1)
-                .help("Set the input file to use"),
+                .help("Input FA file to process"),
         )
         .arg(
             Arg::new("replace.tsv")
                 .required(true)
                 .index(2)
-                .help("Path to replace.tsv"),
+                .help("TSV file containing original and replacement names"),
         )
         .arg(
             Arg::new("some")
                 .long("some")
                 .short('s')
                 .action(ArgAction::SetTrue)
-                .help("Only output sequences in the list, like `hnsm some`"),
+                .help("Only output sequences listed in the TSV file, like `hnsm some`"),
         )
         .arg(
             Arg::new("outfile")
@@ -50,6 +58,9 @@ pub fn make_subcommand() -> Command {
 
 // command implementation
 pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
+    //----------------------------
+    // Args
+    //----------------------------
     let reader = intspan::reader(args.get_one::<String>("infile").unwrap());
     let mut fa_in = fasta::io::Reader::new(reader);
 
@@ -61,11 +72,14 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
         .set_line_base_count(usize::MAX)
         .build_from_writer(writer);
 
+    //----------------------------
+    // Ops
+    //----------------------------
     for result in fa_in.records() {
         // obtain record or fail with error
         let record = result?;
+        let name = String::from_utf8(record.name().into())?;
 
-        let name = String::from_utf8(record.name().into()).unwrap();
         if replace_of.contains_key(&name) {
             for el in replace_of.get(&name).unwrap() {
                 let definition = fasta::record::Definition::new(&**el, None);
@@ -84,6 +98,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     Ok(())
 }
 
+// Read the replacement mappings from a TSV file
 fn read_replaces(input: &str) -> HashMap<String, Vec<String>> {
     let mut replaces: HashMap<String, Vec<String>> = HashMap::new();
 
