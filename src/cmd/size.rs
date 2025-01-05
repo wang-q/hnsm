@@ -21,7 +21,8 @@ Examples:
        hnsm size input.fa -o output.tsv
 
 "###,
-        ).arg(
+        )
+        .arg(
             Arg::new("infiles")
                 .required(true)
                 .num_args(1..)

@@ -1,7 +1,7 @@
 use clap::*;
+use noodles_bgzf as bgzf;
 use std::io::{self};
 use std::{fs, num, path, process};
-use noodles_bgzf as bgzf;
 
 // Create clap subcommand arguments
 pub fn make_subcommand() -> Command {

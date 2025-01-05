@@ -8,7 +8,21 @@ pub fn make_subcommand() -> Command {
         .about("Reverse complement a FA file")
         .after_help(
             r###"
-* [list] is optional, only RC sequences listed in this file
+This command reverse complements sequences in a FA file. If a list of sequence names is provided,
+only the sequences in the list will be reverse complemented. Otherwise, all sequences will be processed.
+
+By default, reverse complemented sequences will have their names prefixed with "RC_". Use the --consistent
+flag to keep the original names.
+
+Examples:
+    1. Reverse complement all sequences in a FASTA file:
+       hnsm rc input.fa -o output.fa
+
+    2. Reverse complement only sequences listed in list.txt:
+       hnsm rc input.fa list.txt -o output.fa
+
+    3. Reverse complement sequences but keep their original names:
+       hnsm rc input.fa -c -o output.fa
 
 "###,
         )
@@ -16,20 +30,20 @@ pub fn make_subcommand() -> Command {
             Arg::new("infile")
                 .required(true)
                 .index(1)
-                .help("Set the input file to use"),
+                .help("Input FA file to process"),
         )
         .arg(
             Arg::new("list.txt")
                 .required(false)
                 .index(2)
-                .help("One name per line"),
+                .help("File containing one sequence name per line (optional)"),
         )
         .arg(
             Arg::new("consistent")
                 .long("consistent")
                 .short('c')
                 .action(ArgAction::SetTrue)
-                .help("Keep the name consistent (don't prepend RC_)"),
+                .help("Keep the name consistent (don't prepend 'RC_')"),
         )
         .arg(
             Arg::new("outfile")
@@ -43,6 +57,9 @@ pub fn make_subcommand() -> Command {
 
 // command implementation
 pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
+    //----------------------------
+    // Args
+    //----------------------------
     let reader = intspan::reader(args.get_one::<String>("infile").unwrap());
     let mut fa_in = fasta::io::Reader::new(reader);
 
@@ -53,12 +70,16 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
         .set_line_base_count(usize::MAX)
         .build_from_writer(writer);
 
-    let mut set_list: HashSet<String> = HashSet::new();
-    if args.contains_id("list.txt") {
-        set_list = intspan::read_first_column(args.get_one::<String>("list.txt").unwrap())
+    //----------------------------
+    // Ops
+    //----------------------------
+    let set_list: HashSet<String> = if args.contains_id("list.txt") {
+        intspan::read_first_column(args.get_one::<String>("list.txt").unwrap())
             .into_iter()
-            .collect();
-    }
+            .collect()
+    } else {
+        HashSet::new()
+    };
 
     for result in fa_in.records() {
         // obtain record or fail with error

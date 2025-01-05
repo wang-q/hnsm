@@ -22,7 +22,8 @@ Examples:
        hnsm some input.fa list.txt -o output.fa
 
 "###,
-        )      .arg(
+        )
+        .arg(
             Arg::new("infile")
                 .required(true)
                 .index(1)
