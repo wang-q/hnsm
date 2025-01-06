@@ -152,7 +152,7 @@ hnsm filter -a 400 tests/fasta/ufasta.fa |
     hnsm split name stdin -o tmp
 hnsm split about -c 2000 tests/fasta/ufasta.fa -o tmp
 
-cargo run --bin hnsm sixframe
+cargo run --bin hnsm sixframe tests/fasta/trans.fa
 
 cargo run --bin hnsm sort
 
@@ -391,31 +391,6 @@ cargo run --bin fasr pl-p2m tests/fasr/S288cvsRM11_1a.slice.fas tests/fasr/S288c
 
 ### Genomes
 
-```shell
-pgr ir tests/pgr/tncentral.fa.gz tests/pgr/mg1655.fa.gz \
-    > tests/pgr/mg1655.ir.json
-
-spanr stat tests/pgr/mg1655.chr.sizes tests/pgr/mg1655.ir.json
-
-pgr rept tests/pgr/mg1655.fa.gz \
-    > tests/pgr/mg1655.rept.json
-
-pgr trf tests/pgr/mg1655.fa.gz \
-    > tests/pgr/mg1655.trf.json
-
-spanr stat tests/pgr/mg1655.chr.sizes tests/pgr/mg1655.rm.json
-spanr statop tests/pgr/mg1655.chr.sizes tests/pgr/mg1655.ir.json tests/pgr/mg1655.rm.json
-
-lastz tests/pgr/pseudocat.fa tests/pgr/pseudopig.fa |
-    lavToPsl stdin stdout \
-    > tests/pgr/lastz.psl
-
-pgr chain tests/pgr/pseudocat.fa tests/pgr/pseudopig.fa tests/pgr/lastz.psl
-
-lastz --self <(gzip -dcf tests/pgr/mg1655.fa.gz)
-
-```
-
 * genomes
 
 ```shell
@@ -424,42 +399,6 @@ curl -L https://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/000/005/845/GCF_000005845.2
 
 curl -L https://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/000/008/865/GCF_000008865.2_ASM886v2/GCF_000008865.2_ASM886v2_genomic.fna.gz \
     > tests/pgr/sakai.fa.gz
-
-```
-
-* repeats
-
-```shell
-# TnCentral
-curl -LO https://tncentral.ncc.unesp.br/api/download_blast/nc/tn_in_is
-
-unzip -j tn_in_is 'tncentral_integrall_isfinder.fa'
-gzip -9 -c 'tncentral_integrall_isfinder.fa' > tncentral.fa.gz
-
-hnsm size tests/pgr/tncentral.fa.gz
-
-# RepBase for RepeatMasker
-curl -LO https://github.com/wang-q/ubuntu/releases/download/20190906/repeatmaskerlibraries-20140131.tar.gz
-
-tar xvfz repeatmaskerlibraries-20140131.tar.gz Libraries/RepeatMaskerLib.embl
-
-# https://sourceforge.net/projects/readseq/
-java -jar ~/bin/readseq.jar -f fa Libraries/RepeatMaskerLib.embl
-mv Libraries/RepeatMaskerLib.embl.fasta repbase.fa
-gzip -9 -k repbase.fa
-
-```
-
-* RepeatMasker
-
-```shell
-singularity run ~/bin/repeatmasker_master.sif /app/RepeatMasker/RepeatMasker \
-    ./genome.fa -xsmall -species "bacteria"
-
-singularity run ~/bin/repeatmasker_master.sif /app/RepeatMasker/util/rmOutToGFF3.pl \
-    ./genome.fa.out > mg1655.rm.gff
-
-spanr gff tests/pgr/mg1655.rm.gff -o tests/pgr/mg1655.rm.json
 
 ```
 
@@ -501,6 +440,68 @@ wgatools dotplot tmp.lastz.maf > tmp.lastz.html
 | ![syn.png](images/syn.png) | ![lastz.png](images/lastz.png) |
 |:--------------------------:|:------------------------------:|
 |            syn             |             lastz              |
+
+
+* repeats
+
+```shell
+# TnCentral
+curl -LO https://tncentral.ncc.unesp.br/api/download_blast/nc/tn_in_is
+
+unzip -j tn_in_is 'tncentral_integrall_isfinder.fa'
+gzip -9 -c 'tncentral_integrall_isfinder.fa' > tncentral.fa.gz
+
+hnsm size tests/pgr/tncentral.fa.gz
+
+# RepBase for RepeatMasker
+curl -LO https://github.com/wang-q/ubuntu/releases/download/20190906/repeatmaskerlibraries-20140131.tar.gz
+
+tar xvfz repeatmaskerlibraries-20140131.tar.gz Libraries/RepeatMaskerLib.embl
+
+# https://sourceforge.net/projects/readseq/
+java -jar ~/bin/readseq.jar -f fa Libraries/RepeatMaskerLib.embl
+mv Libraries/RepeatMaskerLib.embl.fasta repbase.fa
+gzip -9 -k repbase.fa
+
+```
+
+* RepeatMasker
+
+```shell
+singularity run ~/bin/repeatmasker_master.sif /app/RepeatMasker/RepeatMasker \
+    ./genome.fa -xsmall -species "bacteria"
+
+singularity run ~/bin/repeatmasker_master.sif /app/RepeatMasker/util/rmOutToGFF3.pl \
+    ./genome.fa.out > mg1655.rm.gff
+
+spanr gff tests/pgr/mg1655.rm.gff -o tests/pgr/mg1655.rm.json
+
+```
+
+```shell
+pgr ir tests/pgr/tncentral.fa.gz tests/pgr/mg1655.fa.gz \
+    > tests/pgr/mg1655.ir.json
+
+spanr stat tests/pgr/mg1655.chr.sizes tests/pgr/mg1655.ir.json
+
+pgr rept tests/pgr/mg1655.fa.gz \
+    > tests/pgr/mg1655.rept.json
+
+pgr trf tests/pgr/mg1655.fa.gz \
+    > tests/pgr/mg1655.trf.json
+
+spanr stat tests/pgr/mg1655.chr.sizes tests/pgr/mg1655.rm.json
+spanr statop tests/pgr/mg1655.chr.sizes tests/pgr/mg1655.ir.json tests/pgr/mg1655.rm.json
+
+lastz tests/pgr/pseudocat.fa tests/pgr/pseudopig.fa |
+    lavToPsl stdin stdout \
+    > tests/pgr/lastz.psl
+
+pgr chain tests/pgr/pseudocat.fa tests/pgr/pseudopig.fa tests/pgr/lastz.psl
+
+lastz --self <(gzip -dcf tests/pgr/mg1655.fa.gz)
+
+```
 
 ## Author
 
