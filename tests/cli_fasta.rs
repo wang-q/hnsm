@@ -42,9 +42,8 @@ fn command_size() -> anyhow::Result<()> {
     let output = cmd
         .arg("size")
         .arg("tests/fasta/ufasta.fa")
-        .output()
-        .unwrap();
-    let stdout = String::from_utf8(output.stdout).unwrap();
+        .output()?;
+    let stdout = String::from_utf8(output.stdout)?;
 
     assert_eq!(stdout.lines().count(), 50);
     assert!(stdout.contains("read0\t359"), "read0");
@@ -54,7 +53,7 @@ fn command_size() -> anyhow::Result<()> {
     for line in stdout.lines() {
         let fields: Vec<&str> = line.split('\t').collect();
         if fields.len() == 2 {
-            sum += fields[1].parse::<i32>().unwrap();
+            sum += fields[1].parse::<i32>()?;
         }
     }
     assert_eq!(sum, 9317, "sum length");
@@ -69,9 +68,8 @@ fn command_size_gz() -> anyhow::Result<()> {
         .arg("size")
         .arg("tests/fasta/ufasta.fa")
         .arg("tests/fasta/ufasta.fa.gz")
-        .output()
-        .unwrap();
-    let stdout = String::from_utf8(output.stdout).unwrap();
+        .output()?;
+    let stdout = String::from_utf8(output.stdout)?;
 
     assert_eq!(stdout.lines().count(), 100);
     assert!(stdout.contains("read0\t359"), "read0");
@@ -87,9 +85,8 @@ fn command_some() -> anyhow::Result<()> {
         .arg("some")
         .arg("tests/fasta/ufasta.fa")
         .arg("tests/fasta/list.txt")
-        .output()
-        .unwrap();
-    let stdout = String::from_utf8(output.stdout).unwrap();
+        .output()?;
+    let stdout = String::from_utf8(output.stdout)?;
 
     assert_eq!(stdout.lines().count(), 4);
     assert!(stdout.contains("read0\n"), "read0");
@@ -101,9 +98,8 @@ fn command_some() -> anyhow::Result<()> {
         .arg("tests/fasta/ufasta.fa")
         .arg("tests/fasta/list.txt")
         .arg("-i")
-        .output()
-        .unwrap();
-    let stdout = String::from_utf8(output.stdout).unwrap();
+        .output()?;
+    let stdout = String::from_utf8(output.stdout)?;
 
     assert_eq!(stdout.lines().count(), 91);
     assert!(!stdout.contains("read0\n"), "read0");
@@ -119,9 +115,8 @@ fn command_order() -> anyhow::Result<()> {
         .arg("order")
         .arg("tests/fasta/ufasta.fa")
         .arg("tests/fasta/list.txt")
-        .output()
-        .unwrap();
-    let stdout = String::from_utf8(output.stdout).unwrap();
+        .output()?;
+    let stdout = String::from_utf8(output.stdout)?;
 
     assert_eq!(stdout.lines().count(), 4);
     assert!(stdout.contains("read12\n"), "read12");
@@ -137,9 +132,8 @@ fn command_one() -> anyhow::Result<()> {
         .arg("one")
         .arg("tests/fasta/ufasta.fa")
         .arg("read12")
-        .output()
-        .unwrap();
-    let stdout = String::from_utf8(output.stdout).unwrap();
+        .output()?;
+    let stdout = String::from_utf8(output.stdout)?;
 
     assert_eq!(stdout.lines().count(), 2);
     assert!(stdout.contains("read12\n"), "read12");
@@ -153,9 +147,8 @@ fn command_masked() -> anyhow::Result<()> {
     let output = cmd
         .arg("masked")
         .arg("tests/fasta/ufasta.fa")
-        .output()
-        .unwrap();
-    let stdout = String::from_utf8(output.stdout).unwrap();
+        .output()?;
+    let stdout = String::from_utf8(output.stdout)?;
 
     assert!(stdout.contains("read46:3-4"), "read46");
 
@@ -169,9 +162,8 @@ fn command_mask() -> anyhow::Result<()> {
         .arg("mask")
         .arg("tests/fasta/ufasta.fa")
         .arg("tests/fasta/mask.json")
-        .output()
-        .unwrap();
-    let stdout = String::from_utf8(output.stdout).unwrap();
+        .output()?;
+    let stdout = String::from_utf8(output.stdout)?;
 
     assert!(stdout.contains("read0\ntcgtttaacccaaatcaagg"), "read0");
     assert!(stdout.contains("read2\natagcaagct"), "read2");
@@ -182,9 +174,8 @@ fn command_mask() -> anyhow::Result<()> {
         .arg("--hard")
         .arg("tests/fasta/ufasta.fa")
         .arg("tests/fasta/mask.json")
-        .output()
-        .unwrap();
-    let stdout = String::from_utf8(output.stdout).unwrap();
+        .output()?;
+    let stdout = String::from_utf8(output.stdout)?;
 
     assert!(stdout.contains("read0\nNNNNNNNNNNNNNNNNNNNN"), "read0");
     assert!(stdout.contains("read2\nNNNNNNNNNN"), "read2");
@@ -195,8 +186,8 @@ fn command_mask() -> anyhow::Result<()> {
 #[test]
 fn command_rc() -> anyhow::Result<()> {
     let mut cmd = Command::cargo_bin("hnsm")?;
-    let output = cmd.arg("rc").arg("tests/fasta/ufasta.fa").output().unwrap();
-    let stdout = String::from_utf8(output.stdout).unwrap();
+    let output = cmd.arg("rc").arg("tests/fasta/ufasta.fa").output()?;
+    let stdout = String::from_utf8(output.stdout)?;
 
     assert!(stdout.contains("GgacTgcggCTagAA"), "read46");
 
@@ -205,9 +196,8 @@ fn command_rc() -> anyhow::Result<()> {
         .arg("rc")
         .arg("tests/fasta/ufasta.fa")
         .arg("tests/fasta/list.txt")
-        .output()
-        .unwrap();
-    let stdout = String::from_utf8(output.stdout).unwrap();
+        .output()?;
+    let stdout = String::from_utf8(output.stdout)?;
 
     assert!(stdout.contains(">RC_read12"), "read12");
     assert!(!stdout.contains(">RC_read46"), "read46");
@@ -222,9 +212,8 @@ fn command_count() -> anyhow::Result<()> {
     let output = cmd
         .arg("count")
         .arg("tests/fasta/ufasta.fa")
-        .output()
-        .unwrap();
-    let stdout = String::from_utf8(output.stdout).unwrap();
+        .output()?;
+    let stdout = String::from_utf8(output.stdout)?;
 
     assert!(stdout.contains("read45\t0\t0"), "empty");
     assert!(stdout.contains("total\t9317\t2318"), "total");
@@ -239,9 +228,8 @@ fn command_replace() -> anyhow::Result<()> {
         .arg("replace")
         .arg("tests/fasta/ufasta.fa")
         .arg("tests/fasta/replace.tsv")
-        .output()
-        .unwrap();
-    let stdout = String::from_utf8(output.stdout).unwrap();
+        .output()?;
+    let stdout = String::from_utf8(output.stdout)?;
 
     assert_eq!(stdout.lines().count(), 95);
     assert!(stdout.contains(">359"), "read0");
@@ -253,9 +241,8 @@ fn command_replace() -> anyhow::Result<()> {
         .arg("tests/fasta/ufasta.fa")
         .arg("tests/fasta/replace.tsv")
         .arg("--some")
-        .output()
-        .unwrap();
-    let stdout = String::from_utf8(output.stdout).unwrap();
+        .output()?;
+    let stdout = String::from_utf8(output.stdout)?;
 
     assert_eq!(stdout.lines().count(), 6);
     assert!(stdout.contains(">359"), "read0");
@@ -276,9 +263,8 @@ fn command_filter() -> anyhow::Result<()> {
         .arg("10")
         .arg("-z")
         .arg("50")
-        .output()
-        .unwrap();
-    let stdout = String::from_utf8(output.stdout).unwrap();
+        .output()?;
+    let stdout = String::from_utf8(output.stdout)?;
 
     assert_eq!(stdout.lines().count(), 12);
     assert!(!stdout.contains(">read0"), "read0");
@@ -292,9 +278,8 @@ fn command_filter() -> anyhow::Result<()> {
         .arg("--uniq")
         .arg("-a")
         .arg("1")
-        .output()
-        .unwrap();
-    let stdout = String::from_utf8(output.stdout).unwrap();
+        .output()?;
+    let stdout = String::from_utf8(output.stdout)?;
 
     assert_eq!(stdout.lines().count(), 90);
 
@@ -310,9 +295,8 @@ fn command_filter_fmt() -> anyhow::Result<()> {
         .arg("filter")
         .arg("tests/fasta/filter.fa")
         .arg("--iupac")
-        .output()
-        .unwrap();
-    let stdout = String::from_utf8(output.stdout).unwrap();
+        .output()?;
+    let stdout = String::from_utf8(output.stdout)?;
 
     assert!(!stdout.contains(">iupac\nAMRG"), "iupac");
     assert!(stdout.contains(">iupac\nANNG"), "iupac");
@@ -323,9 +307,8 @@ fn command_filter_fmt() -> anyhow::Result<()> {
         .arg("filter")
         .arg("tests/fasta/filter.fa")
         .arg("--dash")
-        .output()
-        .unwrap();
-    let stdout = String::from_utf8(output.stdout).unwrap();
+        .output()?;
+    let stdout = String::from_utf8(output.stdout)?;
 
     assert!(!stdout.contains(">dash\nA-RG"), "dash");
     assert!(stdout.contains(">dash\nARG"), "dash");
@@ -335,9 +318,8 @@ fn command_filter_fmt() -> anyhow::Result<()> {
         .arg("filter")
         .arg("tests/fasta/filter.fa")
         .arg("--upper")
-        .output()
-        .unwrap();
-    let stdout = String::from_utf8(output.stdout).unwrap();
+        .output()?;
+    let stdout = String::from_utf8(output.stdout)?;
 
     assert!(!stdout.contains(">upper\nAtcG"), "upper");
     assert!(stdout.contains(">upper\nATCG"), "upper");
@@ -347,9 +329,8 @@ fn command_filter_fmt() -> anyhow::Result<()> {
         .arg("filter")
         .arg("tests/fasta/filter.fa")
         .arg("--simplify")
-        .output()
-        .unwrap();
-    let stdout = String::from_utf8(output.stdout).unwrap();
+        .output()?;
+    let stdout = String::from_utf8(output.stdout)?;
 
     assert!(!stdout.contains(">read.1 simplify\nAGGG"), "simplify");
     assert!(stdout.contains(">read\nAGGG"), "simplify");
@@ -363,9 +344,8 @@ fn command_dedup() -> anyhow::Result<()> {
     let output = cmd
         .arg("dedup")
         .arg("tests/fasta/dedup.fa")
-        .output()
-        .unwrap();
-    let stdout = String::from_utf8(output.stdout).unwrap();
+        .output()?;
+    let stdout = String::from_utf8(output.stdout)?;
 
     assert_eq!(stdout.lines().count(), 8);
     assert!(!stdout.contains(">read0 some text"));
@@ -375,9 +355,8 @@ fn command_dedup() -> anyhow::Result<()> {
         .arg("dedup")
         .arg("tests/fasta/dedup.fa")
         .arg("--desc")
-        .output()
-        .unwrap();
-    let stdout = String::from_utf8(output.stdout).unwrap();
+        .output()?;
+    let stdout = String::from_utf8(output.stdout)?;
 
     assert_eq!(stdout.lines().count(), 10);
     assert!(stdout.contains(">read0 some text"));
@@ -387,9 +366,8 @@ fn command_dedup() -> anyhow::Result<()> {
         .arg("dedup")
         .arg("tests/fasta/dedup.fa")
         .arg("--seq")
-        .output()
-        .unwrap();
-    let stdout = String::from_utf8(output.stdout).unwrap();
+        .output()?;
+    let stdout = String::from_utf8(output.stdout)?;
 
     assert_eq!(stdout.lines().count(), 6);
     assert!(!stdout.contains(">read1"));
@@ -400,9 +378,8 @@ fn command_dedup() -> anyhow::Result<()> {
         .arg("tests/fasta/dedup.fa")
         .arg("--seq")
         .arg("--case")
-        .output()
-        .unwrap();
-    let stdout = String::from_utf8(output.stdout).unwrap();
+        .output()?;
+    let stdout = String::from_utf8(output.stdout)?;
 
     assert_eq!(stdout.lines().count(), 4);
     assert!(!stdout.contains(">read2"));
@@ -413,9 +390,8 @@ fn command_dedup() -> anyhow::Result<()> {
         .arg("tests/fasta/dedup.fa")
         .arg("--seq")
         .arg("--both")
-        .output()
-        .unwrap();
-    let stdout = String::from_utf8(output.stdout).unwrap();
+        .output()?;
+    let stdout = String::from_utf8(output.stdout)?;
 
     assert_eq!(stdout.lines().count(), 2);
     assert!(!stdout.contains(">read3"));
@@ -428,9 +404,8 @@ fn command_dedup() -> anyhow::Result<()> {
         .arg("--both")
         .arg("--file")
         .arg("stdout")
-        .output()
-        .unwrap();
-    let stdout = String::from_utf8(output.stdout).unwrap();
+        .output()?;
+    let stdout = String::from_utf8(output.stdout)?;
 
     assert_eq!(stdout.lines().count(), 7);
     assert!(stdout.contains(">read0"));
@@ -441,7 +416,7 @@ fn command_dedup() -> anyhow::Result<()> {
 
 #[test]
 fn command_split_name() -> anyhow::Result<()> {
-    let tempdir = TempDir::new().unwrap();
+    let tempdir = TempDir::new()?;
     let tempdir_str = tempdir.path().to_str().unwrap();
 
     let mut cmd = Command::cargo_bin("hnsm")?;
@@ -463,7 +438,7 @@ fn command_split_name() -> anyhow::Result<()> {
 
 #[test]
 fn command_split_about() -> anyhow::Result<()> {
-    let tempdir = TempDir::new().unwrap();
+    let tempdir = TempDir::new()?;
     let tempdir_str = tempdir.path().to_str().unwrap();
 
     let mut cmd = Command::cargo_bin("hnsm")?;
@@ -494,9 +469,8 @@ fn command_n50() -> anyhow::Result<()> {
     let output = cmd
         .arg("n50")
         .arg("tests/fasta/ufasta.fa")
-        .output()
-        .unwrap();
-    let stdout = String::from_utf8(output.stdout).unwrap();
+        .output()?;
+    let stdout = String::from_utf8(output.stdout)?;
 
     assert_eq!(stdout.lines().count(), 1);
     assert!(stdout.contains("N50\t314"), "line 1");
@@ -507,9 +481,8 @@ fn command_n50() -> anyhow::Result<()> {
         .arg("n50")
         .arg("tests/fasta/ufasta.fa")
         .arg("-H")
-        .output()
-        .unwrap();
-    let stdout = String::from_utf8(output.stdout).unwrap();
+        .output()?;
+    let stdout = String::from_utf8(output.stdout)?;
 
     assert_eq!(stdout.lines().count(), 1);
     assert!(!stdout.contains("N50\t314"), "line 1");
@@ -523,9 +496,8 @@ fn command_n50() -> anyhow::Result<()> {
         .arg("-H")
         .arg("-g")
         .arg("10000")
-        .output()
-        .unwrap();
-    let stdout = String::from_utf8(output.stdout).unwrap();
+        .output()?;
+    let stdout = String::from_utf8(output.stdout)?;
 
     assert_eq!(stdout.lines().count(), 1);
     assert!(stdout.contains("297"), "line 1");
@@ -538,9 +510,8 @@ fn command_n50() -> anyhow::Result<()> {
         .arg("-H")
         .arg("-S")
         .arg("-A")
-        .output()
-        .unwrap();
-    let stdout = String::from_utf8(output.stdout).unwrap();
+        .output()?;
+    let stdout = String::from_utf8(output.stdout)?;
 
     assert_eq!(stdout.lines().count(), 3);
     assert!(stdout.contains("314\n9317\n186.34"), "line 1,2,3");
@@ -556,9 +527,8 @@ fn command_n50() -> anyhow::Result<()> {
         .arg("10")
         .arg("-N")
         .arg("90")
-        .output()
-        .unwrap();
-    let stdout = String::from_utf8(output.stdout).unwrap();
+        .output()?;
+    let stdout = String::from_utf8(output.stdout)?;
 
     assert_eq!(stdout.lines().count(), 3);
     assert!(stdout.contains("516\n112\n314.70\n"), "line 1,2,3");
@@ -574,13 +544,30 @@ fn command_n50() -> anyhow::Result<()> {
         .arg("-N")
         .arg("90")
         .arg("-t")
-        .output()
-        .unwrap();
-    let stdout = String::from_utf8(output.stdout).unwrap();
+        .output()?;
+    let stdout = String::from_utf8(output.stdout)?;
 
     assert_eq!(stdout.lines().count(), 2);
     assert!(stdout.contains("N10\tN90\tE\n"), "line 1");
     assert!(stdout.contains("516\t112\t314.70\n"), "line 2");
+
+    Ok(())
+}
+
+#[test]
+fn command_sixframe() -> anyhow::Result<()> {
+    let mut cmd = Command::cargo_bin("hnsm")?;
+    let output = cmd
+        .arg("sixframe")
+        .arg("tests/fasta/trans.fa")
+        .output()?;
+    let stdout = String::from_utf8(output.stdout)?;
+
+    assert_eq!(stdout.lines().count(), 16);
+    assert!(stdout.contains(">seq1(+):1-15|frame=0"));
+    assert!(stdout.contains("MGMG*"));
+    assert!(stdout.contains(">seq1(-):3-26|frame=2"));
+    assert!(stdout.contains("TIYLYPIP"));
 
     Ok(())
 }

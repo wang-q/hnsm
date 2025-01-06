@@ -9,6 +9,7 @@
     * `pgr chain`
 
 * Add `hnsm mask`
+* Add `hnsm sixframe`
 
 * Improve help texts
 

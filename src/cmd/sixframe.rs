@@ -1,31 +1,17 @@
 use clap::*;
-use std::io::BufRead;
+use noodles::fasta;
+use std::io::Write;
 
 // Create clap subcommand arguments
 pub fn make_subcommand() -> Command {
     Command::new("sixframe")
         .about("Six-Frame Translation")
         .arg(
-            Arg::new("infiles")
+            Arg::new("infile")
                 .required(true)
-                .num_args(1..)
+                .num_args(1)
                 .index(1)
                 .help("Set the input file to use"),
-        )
-        .arg(
-            Arg::new("header")
-                .long("header")
-                .short('H')
-                .action(ArgAction::SetTrue)
-                .help("Treat the first line of each file as a header"),
-        )
-        .arg(
-            Arg::new("len")
-                .long("len")
-                .short('l')
-                .num_args(1)
-                .value_parser(value_parser!(usize))
-                .help("Set the minimal length of AA sequence"),
         )
         .arg(
             Arg::new("outfile")
@@ -40,16 +26,85 @@ pub fn make_subcommand() -> Command {
 // command implementation
 pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     //----------------------------
-    // Options
+    // Args
     //----------------------------
-    // let mut writer = intspan::writer(args.get_one::<String>("outfile").unwrap());
-    //
-    // for infile in args.get_many::<String>("infiles").unwrap() {
-    //     let reader = intspan::reader(infile);
-    //     for line in reader.lines().map_while(Result::ok) {}
-    // }
+    let reader = intspan::reader(args.get_one::<String>("infile").unwrap());
+    let mut fa_in = fasta::io::Reader::new(reader);
 
-    // dbg!(hnsm::NT_VAL);
+    let mut writer = intspan::writer(args.get_one::<String>("outfile").unwrap());
+
+    //----------------------------
+    // Ops
+    //----------------------------
+    for result in fa_in.records() {
+        // obtain record or fail with error
+        let record = result?;
+
+        let name = String::from_utf8(record.name().into())?;
+        let seq = record.sequence();
+
+        // Perform six-frame translation
+        let translations = six_frame_translation(&seq[..]);
+
+        // Iterate over each translation frame
+        for (protein, frame, is_reverse) in translations {
+            // Detect ORFs in the translated protein sequence
+            let orfs = hnsm::find_orfs(&protein);
+
+            // Calculate the starting position in the DNA sequence
+            let dna_start = if is_reverse {
+                seq.len() - frame // Starting position for reverse strand
+            } else {
+                frame // Starting position for forward strand
+            };
+
+            // Adjust dna positions and write each ORF to the output file
+            for (orf_seq, start, end) in orfs {
+                // 1-based
+                let orf_start = if is_reverse {
+                    dna_start - end * 3 + 1
+                } else {
+                    dna_start + start * 3 + 1
+                };
+                let orf_end = if is_reverse {
+                    dna_start - start * 3
+                } else {
+                    dna_start + end * 3
+                };
+
+                let header = format!(
+                    "{}({}):{}-{}|frame={}",
+                    name,
+                    if is_reverse { "-" } else { "+" },
+                    orf_start,
+                    orf_end,
+                    frame,
+                );
+                writer.write_fmt(format_args!(">{}\n{}\n", header, orf_seq))?;
+            }
+        }
+    }
 
     Ok(())
+}
+
+fn six_frame_translation(dna: &[u8]) -> Vec<(String, usize, bool)> {
+    let mut translations = Vec::new();
+
+    // Translate the three forward frames
+    for frame in 0..3 {
+        let frame_dna = &dna[frame..];
+        let protein = hnsm::translate(frame_dna);
+        translations.push((protein, frame, false)); // false indicates forward strand
+    }
+
+    // Translate the three forward frames
+    let dna_rc = hnsm::rev_comp(dna).collect::<Vec<_>>();
+    for frame in 0..3 {
+        let frame_dna = &dna_rc[frame..];
+        let protein = hnsm::translate(frame_dna);
+        translations.push((protein, frame, true)); // true indicates reverse strand
+    }
+
+    translations
 }

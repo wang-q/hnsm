@@ -110,5 +110,5 @@ Subcommand groups:
     Ok(())
 }
 
-// TODO:
-//  Remove fully contained sequences
+// TODO: Remove fully contained sequences
+// TODO: distance --parallel
