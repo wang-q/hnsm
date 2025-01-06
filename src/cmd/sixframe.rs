@@ -6,12 +6,27 @@ use std::io::Write;
 pub fn make_subcommand() -> Command {
     Command::new("sixframe")
         .about("Six-Frame Translation")
+        .after_help(
+            r###"
+This command performs six-frame translation on DNA sequences in a FASTA file.
+It translates each sequence into all six possible reading frames (three forward and three reverse)
+and identifies open reading frames (ORFs) in the translated protein sequences.
+
+Examples:
+    1. Perform six-frame translation on a FASTA file and output to stdout:
+       hnsm sixframe input.fa
+
+    2. Perform six-frame translation and save the results to a file:
+       hnsm sixframe input.fa -o output.fa
+
+"###,
+        )
         .arg(
             Arg::new("infile")
                 .required(true)
                 .num_args(1)
                 .index(1)
-                .help("Set the input file to use"),
+                .help("Input FASTA file containing DNA sequences"),
         )
         .arg(
             Arg::new("outfile")
@@ -22,6 +37,8 @@ pub fn make_subcommand() -> Command {
                 .help("Output filename. [stdout] for screen"),
         )
 }
+
+// https://web.expasy.org/translate/
 
 // command implementation
 pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
