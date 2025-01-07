@@ -203,6 +203,50 @@ fn nohash_jaccard(c: &mut Criterion) {
     });
 }
 
+fn rapidhash_jaccard(c: &mut Criterion) {
+    let vec: Vec<rapidhash::RapidHashSet<u64>> = generate_random_set(LEN, SIZE)
+        .iter()
+        .map(|set| set.iter().cloned().collect())
+        .collect();
+
+    c.bench_function("rapidhash_jaccard", |b| {
+        b.iter(|| {
+            let mut rng = rand::thread_rng();
+            let side = rand::distributions::Uniform::new(0, SIZE);
+            let set1 = vec.get(rng.sample(side)).unwrap();
+            let set2 = vec.get(rng.sample(side)).unwrap();
+
+            let inter = set1.intersection(set2).count();
+            let union = set1.len() + set2.len() - inter;
+
+            let jaccard = (inter as f64) / (union as f64);
+            black_box(jaccard);
+        })
+    });
+}
+
+fn rapidinlinehash_jaccard(c: &mut Criterion) {
+    let vec: Vec<rapidhash::RapidInlineHashSet<u64>> = generate_random_set(LEN, SIZE)
+        .iter()
+        .map(|set| set.iter().cloned().collect())
+        .collect();
+
+    c.bench_function("rapidinlinehash_jaccard", |b| {
+        b.iter(|| {
+            let mut rng = rand::thread_rng();
+            let side = rand::distributions::Uniform::new(0, SIZE);
+            let set1 = vec.get(rng.sample(side)).unwrap();
+            let set2 = vec.get(rng.sample(side)).unwrap();
+
+            let inter = set1.intersection(set2).count();
+            let union = set1.len() + set2.len() - inter;
+
+            let jaccard = (inter as f64) / (union as f64);
+            black_box(jaccard);
+        })
+    });
+}
+
 criterion_group!(
     benches,
     btree_inter,
@@ -214,6 +258,8 @@ criterion_group!(
     hashset_jaccard,
     tinyset_jaccard,
     nohash_jaccard,
+    rapidhash_jaccard,
+    rapidinlinehash_jaccard,
 );
 criterion_main!(benches);
 
@@ -223,3 +269,5 @@ criterion_main!(benches);
 // hashset_jaccard         time:   [74.317 µs 75.589 µs 76.957 µs]
 // tinyset_jaccard         time:   [53.552 µs 53.821 µs 54.103 µs]
 // nohash_jaccard          time:   [60.036 µs 60.417 µs 60.790 µs]
+// rapidhash_jaccard       time:   [22.560 µs 22.733 µs 22.913 µs]
+// rapidinlinehash_jaccard time:   [22.773 µs 23.040 µs 23.351 µs]

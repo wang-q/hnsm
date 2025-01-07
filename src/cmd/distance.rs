@@ -1,7 +1,6 @@
 use clap::*;
 use hnsm::Minimizer;
 use noodles_fasta as fasta;
-use std::collections::BTreeSet;
 use std::iter::FromIterator;
 
 // Create clap subcommand arguments
@@ -61,10 +60,11 @@ Examples:
                 .long("hasher")
                 .action(ArgAction::Set)
                 .value_parser([
+                    builder::PossibleValue::new("rapid"),
                     builder::PossibleValue::new("fx"),
                     builder::PossibleValue::new("murmur"),
                 ])
-                .default_value("fx")
+                .default_value("rapid")
                 .help("Hash algorithm to use"),
         )
         .arg(
@@ -112,7 +112,7 @@ Examples:
 #[derive(Default, Clone)]
 struct MinimizerEntry {
     name: String,
-    set: BTreeSet<u64>,
+    set: rapidhash::RapidHashSet<u64>,
 }
 
 // command implementation
@@ -221,6 +221,12 @@ fn load_file(
         let seq = record.sequence();
 
         let minimizers = match opt_hasher.as_str() {
+            "rapid" => hnsm::JumpingMinimizer {
+                w: opt_window,
+                k: opt_kmer,
+                hasher: hnsm::RapidHash,
+            }
+            .minimizer(&seq[..]),
             "fx" => hnsm::JumpingMinimizer {
                 w: opt_window,
                 k: opt_kmer,
@@ -236,7 +242,8 @@ fn load_file(
             _ => unreachable!(),
         };
 
-        let set: BTreeSet<u64> = BTreeSet::from_iter(minimizers.iter().map(|t| t.1));
+        let set: rapidhash::RapidHashSet<u64> =
+            rapidhash::RapidHashSet::from_iter(minimizers.iter().map(|t| t.1));
         let entry = MinimizerEntry { name, set };
         entries.push(entry);
     }
@@ -244,8 +251,11 @@ fn load_file(
     entries
 }
 
-// Calculate Jaccard, Containment, and Mash distance between two BTreeSet
-fn calc_distances(s1: &BTreeSet<u64>, s2: &BTreeSet<u64>) -> (f64, f64, f64) {
+// Calculate Jaccard, Containment, and Mash distance between two sets
+fn calc_distances(
+    s1: &rapidhash::RapidHashSet<u64>,
+    s2: &rapidhash::RapidHashSet<u64>,
+) -> (f64, f64, f64) {
     let inter = s1.intersection(&s2).cloned().count();
     let union = s1.len() + s2.len() - inter;
 
