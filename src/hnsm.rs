@@ -47,7 +47,7 @@ Subcommand groups:
 * Fasta files
     * info: size / count / masked / n50
     * records: one / some / order / split
-    * transform: replace / rc / filter / dedup / mask
+    * transform: replace / rc / filter / dedup / mask / sixframe
     * indexing: gz / range
         * `hnsm gz` writes out the BGZF format and `hnsm range` reads it
 
@@ -55,8 +55,9 @@ Subcommand groups:
     * interleave
 
 * Clustering
-    * vectors: similarity
     * DNA/protein: distance
+    * vectors: similarity
+    * convert
     * cluster
     * manifold
 
@@ -88,7 +89,6 @@ Subcommand groups:
         Some(("filter", sub_matches)) => cmd::filter::execute(sub_matches),
         Some(("dedup", sub_matches)) => cmd::dedup::execute(sub_matches),
         Some(("mask", sub_matches)) => cmd::mask::execute(sub_matches),
-        //
         Some(("sixframe", sub_matches)) => cmd::sixframe::execute(sub_matches),
         // index
         Some(("gz", sub_matches)) => cmd::gz::execute(sub_matches),
@@ -111,4 +111,3 @@ Subcommand groups:
 }
 
 // TODO: Remove fully contained sequences
-// TODO: distance --parallel

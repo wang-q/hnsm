@@ -1,7 +1,7 @@
 use clap::*;
 use hnsm::Minimizer;
 use noodles_fasta as fasta;
-use std::collections::{HashMap, HashSet};
+use std::collections::BTreeSet;
 use std::iter::FromIterator;
 
 // Create clap subcommand arguments
@@ -43,13 +43,18 @@ Examples:
     5. Use 4 threads for parallel processing:
        hnsm distance input.fa --parallel 4
 
+    6. Compare two FA files:
+       hnsm distance file1.fa file2.fa
+
 "###,
         )
         .arg(
-            Arg::new("infile")
+            Arg::new("infiles")
                 .required(true)
+                .num_args(1..=2)
                 .index(1)
-                .help("Input FA file to process"),
+                .required(true)
+                .help("Input filenames. [stdin] for standard input"),
         )
         .arg(
             Arg::new("hasher")
@@ -104,14 +109,17 @@ Examples:
         )
 }
 
+#[derive(Default, Clone)]
+struct MinimizerEntry {
+    name: String,
+    set: BTreeSet<u64>,
+}
+
 // command implementation
 pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     //----------------------------
     // Args
     //----------------------------
-    let reader = intspan::reader(args.get_one::<String>("infile").unwrap());
-    let mut fa_in = fasta::io::Reader::new(reader);
-
     let opt_hasher = args.get_one::<String>("hasher").unwrap();
     let opt_kmer = *args.get_one::<usize>("kmer").unwrap();
     let opt_window = *args.get_one::<usize>("window").unwrap();
@@ -121,15 +129,93 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
 
     let mut writer = intspan::writer(args.get_one::<String>("outfile").unwrap());
 
+    let infiles = args
+        .get_many::<String>("infiles")
+        .unwrap()
+        .map(|s| s.as_str())
+        .collect::<Vec<_>>();
+
     //----------------------------
     // Ops
     //----------------------------
-    let mut set_of = HashMap::new();
-    let mut names = vec![]; // track original orders of names
+    let entries = load_file(infiles.get(0).unwrap(), opt_hasher, opt_kmer, opt_window);
+    let others = if infiles.len() == 2 {
+        load_file(infiles.get(1).unwrap(), opt_hasher, opt_kmer, opt_window)
+    } else {
+        entries.clone()
+    };
+
+    // Channel 1 - Entries
+    let (snd1, rcv1) = crossbeam::channel::bounded::<(&MinimizerEntry, &MinimizerEntry)>(10);
+    // Channel 2 - Results
+    let (snd2, rcv2) = crossbeam::channel::bounded::<String>(10);
+
+    crossbeam::scope(|s| {
+        //----------------------------
+        // Reader thread
+        //----------------------------
+        s.spawn(|_| {
+            for e1 in &entries {
+                for e2 in &others {
+                    snd1.send((e1, e2)).unwrap();
+                }
+            }
+            // Close the channel - this is necessary to exit the for-loop in the worker
+            drop(snd1);
+        });
+
+        //----------------------------
+        // Worker threads
+        //----------------------------
+        for _ in 0..opt_parallel {
+            // Send to sink, receive from source
+            let (sendr, recvr) = (snd2.clone(), rcv1.clone());
+            // Spawn workers in separate threads
+            s.spawn(move |_| {
+                // Receive until channel closes
+                for (e1, e2) in recvr.iter() {
+                    let (jaccard, containment, mash) = calc_distances(&e1.set, &e2.set);
+                    let out_string = format!(
+                        "{}\t{}\t{:.4}\t{:.4}\t{:.4}\n",
+                        e1.name,
+                        e2.name,
+                        if is_sim { 1.0 - mash } else { mash },
+                        jaccard,
+                        containment
+                    );
+                    sendr.send(out_string).unwrap();
+                }
+            });
+        }
+        // Close the channel, otherwise sink will never exit the for-loop
+        drop(snd2);
+
+        //----------------------------
+        // Writer (main) thread
+        //----------------------------
+        for out_string in rcv2.iter() {
+            writer.write_all(out_string.as_ref()).unwrap();
+        }
+    })
+    .unwrap();
+
+    Ok(())
+}
+
+fn load_file(
+    infile: &str,
+    opt_hasher: &String,
+    opt_kmer: usize,
+    opt_window: usize,
+) -> Vec<MinimizerEntry> {
+    let reader = intspan::reader(infile);
+    let mut fa_in = fasta::io::Reader::new(reader);
+
+    let mut entries = vec![];
 
     for result in fa_in.records() {
         // obtain record or fail with error
-        let record = result?;
+        let record = result.unwrap();
 
         let name = String::from_utf8(record.name().into()).unwrap();
         let seq = record.sequence();
@@ -150,33 +236,17 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
             _ => unreachable!(),
         };
 
-        names.push(name.clone());
-        let set: HashSet<u64> = HashSet::from_iter(minimizers.iter().map(|t| t.1));
-        set_of.insert(name, set);
+        let set: BTreeSet<u64> = BTreeSet::from_iter(minimizers.iter().map(|t| t.1));
+        let entry = MinimizerEntry { name, set };
+        entries.push(entry);
     }
 
-    for n1 in &names {
-        for n2 in &names {
-            let (jaccard, containment, mash) =
-                calc_distances(set_of.get(n1).unwrap(), set_of.get(n2).unwrap());
-
-            writer.write_fmt(format_args!(
-                "{}\t{}\t{:.4}\t{:.4}\t{:.4}\n",
-                n1,
-                n2,
-                if is_sim { 1.0 - mash } else { mash },
-                jaccard,
-                containment
-            ))?;
-        }
-    }
-
-    Ok(())
+    entries
 }
 
-// Calculate Jaccard, Containment, and Mash distance between two HashSets
-fn calc_distances(s1: &HashSet<u64>, s2: &HashSet<u64>) -> (f64, f64, f64) {
-    let inter = s1.intersection(&s2).count();
+// Calculate Jaccard, Containment, and Mash distance between two BTreeSet
+fn calc_distances(s1: &BTreeSet<u64>, s2: &BTreeSet<u64>) -> (f64, f64, f64) {
+    let inter = s1.intersection(&s2).cloned().count();
     let union = s1.len() + s2.len() - inter;
 
     let jaccard = inter as f64 / union as f64;

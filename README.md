@@ -153,6 +153,7 @@ hnsm filter -a 400 tests/fasta/ufasta.fa |
 hnsm split about -c 2000 tests/fasta/ufasta.fa -o tmp
 
 cargo run --bin hnsm sixframe tests/fasta/trans.fa
+cargo run --bin hnsm sixframe tests/fasta/trans.fa --len 3 --start --end
 
 cargo run --bin hnsm sort
 
@@ -283,6 +284,23 @@ A0A192CFC5_ECO25    0.000000 0.058394 0.160584 0.197080 0.277372 0.000000 0.0000
 Q2QJL7_ACEAC        0.583942 0.627737 0.671533 0.656934 0.700730 0.583942 0.589928 0.000000 0.628378 0.518248
 A0A010SUI8_PSEFL    0.540146 0.576642 0.635036 0.642336 0.671533 0.540146 0.546763 0.628378 0.000000 0.496350
 K1J4J6_9GAMM        0.372263 0.416058 0.496350 0.518248 0.569343 0.372263 0.372263 0.518248 0.496350 0.000000
+
+```
+
+* proteomes
+
+```shell
+curl -L https://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/000/005/845/GCF_000005845.2_ASM584v2/GCF_000005845.2_ASM584v2_protein.faa.gz \
+    > tests/clust/mg1655.pro.fa.gz
+
+curl -L https://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/000/008/865/GCF_000008865.2_ASM886v2/GCF_000008865.2_ASM886v2_protein.faa.gz \
+    > tests/clust/sakai.pro.fa.gz
+
+curl -L https://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/000/006/765/GCF_000006765.1_ASM676v1/GCF_000006765.1_ASM676v1_protein.faa.gz \
+    > tests/clust/pao1.pro.fa.gz
+
+hnsm distance tests/clust/mg1655.pro.fa.gz tests/clust/pao1.pro.fa.gz -k 7 -w 4 |
+    rgr filter stdin --ne 3:1
 
 ```
 
