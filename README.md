@@ -98,7 +98,7 @@ Subcommand groups:
 * Fasta files
     * info: size / count / masked / n50
     * records: one / some / order / split
-    * transform: replace / rc / filter / dedup / mask
+    * transform: replace / rc / filter / dedup / mask / sixframe
     * indexing: gz / range
         * `hnsm gz` writes out the BGZF format and `hnsm range` reads it
 
@@ -106,8 +106,9 @@ Subcommand groups:
     * interleave
 
 * Clustering
-    * vectors: similarity
     * DNA/protein: distance
+    * vectors: similarity
+    * convert
     * cluster
     * manifold
 
