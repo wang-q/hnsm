@@ -96,6 +96,25 @@ fn hashset_union(c: &mut Criterion) {
     });
 }
 
+fn btree_access(c: &mut Criterion) {
+    let vec: Vec<BTreeSet<u64>> = generate_random_set(LEN, SIZE)
+        .iter()
+        .map(|set| set.iter().cloned().collect())
+        .collect();
+
+    c.bench_function("btree_access", |b| {
+        b.iter(|| {
+            let mut rng = rand::thread_rng();
+            let side = rand::distributions::Uniform::new(0, SIZE);
+            let set1 = vec.get(rng.sample(side)).unwrap();
+            let set2 = vec.get(rng.sample(side)).unwrap();
+            let sum = set1.len() + set2.len();
+
+            black_box(sum);
+        })
+    });
+}
+
 fn btree_jaccard(c: &mut Criterion) {
     let vec: Vec<BTreeSet<u64>> = generate_random_set(LEN, SIZE)
         .iter()
@@ -190,6 +209,7 @@ criterion_group!(
     btree_union,
     hashset_inter,
     hashset_union,
+    btree_access,
     btree_jaccard,
     hashset_jaccard,
     tinyset_jaccard,
@@ -198,5 +218,8 @@ criterion_group!(
 criterion_main!(benches);
 
 // msvc
-// btree_jaccard2          time:   [44.467 µs 45.254 µs 46.136 µs]
-// hashset_jaccard2        time:   [48.958 µs 50.457 µs 52.138 µs]
+// btree_access            time:   [8.5894 ns 8.6377 ns 8.6902 ns]
+// btree_jaccard           time:   [56.012 µs 57.249 µs 58.617 µs]
+// hashset_jaccard         time:   [74.317 µs 75.589 µs 76.957 µs]
+// tinyset_jaccard         time:   [53.552 µs 53.821 µs 54.103 µs]
+// nohash_jaccard          time:   [60.036 µs 60.417 µs 60.790 µs]
