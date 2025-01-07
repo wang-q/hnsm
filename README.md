@@ -7,25 +7,27 @@
 `hnsm` - **H**omogeneous **N**ucleic acids/amino acids **S**mart **M**atching
 
 <!-- TOC -->
+
 * [hnsm](#hnsm)
-  * [Install](#install)
-  * [Synopsis](#synopsis)
-    * [`hnsm help`](#hnsm-help)
-    * [`fasr help`](#fasr-help)
-  * [Examples](#examples)
-    * [Fasta files](#fasta-files)
-    * [Index](#index)
-    * [Fastq](#fastq)
-    * [Clustering](#clustering)
-      * [Similarity and dissimilarity (distance) of vectors](#similarity-and-dissimilarity-distance-of-vectors)
-      * [Pairwise distances by Minimizer](#pairwise-distances-by-minimizer)
-      * [Matrix conversion](#matrix-conversion)
-      * [DBSCAN](#dbscan)
-      * [PCoA](#pcoa)
-    * [Block Fasta files](#block-fasta-files)
-    * [Genomes](#genomes)
-  * [Author](#author)
-  * [License](#license)
+    * [Install](#install)
+    * [Synopsis](#synopsis)
+        * [`hnsm help`](#hnsm-help)
+        * [`fasr help`](#fasr-help)
+    * [Examples](#examples)
+        * [Fasta files](#fasta-files)
+        * [Index](#index)
+        * [Fastq](#fastq)
+        * [Clustering](#clustering)
+            * [Similarity and dissimilarity (distance) of vectors](#similarity-and-dissimilarity-distance-of-vectors)
+            * [Pairwise distances by Minimizer](#pairwise-distances-by-minimizer)
+            * [Matrix conversion](#matrix-conversion)
+            * [DBSCAN](#dbscan)
+            * [PCoA](#pcoa)
+        * [Block Fasta files](#block-fasta-files)
+        * [Genomes](#genomes)
+    * [Author](#author)
+    * [License](#license)
+
 <!-- TOC -->
 
 ## Install
@@ -123,6 +125,41 @@ Subcommand groups:
 
 ### `fasr help`
 
+```text
+`fasr` operates block fasta files
+
+Usage: fasr [COMMAND]
+
+Commands:
+  axt2fas    Convert axt to block fasta
+  check      Check genome locations in block fasta headers
+  concat     Concatenate sequence pieces of the same species
+  consensus  Generate consensus sequences by POA
+  cover      Output covers on chromosomes
+  create     Create block fasta files from links of ranges
+  filter     Filter blocks, and can also be used as a formatter
+  join       Join multiple block fasta files by a common target
+  link       Output bi/multi-lateral range links
+  maf2fas    Convert maf to block fasta
+  name       Output all species names
+  pl-p2m     Pipeline - pairwise alignments to multiple alignments
+  refine     Realign files with external programs and trim unwanted regions
+  replace    Concatenate sequence pieces of the same species
+  separate   Separate block fasta files by species
+  slice      Extract alignment slices
+  split      Split block fasta files to per-alignment/chromosome fasta files
+  stat       Extract a subset of species
+  subset     Extract a subset of species
+  variation  List variations (substitutions/indels)
+  xlsx       List variations (substitutions/indels)
+  help       Print this message or the help of the given subcommand(s)
+
+Options:
+  -h, --help     Print help
+  -V, --version  Print version
+
+```
+
 ## Examples
 
 ### Fasta files
@@ -153,10 +190,8 @@ hnsm filter -a 400 tests/fasta/ufasta.fa |
     hnsm split name stdin -o tmp
 hnsm split about -c 2000 tests/fasta/ufasta.fa -o tmp
 
-cargo run --bin hnsm sixframe tests/fasta/trans.fa
-cargo run --bin hnsm sixframe tests/fasta/trans.fa --len 3 --start --end
-
-cargo run --bin hnsm sort
+hnsm sixframe tests/fasta/trans.fa
+hnsm sixframe tests/fasta/trans.fa --len 3 --start --end
 
 ```
 
@@ -238,12 +273,12 @@ hyperfine --warmup 1 \
 
 | Command |       Mean [s] | Min [s] | Max [s] |    Relative |
 |:--------|---------------:|--------:|--------:|------------:|
-| `p1`    | 12.379 ± 0.311 |  11.758 |  12.665 | 3.92 ± 0.20 |
-| `p2`    |  6.943 ± 0.178 |   6.721 |   7.333 | 2.20 ± 0.11 |
-| `p3`    |  5.259 ± 0.198 |   5.051 |   5.617 | 1.67 ± 0.10 |
-| `p4`    |  4.256 ± 0.084 |   4.140 |   4.398 | 1.35 ± 0.06 |
-| `p6`    |  3.329 ± 0.083 |   3.162 |   3.421 | 1.05 ± 0.05 |
-| `p8`    |  3.157 ± 0.139 |   3.015 |   3.458 |        1.00 |
+| `p1`    | 11.701 ± 0.247 |  11.205 |  11.933 | 3.79 ± 0.14 |
+| `p2`    |  6.740 ± 0.071 |   6.573 |   6.809 | 2.18 ± 0.07 |
+| `p3`    |  5.073 ± 0.122 |   4.889 |   5.366 | 1.64 ± 0.07 |
+| `p4`    |  4.146 ± 0.102 |   3.919 |   4.244 | 1.34 ± 0.05 |
+| `p6`    |  3.474 ± 0.114 |   3.347 |   3.674 | 1.13 ± 0.05 |
+| `p8`    |  3.086 ± 0.098 |   2.934 |   3.209 |        1.00 |
 
 #### Pairwise distances by Minimizer
 

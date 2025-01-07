@@ -1,7 +1,7 @@
 use clap::*;
+use rayon::prelude::*;
 use std::io::BufRead;
 use std::simd::prelude::*;
-use rayon::prelude::*;
 
 const LANES: usize = 8; // 32 * 8 = 256, AVX2
 
@@ -124,11 +124,13 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
 
     // Use rayon to parallelize the outer loop
     entries.par_iter().for_each(|e1| {
+        let mut lines = "".to_string();
         for e2 in &others {
             let score = calc(e1.list(), e2.list(), opt_mode, is_sim, is_dis);
-            let out_string = format!("{}\t{}\t{:.4}", e1.name(), e2.name(), score);
-            println!("{}", out_string);
+            let out_string = format!("{}\t{}\t{:.4}\n", e1.name(), e2.name(), score);
+            lines.push_str(&out_string);
         }
+        print!("{}", lines);
     });
 
     Ok(())

@@ -10,7 +10,7 @@ pub fn make_subcommand() -> Command {
         .about("Estimate distances between DNA/protein sequences using minimizers")
         .after_help(
             r###"
-This command calculates pairwise distances between sequences in a FA file using minimizers.
+This command calculates pairwise distances between sequences in FA file(s) using minimizers.
 
 * The outputs are printed to stdout in the following format:
     n1  n2  mash    jaccard containment
@@ -156,14 +156,14 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
                 continue;
             }
             let out_string = format!(
-                "{}\t{}\t{:.4}\t{:.4}\t{:.4}",
+                "{}\t{}\t{:.4}\t{:.4}\t{:.4}\n",
                 e1.name,
                 e2.name,
                 if is_sim { 1.0 - mash } else { mash },
                 jaccard,
                 containment
             );
-            println!("{}", out_string);
+            print!("{}", out_string);
         }
     });
 
