@@ -7,27 +7,25 @@
 `hnsm` - **H**omogeneous **N**ucleic acids/amino acids **S**mart **M**atching
 
 <!-- TOC -->
-
 * [hnsm](#hnsm)
-    * [Install](#install)
-    * [Synopsis](#synopsis)
-        * [`hnsm help`](#hnsm-help)
-        * [`fasr help`](#fasr-help)
-    * [Examples](#examples)
-        * [Fasta files](#fasta-files)
-        * [Index](#index)
-        * [Fastq](#fastq)
-        * [Clustering](#clustering)
-            * [Similarity and dissimilarity (distance) of vectors](#similarity-and-dissimilarity-distance-of-vectors)
-            * [Pairwise distances by Minimizer](#pairwise-distances-by-minimizer)
-            * [Matrix conversion](#matrix-conversion)
-            * [DBSCAN](#dbscan)
-            * [PCoA](#pcoa)
-        * [Block Fasta files](#block-fasta-files)
-        * [Genomes](#genomes)
-    * [Author](#author)
-    * [License](#license)
-
+  * [Install](#install)
+  * [Synopsis](#synopsis)
+    * [`hnsm help`](#hnsm-help)
+    * [`fasr help`](#fasr-help)
+  * [Examples](#examples)
+    * [Fasta files](#fasta-files)
+    * [Index](#index)
+    * [Fastq](#fastq)
+    * [Clustering](#clustering)
+      * [Similarity and dissimilarity (distance) of vectors](#similarity-and-dissimilarity-distance-of-vectors)
+      * [Pairwise distances by Minimizer](#pairwise-distances-by-minimizer)
+      * [Matrix conversion](#matrix-conversion)
+      * [DBSCAN](#dbscan)
+      * [PCoA](#pcoa)
+    * [Block Fasta files](#block-fasta-files)
+    * [Genomes](#genomes)
+  * [Author](#author)
+  * [License](#license)
 <!-- TOC -->
 
 ## Install
