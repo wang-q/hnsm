@@ -110,28 +110,6 @@ fn btree_jaccard(c: &mut Criterion) {
             let set2 = vec.get(rng.sample(side)).unwrap();
 
             let inter = set1.intersection(set2).cloned().count();
-            let union = set1.union(set2).cloned().count();
-
-            let jaccard = (inter as f64) / (union as f64);
-            black_box(jaccard);
-        })
-    });
-}
-
-fn btree_jaccard2(c: &mut Criterion) {
-    let vec: Vec<BTreeSet<u64>> = generate_random_set(LEN, SIZE)
-        .iter()
-        .map(|set| set.iter().cloned().collect())
-        .collect();
-
-    c.bench_function("btree_jaccard2", |b| {
-        b.iter(|| {
-            let mut rng = rand::thread_rng();
-            let side = rand::distributions::Uniform::new(0, SIZE);
-            let set1 = vec.get(rng.sample(side)).unwrap();
-            let set2 = vec.get(rng.sample(side)).unwrap();
-
-            let inter = set1.intersection(set2).cloned().count();
             let union = set1.len() + set2.len() - inter;
 
             let jaccard = (inter as f64) / (union as f64);
@@ -140,13 +118,57 @@ fn btree_jaccard2(c: &mut Criterion) {
     });
 }
 
-fn hashset_jaccard2(c: &mut Criterion) {
-    let vec: Vec<BTreeSet<u64>> = generate_random_set(LEN, SIZE)
+fn hashset_jaccard(c: &mut Criterion) {
+    let vec: Vec<HashSet<u64>> = generate_random_set(LEN, SIZE)
         .iter()
         .map(|set| set.iter().cloned().collect())
         .collect();
 
-    c.bench_function("hashset_jaccard2", |b| {
+    c.bench_function("hashset_jaccard", |b| {
+        b.iter(|| {
+            let mut rng = rand::thread_rng();
+            let side = rand::distributions::Uniform::new(0, SIZE);
+            let set1 = vec.get(rng.sample(side)).unwrap();
+            let set2 = vec.get(rng.sample(side)).unwrap();
+
+            let inter = set1.intersection(set2).count();
+            let union = set1.len() + set2.len() - inter;
+
+            let jaccard = (inter as f64) / (union as f64);
+            black_box(jaccard);
+        })
+    });
+}
+
+fn tinyset_jaccard(c: &mut Criterion) {
+    let vec: Vec<tinyset::SetU64> = generate_random_set(LEN, SIZE)
+        .iter()
+        .map(|set| set.iter().cloned().collect())
+        .collect();
+
+    c.bench_function("tinyset_jaccard", |b| {
+        b.iter(|| {
+            let mut rng = rand::thread_rng();
+            let side = rand::distributions::Uniform::new(0, SIZE);
+            let set1 = vec.get(rng.sample(side)).unwrap();
+            let set2 = vec.get(rng.sample(side)).unwrap();
+
+            let inter = set1.iter().filter(|&x| set2.contains(x)).count();
+            let union = set1.len() + set2.len() - inter;
+
+            let jaccard = (inter as f64) / (union as f64);
+            black_box(jaccard);
+        })
+    });
+}
+
+fn nohash_jaccard(c: &mut Criterion) {
+    let vec: Vec<nohash_hasher::IntSet<u64>> = generate_random_set(LEN, SIZE)
+        .iter()
+        .map(|set| set.iter().cloned().collect())
+        .collect();
+
+    c.bench_function("nohash_jaccard", |b| {
         b.iter(|| {
             let mut rng = rand::thread_rng();
             let side = rand::distributions::Uniform::new(0, SIZE);
@@ -169,8 +191,9 @@ criterion_group!(
     hashset_inter,
     hashset_union,
     btree_jaccard,
-    btree_jaccard2,
-    hashset_jaccard2
+    hashset_jaccard,
+    tinyset_jaccard,
+    nohash_jaccard,
 );
 criterion_main!(benches);
 
