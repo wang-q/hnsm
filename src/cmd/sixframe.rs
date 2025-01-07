@@ -8,16 +8,23 @@ pub fn make_subcommand() -> Command {
         .about("Six-Frame Translation")
         .after_help(
             r###"
-This command performs six-frame translation on DNA sequences in a FASTA file.
+This command performs six-frame translation on DNA sequences in a FA file.
 It translates each sequence into all six possible reading frames (three forward and three reverse)
 and identifies open reading frames (ORFs) in the translated protein sequences.
 
+The output includes the ORF sequences along with their positions and frames.
+
 Examples:
-    1. Perform six-frame translation on a FASTA file and output to stdout:
+    1. Perform six-frame translation on a FA file and output to stdout:
        hnsm sixframe input.fa
 
     2. Perform six-frame translation and save the results to a file:
        hnsm sixframe input.fa -o output.fa
+
+    3. Combine filters (e.g., ORFs starting with M, ending with *, and at least 50 amino acids):
+       hnsm sixframe input.fa --len 50 --start --end
+
+For more information on six-frame translation, visit: https://web.expasy.org/translate/
 
 "###,
         )
@@ -26,7 +33,27 @@ Examples:
                 .required(true)
                 .num_args(1)
                 .index(1)
-                .help("Input FASTA file containing DNA sequences"),
+                .help("Input FA file containing DNA sequences"),
+        )
+        .arg(
+            Arg::new("len")
+                .long("len")
+                .num_args(1)
+                .default_value("0")
+                .value_parser(value_parser!(usize))
+                .help("Minimum length of the amino acid sequence to consider"),
+        )
+        .arg(
+            Arg::new("start")
+                .long("start")
+                .action(ArgAction::SetTrue)
+                .help("Only consider ORFs that start with Methionine (M)"),
+        )
+        .arg(
+            Arg::new("end")
+                .long("end")
+                .action(ArgAction::SetTrue)
+                .help("Only consider ORFs that end with a stop codon (*)"),
         )
         .arg(
             Arg::new("outfile")
@@ -38,8 +65,6 @@ Examples:
         )
 }
 
-// https://web.expasy.org/translate/
-
 // command implementation
 pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     //----------------------------
@@ -47,6 +72,10 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     //----------------------------
     let reader = intspan::reader(args.get_one::<String>("infile").unwrap());
     let mut fa_in = fasta::io::Reader::new(reader);
+
+    let opt_len = *args.get_one::<usize>("len").unwrap();
+    let is_start = args.get_flag("start");
+    let is_end = args.get_flag("end");
 
     let mut writer = intspan::writer(args.get_one::<String>("outfile").unwrap());
 
@@ -77,6 +106,17 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
 
             // Adjust dna positions and write each ORF to the output file
             for (orf_seq, start, end) in orfs {
+                // Filter ORFs based on the provided options
+                if orf_seq.len() < opt_len {
+                    continue;
+                }
+                if is_start && !orf_seq.starts_with('M') {
+                    continue;
+                }
+                if is_end && !orf_seq.ends_with('*') {
+                    continue;
+                }
+
                 // 1-based
                 let orf_start = if is_reverse {
                     dna_start - end * 3 + 1
