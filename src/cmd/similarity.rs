@@ -1,15 +1,18 @@
 use clap::*;
 use std::io::BufRead;
 use std::simd::prelude::*;
+use rayon::prelude::*;
 
 const LANES: usize = 8; // 32 * 8 = 256, AVX2
 
 // Create clap subcommand arguments
 pub fn make_subcommand() -> Command {
     Command::new("similarity")
-        .about("Similarity of vectors")
+        .about("Calculate similarity between vectors")
         .after_help(
             r###"
+This command calculates pairwise similarity between vectors in input file(s).
+
 modes:
     * euclidean distance
         * --mode euclid
@@ -54,13 +57,13 @@ modes:
                     builder::PossibleValue::new("jaccard"),
                 ])
                 .default_value("euclid")
-                .help("Where we can find taxonomy terms"),
+                .help("Mode of calculation"),
         )
         .arg(
             Arg::new("bin")
                 .long("bin")
                 .action(ArgAction::SetTrue)
-                .help("Treat values in list as 0,1"),
+                .help("Treat values in list as binary (0 or 1)"),
         )
         .arg(
             Arg::new("sim")
@@ -77,18 +80,11 @@ modes:
         .arg(
             Arg::new("parallel")
                 .long("parallel")
+                .short('p')
                 .num_args(1)
                 .default_value("1")
                 .value_parser(value_parser!(usize))
-                .help("Number of threads"),
-        )
-        .arg(
-            Arg::new("outfile")
-                .short('o')
-                .long("outfile")
-                .num_args(1)
-                .default_value("stdout")
-                .help("Output filename. [stdout] for screen"),
+                .help("Number of threads for parallel processing"),
         )
 }
 
@@ -97,8 +93,6 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     //----------------------------
     // Args
     //----------------------------
-    let mut writer = intspan::writer(args.get_one::<String>("outfile").unwrap());
-
     let opt_mode = args.get_one::<String>("mode").unwrap();
 
     let is_bin = args.get_flag("bin");
@@ -123,52 +117,19 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
         entries.clone()
     };
 
-    // Channel 1 - Entries
-    let (snd1, rcv1) = crossbeam::channel::bounded::<(&hnsm::AsmEntry, &hnsm::AsmEntry)>(10);
-    // Channel 2 - Results
-    let (snd2, rcv2) = crossbeam::channel::bounded::<String>(10);
+    // Set the number of threads for rayon
+    rayon::ThreadPoolBuilder::new()
+        .num_threads(opt_parallel)
+        .build_global()?;
 
-    crossbeam::scope(|s| {
-        //----------------------------
-        // Reader thread
-        //----------------------------
-        s.spawn(|_| {
-            for e1 in &entries {
-                for e2 in &others {
-                    snd1.send((e1, e2)).unwrap();
-                }
-            }
-            // Close the channel - this is necessary to exit the for-loop in the worker
-            drop(snd1);
-        });
-
-        //----------------------------
-        // Worker threads
-        //----------------------------
-        for _ in 0..opt_parallel {
-            // Send to sink, receive from source
-            let (sendr, recvr) = (snd2.clone(), rcv1.clone());
-            // Spawn workers in separate threads
-            s.spawn(move |_| {
-                // Receive until channel closes
-                for (e1, e2) in recvr.iter() {
-                    let score = calc(e1.list(), e2.list(), opt_mode, is_sim, is_dis);
-                    let out_string = format!("{}\t{}\t{:.4}\n", e1.name(), e2.name(), score);
-                    sendr.send(out_string).unwrap();
-                }
-            });
+    // Use rayon to parallelize the outer loop
+    entries.par_iter().for_each(|e1| {
+        for e2 in &others {
+            let score = calc(e1.list(), e2.list(), opt_mode, is_sim, is_dis);
+            let out_string = format!("{}\t{}\t{:.4}", e1.name(), e2.name(), score);
+            println!("{}", out_string);
         }
-        // Close the channel, otherwise sink will never exit the for-loop
-        drop(snd2);
-
-        //----------------------------
-        // Writer (main) thread
-        //----------------------------
-        for out_string in rcv2.iter() {
-            writer.write_all(out_string.as_ref()).unwrap();
-        }
-    })
-    .unwrap();
+    });
 
     Ok(())
 }

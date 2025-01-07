@@ -210,48 +210,39 @@ hnsm interleave --fq tests/fastq/R1.fq.gz
 #### Similarity and dissimilarity (distance) of vectors
 
 ```shell
-cargo bench --bench simd
+hnsm similarity tests/clust/domain.tsv --mode euclid --bin
 
-cargo run --bin hnsm similarity tests/clust/domain.tsv --mode euclid --bin
+hnsm similarity tests/clust/domain.tsv --mode cosine --bin
 
-cargo run --bin hnsm similarity tests/clust/domain.tsv --mode cosine --bin
-
-cargo run --bin hnsm similarity tests/clust/domain.tsv --mode jaccard --bin
+hnsm similarity tests/clust/domain.tsv --mode jaccard --bin
 
 hyperfine --warmup 1 \
     -n p1 \
-    'hnsm similarity data/Domian_content_1000.tsv --parallel 1 --mode jaccard --bin > /dev/null' \
+    'hnsm similarity data/Domian_content_1000.tsv -p 1 --mode jaccard --bin > /dev/null' \
     -n p2 \
-    'hnsm similarity data/Domian_content_1000.tsv --parallel 2 --mode jaccard --bin > /dev/null' \
+    'hnsm similarity data/Domian_content_1000.tsv -p 2 --mode jaccard --bin > /dev/null' \
     -n p3 \
-    'hnsm similarity data/Domian_content_1000.tsv --parallel 3 --mode jaccard --bin > /dev/null' \
+    'hnsm similarity data/Domian_content_1000.tsv -p 3 --mode jaccard --bin > /dev/null' \
     -n p4 \
-    'hnsm similarity data/Domian_content_1000.tsv --parallel 4 --mode jaccard --bin > /dev/null' \
+    'hnsm similarity data/Domian_content_1000.tsv -p 4 --mode jaccard --bin > /dev/null' \
     -n p6 \
-    'hnsm similarity data/Domian_content_1000.tsv --parallel 6 --mode jaccard --bin > /dev/null' \
+    'hnsm similarity data/Domian_content_1000.tsv -p 6 --mode jaccard --bin > /dev/null' \
     -n p8 \
-    'hnsm similarity data/Domian_content_1000.tsv --parallel 8 --mode jaccard --bin > /dev/null' \
+    'hnsm similarity data/Domian_content_1000.tsv -p 8 --mode jaccard --bin > /dev/null' \
     --export-markdown sim.md.tmp
 
 ```
 
-| Command |       Mean [s] | Min [s] | Max [s] |    Relative |
-|:--------|---------------:|--------:|--------:|------------:|
-| `p1`    | 17.364 ± 1.244 |  16.065 |  20.367 | 2.11 ± 0.18 |
-| `p2`    | 10.467 ± 1.405 |   9.421 |  14.045 | 1.27 ± 0.18 |
-| `p3`    |  8.226 ± 0.380 |   7.615 |   8.722 |        1.00 |
-| `p4`    |  8.430 ± 0.842 |   7.777 |  10.614 | 1.02 ± 0.11 |
-| `p6`    |  8.330 ± 0.827 |   7.648 |  10.371 | 1.01 ± 0.11 |
-| `p8`    | 10.268 ± 2.407 |   8.415 |  15.486 | 1.25 ± 0.30 |
+* AMD Ryzen 7 8745HS
 
 | Command |       Mean [s] | Min [s] | Max [s] |    Relative |
 |:--------|---------------:|--------:|--------:|------------:|
-| `p1`    | 27.631 ± 0.533 |  27.123 |  29.022 | 6.92 ± 0.17 |
-| `p2`    | 14.673 ± 0.241 |  14.417 |  15.138 | 3.67 ± 0.08 |
-| `p3`    |  9.778 ± 0.075 |   9.635 |   9.885 | 2.45 ± 0.04 |
-| `p4`    |  7.472 ± 0.160 |   7.260 |   7.686 | 1.87 ± 0.05 |
-| `p6`    |  5.151 ± 0.123 |   4.975 |   5.397 | 1.29 ± 0.04 |
-| `p8`    |  3.995 ± 0.062 |   3.915 |   4.105 |        1.00 |
+| `p1`    | 12.379 ± 0.311 |  11.758 |  12.665 | 3.92 ± 0.20 |
+| `p2`    |  6.943 ± 0.178 |   6.721 |   7.333 | 2.20 ± 0.11 |
+| `p3`    |  5.259 ± 0.198 |   5.051 |   5.617 | 1.67 ± 0.10 |
+| `p4`    |  4.256 ± 0.084 |   4.140 |   4.398 | 1.35 ± 0.06 |
+| `p6`    |  3.329 ± 0.083 |   3.162 |   3.421 | 1.05 ± 0.05 |
+| `p8`    |  3.157 ± 0.139 |   3.015 |   3.458 |        1.00 |
 
 #### Pairwise distances by Minimizer
 
@@ -302,7 +293,33 @@ curl -L https://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/000/006/765/GCF_000006765.1
 hnsm distance tests/clust/mg1655.pro.fa.gz tests/clust/pao1.pro.fa.gz -k 7 -w 2 |
     rgr filter stdin --ne 3:1
 
+hyperfine --warmup 1 \
+    -n p1 \
+    'hnsm distance tests/clust/mg1655.pro.fa.gz tests/clust/pao1.pro.fa.gz -k 7 -w 2 -p 1 > /dev/null' \
+    -n p2 \
+    'hnsm distance tests/clust/mg1655.pro.fa.gz tests/clust/pao1.pro.fa.gz -k 7 -w 2 -p 2 > /dev/null' \
+    -n p3 \
+    'hnsm distance tests/clust/mg1655.pro.fa.gz tests/clust/pao1.pro.fa.gz -k 7 -w 2 -p 3 > /dev/null' \
+    -n p4 \
+    'hnsm distance tests/clust/mg1655.pro.fa.gz tests/clust/pao1.pro.fa.gz -k 7 -w 2 -p 4 > /dev/null' \
+    -n p6 \
+    'hnsm distance tests/clust/mg1655.pro.fa.gz tests/clust/pao1.pro.fa.gz -k 7 -w 2 -p 6 > /dev/null' \
+    -n p8 \
+    'hnsm distance tests/clust/mg1655.pro.fa.gz tests/clust/pao1.pro.fa.gz -k 7 -w 2 -p 8 > /dev/null' \
+    --export-markdown dis.md.tmp
+
 ```
+
+* AMD Ryzen 7 8745HS
+
+| Command |       Mean [s] | Min [s] | Max [s] |    Relative |
+|:--------|---------------:|--------:|--------:|------------:|
+| `p1`    | 22.815 ± 0.682 |  21.859 |  23.764 | 8.22 ± 0.56 |
+| `p2`    | 10.909 ± 0.485 |  10.426 |  11.619 | 3.93 ± 0.30 |
+| `p3`    |  6.679 ± 0.172 |   6.528 |   7.119 | 2.41 ± 0.16 |
+| `p4`    |  4.968 ± 0.149 |   4.715 |   5.199 | 1.79 ± 0.12 |
+| `p6`    |  3.338 ± 0.122 |   3.226 |   3.608 | 1.20 ± 0.09 |
+| `p8`    |  2.777 ± 0.170 |   2.524 |   2.993 |        1.00 |
 
 #### Matrix conversion
 
@@ -458,7 +475,6 @@ wgatools dotplot tmp.lastz.maf > tmp.lastz.html
 | ![syn.png](images/syn.png) | ![lastz.png](images/lastz.png) |
 |:--------------------------:|:------------------------------:|
 |            syn             |             lastz              |
-
 
 * repeats
 

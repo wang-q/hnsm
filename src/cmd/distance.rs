@@ -1,6 +1,7 @@
 use clap::*;
 use hnsm::Minimizer;
 use noodles_fasta as fasta;
+use rayon::prelude::*;
 use std::iter::FromIterator;
 
 // Create clap subcommand arguments
@@ -11,7 +12,7 @@ pub fn make_subcommand() -> Command {
             r###"
 This command calculates pairwise distances between sequences in a FA file using minimizers.
 
-* The outputs:
+* The outputs are printed to stdout in the following format:
     n1  n2  mash    jaccard containment
 
 * Minimizers
@@ -30,7 +31,7 @@ Examples:
     1. Calculate distances with default parameters:
        hnsm distance input.fa
 
-    2. Use MurmurHash instead of FxHash:
+    2. Use MurmurHash instead of RapidHash:
        hnsm distance input.fa --hasher murmur
 
     3. Set custom k-mer size and window size:
@@ -92,20 +93,19 @@ Examples:
                 .help("Convert distance to similarity"),
         )
         .arg(
+            Arg::new("zero")
+                .long("zero")
+                .action(ArgAction::SetTrue)
+                .help("Also write results with zero jaccard index"),
+        )
+        .arg(
             Arg::new("parallel")
                 .long("parallel")
+                .short('p')
                 .num_args(1)
                 .default_value("1")
                 .value_parser(value_parser!(usize))
                 .help("Number of threads for parallel processing"),
-        )
-        .arg(
-            Arg::new("outfile")
-                .long("outfile")
-                .short('o')
-                .num_args(1)
-                .default_value("stdout")
-                .help("Output filename. [stdout] for screen"),
         )
 }
 
@@ -124,10 +124,8 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     let opt_kmer = *args.get_one::<usize>("kmer").unwrap();
     let opt_window = *args.get_one::<usize>("window").unwrap();
     let is_sim = args.get_flag("sim");
-
+    let is_zero = args.get_flag("zero");
     let opt_parallel = *args.get_one::<usize>("parallel").unwrap();
-
-    let mut writer = intspan::writer(args.get_one::<String>("outfile").unwrap());
 
     let infiles = args
         .get_many::<String>("infiles")
@@ -145,59 +143,29 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
         entries.clone()
     };
 
-    // Channel 1 - Entries
-    let (snd1, rcv1) = crossbeam::channel::bounded::<(&MinimizerEntry, &MinimizerEntry)>(10);
-    // Channel 2 - Results
-    let (snd2, rcv2) = crossbeam::channel::bounded::<String>(10);
+    // Set the number of threads for rayon
+    rayon::ThreadPoolBuilder::new()
+        .num_threads(opt_parallel)
+        .build_global()?;
 
-    crossbeam::scope(|s| {
-        //----------------------------
-        // Reader thread
-        //----------------------------
-        s.spawn(|_| {
-            for e1 in &entries {
-                for e2 in &others {
-                    snd1.send((e1, e2)).unwrap();
-                }
+    // Use rayon to parallelize the outer loop
+    entries.par_iter().for_each(|e1| {
+        for e2 in &others {
+            let (jaccard, containment, mash) = calc_distances(&e1.set, &e2.set);
+            if !is_zero && jaccard == 0. {
+                continue;
             }
-            // Close the channel - this is necessary to exit the for-loop in the worker
-            drop(snd1);
-        });
-
-        //----------------------------
-        // Worker threads
-        //----------------------------
-        for _ in 0..opt_parallel {
-            // Send to sink, receive from source
-            let (sendr, recvr) = (snd2.clone(), rcv1.clone());
-            // Spawn workers in separate threads
-            s.spawn(move |_| {
-                // Receive until channel closes
-                for (e1, e2) in recvr.iter() {
-                    let (jaccard, containment, mash) = calc_distances(&e1.set, &e2.set);
-                    let out_string = format!(
-                        "{}\t{}\t{:.4}\t{:.4}\t{:.4}\n",
-                        e1.name,
-                        e2.name,
-                        if is_sim { 1.0 - mash } else { mash },
-                        jaccard,
-                        containment
-                    );
-                    sendr.send(out_string).unwrap();
-                }
-            });
+            let out_string = format!(
+                "{}\t{}\t{:.4}\t{:.4}\t{:.4}",
+                e1.name,
+                e2.name,
+                if is_sim { 1.0 - mash } else { mash },
+                jaccard,
+                containment
+            );
+            println!("{}", out_string);
         }
-        // Close the channel, otherwise sink will never exit the for-loop
-        drop(snd2);
-
-        //----------------------------
-        // Writer (main) thread
-        //----------------------------
-        for out_string in rcv2.iter() {
-            writer.write_all(out_string.as_ref()).unwrap();
-        }
-    })
-    .unwrap();
+    });
 
     Ok(())
 }
