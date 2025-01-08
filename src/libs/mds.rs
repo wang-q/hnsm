@@ -6,20 +6,21 @@
 //! PCoA with Euclidean distances == classical Multidimensional Scaling (MDS) == PCA
 //!
 //! Key steps:
+//!
 //! 1. Distance Matrix. PCoA starts with a distance or dissimilarity matrix that quantifies how
 //! similar or different the data points are from each other. Dissimilarity can take various forms
-//! as long as it meets the criteria of a metric space. $D = [d_{ij}]$
+//! as long as it meets the criteria of a metric space. `$D=[d_{ij}]$`
 //!
-//! 2. Double-Centering. $B=-{\frac{1}{2}}CD^{(2)}C$ using the centering matrix
-//! $C=I-{\frac {1}{n}}J_{n}$ where $n$ is the number of objects, $I$ is the $n \times n$
-//! identity matrix, and $J_{n}$ is an $n \times n$ matrix of all ones.
+//! 2. Double-Centering. `$B=-{\frac{1}{2}}CD^{(2)}C$` using the centering matrix
+//! `$C=I-{\frac{1}{n}}J_{n}$` where `$n$` is the number of objects, `$I$` is the `$n \times n$`
+//! identity matrix, and `$J_{n}$` is an `$n \times n$` matrix of all ones.
 //!
 //! 3. Eigenvalue Decomposition. The eigenvalues indicate the amount of variance captured by each
 //! dimension, while the eigenvectors provide the coordinates of the data points in the new space.
 //!
 //! ## Dimensionality Reduction
 //!
-//! PCoA transforms high-dimensional data into a lower-dimensional space (typically2D or3D)
+//! PCoA transforms high-dimensional data into a lower-dimensional space (typically 2D or 3D)
 //! while preserving the relationships between data points, facilitating easier visualization and
 //! interpretation.
 //!

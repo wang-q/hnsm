@@ -45,6 +45,13 @@ cargo test -- --test-threads=1
 # bench
 cargo bench --bench simd
 
+# local docs
+# Linux
+RUSTDOCFLAGS="--html-in-header katex-header.html" cargo doc --no-deps --document-private-items --open
+# Windows Powershell
+$env:RUSTDOCFLAGS="--html-in-header ./katex-header.html"
+cargo doc --no-deps --document-private-items --open
+
 # build under WSL 2
 mkdir -p /tmp/cargo
 export CARGO_TARGET_DIR=/tmp/cargo

@@ -88,3 +88,6 @@ harness = false
 
 [profile.release]
 lto = true
+
+[package.metadata.docs.rs]
+rustdoc-args = ["--html-in-header", "katex-header.html"]
