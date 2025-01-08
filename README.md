@@ -363,6 +363,8 @@ hnsm sixframe tests/pgr/sakai.fa.gz --len 35 |
     wc -l
 #21124
 
+hnsm range tests/pgr/sakai.fa.gz "NC_002695(+):4468532-4468696|frame=1"
+
 ```
 
 #### Matrix conversion
@@ -476,8 +478,10 @@ cargo run --bin fasr pl-p2m tests/fasr/S288cvsRM11_1a.slice.fas tests/fasr/S288c
 curl -L https://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/000/005/845/GCF_000005845.2_ASM584v2/GCF_000005845.2_ASM584v2_genomic.fna.gz \
     > tests/pgr/mg1655.fa.gz
 
-curl -L https://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/000/008/865/GCF_000008865.2_ASM886v2/GCF_000008865.2_ASM886v2_genomic.fna.gz \
-    > tests/pgr/sakai.fa.gz
+curl -L https://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/000/008/865/GCF_000008865.2_ASM886v2/GCF_000008865.2_ASM886v2_genomic.fna.gz |
+    gzip -dc |
+    hnsm filter stdin -s |
+    hnsm gz stdin -o tests/pgr/sakai.fa
 
 ```
 
@@ -530,6 +534,8 @@ unzip -j tn_in_is 'tncentral_integrall_isfinder.fa'
 gzip -9 -c 'tncentral_integrall_isfinder.fa' > tncentral.fa.gz
 
 hnsm size tests/pgr/tncentral.fa.gz
+hnsm distance tests/pgr/tncentral.fa.gz -k 17 -w 5 -p 8 |
+    rgr filter stdin --ge 5:0.9
 
 # RepBase for RepeatMasker
 curl -LO https://github.com/wang-q/ubuntu/releases/download/20190906/repeatmaskerlibraries-20140131.tar.gz
