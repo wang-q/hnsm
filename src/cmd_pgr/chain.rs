@@ -226,8 +226,10 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     for infile in infiles {
         let stem = get_basename(&infile).unwrap();
         run_cmd!(
-            axtChain -minScore=${opt_minscore} -linearGap=${opt_lineargap} -psl ${infile} target.chr.2bit query.chr.2bit stdout |
-                chainAntiRepeat target.chr.2bit query.chr.2bit stdin pslChain/${stem}.chain
+            axtChain -minScore=${opt_minscore} -linearGap=${opt_lineargap} -psl ${infile} target.chr.2bit query.chr.2bit pslChain/${stem}.tmp
+        )?;
+        run_cmd!(
+            chainAntiRepeat target.chr.2bit query.chr.2bit pslChain/${stem}.tmp pslChain/${stem}.chain
         )?;
     }
 
