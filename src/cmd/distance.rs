@@ -13,14 +13,16 @@ pub fn make_subcommand() -> Command {
 This command calculates pairwise distances between sequences in FA file(s) using minimizers.
 
 * The outputs are printed to stdout in the following format:
-    n1  n2  mash    jaccard containment
+    <sequence1> <sequence2> <mash_distance> <jaccard_index> <containment_index>
+* With --all
+    <file1> <file2> <total1> <total2> <inter> <union> <mash_distance> <jaccard_index> <containment_index>
 
 * Minimizers
     Given a $(k + w - 1)$-mer, consider the $w$ contained $k$-mers. The (rightmost) $k$-mer with
     minimal hash (for some given hash function) is the minimizer.
 
 * We use minimizers here to sample kmers
-    * For proteins, the length is short, so the window size can be set as: `-k 7 -w 1`
+    * For proteins, the length is short, so the window size can be set as: `-k 7 -w 2`
     * DNA: `-k 21 -w 5`
     * Increasing the window size speeds up processing
 
@@ -46,6 +48,12 @@ Examples:
     6. Compare two FA files:
        hnsm distance file1.fa file2.fa
 
+    7. Include results with zero Jaccard index:
+       hnsm distance input.fa --zero
+
+    8. Gather all k-mers in a file and compare to another:
+       hnsm distance file1.fa file2.fa --all
+
 "###,
         )
         .arg(
@@ -54,7 +62,7 @@ Examples:
                 .num_args(1..=2)
                 .index(1)
                 .required(true)
-                .help("Input filenames. [stdin] for standard input"),
+                .help("Input FA file(s). [stdin] for standard input"),
         )
         .arg(
             Arg::new("hasher")
@@ -90,13 +98,19 @@ Examples:
             Arg::new("sim")
                 .long("sim")
                 .action(ArgAction::SetTrue)
-                .help("Convert distance to similarity"),
+                .help("Convert distance to similarity (1 - distance)"),
         )
         .arg(
             Arg::new("zero")
                 .long("zero")
                 .action(ArgAction::SetTrue)
-                .help("Also write results with zero jaccard index"),
+                .help("Also write results with zero Jaccard index"),
+        )
+        .arg(
+            Arg::new("all")
+                .long("all")
+                .action(ArgAction::SetTrue)
+                .help("Gather all k-mers in a file and compare to another"),
         )
         .arg(
             Arg::new("parallel")
@@ -125,6 +139,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     let opt_window = *args.get_one::<usize>("window").unwrap();
     let is_sim = args.get_flag("sim");
     let is_zero = args.get_flag("zero");
+    let is_all = args.get_flag("all");
     let opt_parallel = *args.get_one::<usize>("parallel").unwrap();
 
     let infiles = args
@@ -136,9 +151,21 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     //----------------------------
     // Ops
     //----------------------------
-    let entries = load_file(infiles.get(0).unwrap(), opt_hasher, opt_kmer, opt_window);
+    let entries = load_file(
+        infiles.get(0).unwrap(),
+        opt_hasher,
+        opt_kmer,
+        opt_window,
+        is_all,
+    );
     let others = if infiles.len() == 2 {
-        load_file(infiles.get(1).unwrap(), opt_hasher, opt_kmer, opt_window)
+        load_file(
+            infiles.get(1).unwrap(),
+            opt_hasher,
+            opt_kmer,
+            opt_window,
+            is_all,
+        )
     } else {
         entries.clone()
     };
@@ -151,7 +178,27 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     // Use rayon to parallelize the outer loop
     entries.par_iter().for_each(|e1| {
         for e2 in &others {
-            let (jaccard, containment, mash) = calc_distances(&e1.set, &e2.set);
+            if is_all {
+                let (total1, total2, inter, union, jaccard, containment, mash) =
+                    calc_distances(&e1.set, &e2.set);
+                let out_string = format!(
+                    "{}\t{}\t{}\t{}\t{}\t{}\t{:.4}\t{:.4}\t{:.4}\n",
+                    e1.name,
+                    e2.name,
+                    total1,
+                    total2,
+                    inter,
+                    union,
+                    if is_sim { 1.0 - mash } else { mash },
+                    jaccard,
+                    containment
+                );
+                print!("{}", out_string);
+
+                continue;
+            }
+
+            let (_, _, _, _, jaccard, containment, mash) = calc_distances(&e1.set, &e2.set);
             if !is_zero && jaccard == 0. {
                 continue;
             }
@@ -175,11 +222,13 @@ fn load_file(
     opt_hasher: &String,
     opt_kmer: usize,
     opt_window: usize,
+    is_all: bool,
 ) -> Vec<MinimizerEntry> {
     let reader = intspan::reader(infile);
     let mut fa_in = fasta::io::Reader::new(reader);
 
     let mut entries = vec![];
+    let mut all_set = rapidhash::RapidHashSet::default();
 
     for result in fa_in.records() {
         // obtain record or fail with error
@@ -209,10 +258,22 @@ fn load_file(
             .minimizer(&seq[..]),
             _ => unreachable!(),
         };
-
         let set: rapidhash::RapidHashSet<u64> =
             rapidhash::RapidHashSet::from_iter(minimizers.iter().map(|t| t.1));
-        let entry = MinimizerEntry { name, set };
+
+        if is_all {
+            all_set.extend(set);
+        } else {
+            let entry = MinimizerEntry { name, set };
+            entries.push(entry);
+        }
+    }
+
+    if is_all {
+        let entry = MinimizerEntry {
+            name: infile.to_string(),
+            set: all_set,
+        };
         entries.push(entry);
     }
 
@@ -223,12 +284,15 @@ fn load_file(
 fn calc_distances(
     s1: &rapidhash::RapidHashSet<u64>,
     s2: &rapidhash::RapidHashSet<u64>,
-) -> (f64, f64, f64) {
+) -> (usize, usize, usize, usize, f64, f64, f64) {
+    let total1 = s1.len();
+    let total2 = s2.len();
+
     let inter = s1.intersection(&s2).cloned().count();
-    let union = s1.len() + s2.len() - inter;
+    let union = total1 + total2 - inter;
 
     let jaccard = inter as f64 / union as f64;
-    let containment = inter as f64 / s1.len() as f64;
+    let containment = inter as f64 / total1 as f64;
     // https://mash.readthedocs.io/en/latest/distances.html#mash-distance-formulation
     let mash = if jaccard == 0.0 {
         1.0
@@ -236,5 +300,5 @@ fn calc_distances(
         ((-1.0 / 7.0) * ((2.0 * jaccard) / (1.0 + jaccard)).ln()).abs()
     };
 
-    (jaccard, containment, mash)
+    (total1, total2, inter, union, jaccard, containment, mash)
 }

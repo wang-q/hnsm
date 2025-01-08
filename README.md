@@ -490,6 +490,14 @@ curl -L https://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/000/008/865/GCF_000008865.2
 * plot
 
 ```shell
+hnsm distance tests/pgr/sakai.fa.gz tests/pgr/mg1655.fa.gz -k 21 -w 1
+#NC_002695       NC_000913       0.0677  0.4520  0.5793
+#NC_002127       NC_000913       1.9925  0.0000  0.0006
+#NC_002128       NC_000913       1.2133  0.0001  0.0052
+
+hnsm distance tests/pgr/sakai.fa.gz tests/pgr/mg1655.fa.gz -k 21 -w 1 --all
+#tests/pgr/sakai.fa.gz   tests/pgr/mg1655.fa.gz  5394043 4562542 3071076 6885509 0.0690  0.4460  0.5693
+
 FastGA -v -pafx tests/pgr/sakai.fa.gz tests/pgr/mg1655.fa.gz > tmp.paf
 FastGA -v -psl tests/pgr/sakai.fa.gz tests/pgr/mg1655.fa.gz > tmp.psl
 
