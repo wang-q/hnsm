@@ -355,6 +355,16 @@ hyperfine --warmup 1 \
 | `p6`    |  3.338 ± 0.122 |   3.226 |   3.608 | 1.20 ± 0.09 |
 | `p8`    |  2.777 ± 0.170 |   2.524 |   2.993 |        1.00 |
 
+* Six-frame
+
+```shell
+hnsm sixframe tests/pgr/sakai.fa.gz --len 35 |
+    hnsm distance stdin tests/clust/mg1655.pro.fa.gz -k 7 -w 2 -p 4 |
+    wc -l
+#21124
+
+```
+
 #### Matrix conversion
 
 ```shell
