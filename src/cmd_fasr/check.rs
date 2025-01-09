@@ -3,15 +3,23 @@ use clap::*;
 // Create clap subcommand arguments
 pub fn make_subcommand() -> Command {
     Command::new("check")
-        .about("Check genome locations in block fasta headers")
+        .about("Check genome locations in block FA headers")
         .after_help(
             r###"
-* <genome.fa> is a multi-fasta file contains genome sequences
+This tool verifies that the sequences in block FA files match the corresponding locations in a reference genome.
 
-* <infiles> are paths to block fasta files, .fas.gz is supported
-    * infile == stdin means reading from STDIN
+Input files can be gzipped. If the input file is 'stdin', data is read from standard input.
 
-* Need `samtools` in $PATH
+Note:
+- The reference genome must be provided as a multi-FASTA file.
+- `samtools` must be installed and available in $PATH.
+
+Examples:
+1. Check all sequences in a block FA file:
+   fasr check tests/fasr/NC_000932.fa tests/fasr/A_tha.pair.fas
+
+2. Check sequences for a specific species:
+   fasr check tests/fasr/NC_000932.fa tests/fasr/A_tha.pair.fas --name A_tha
 
 "###,
         )
@@ -20,20 +28,20 @@ pub fn make_subcommand() -> Command {
                 .required(true)
                 .num_args(1)
                 .index(1)
-                .help("Path to genome.fa"),
+                .help("Path to the reference genome FA file"),
         )
         .arg(
             Arg::new("infiles")
                 .required(true)
                 .num_args(1..)
                 .index(2)
-                .help("Set the input files to use"),
+                .help("Input block FA file(s) to check"),
         )
         .arg(
             Arg::new("name")
                 .long("name")
                 .num_args(1)
-                .help("Which species to be checked, omit this will check all sequences"),
+                .help("Check sequences for a specific species"),
         )
         .arg(
             Arg::new("outfile")
@@ -51,10 +59,15 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     // Args
     //----------------------------
     let mut writer = intspan::writer(args.get_one::<String>("outfile").unwrap());
-    let genome = args.get_one::<String>("genome.fa").unwrap();
+    let opt_genome = args.get_one::<String>("genome.fa").unwrap();
+    let opt_name = &args
+        .get_one::<String>("name")
+        .map(|s| s.as_str())
+        .unwrap_or("")
+        .to_string();
 
     //----------------------------
-    // Operating
+    // Ops
     //----------------------------
     for infile in args.get_many::<String>("infiles").unwrap() {
         let mut reader = intspan::reader(infile);
@@ -62,24 +75,19 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
         while let Ok(block) = hnsm::next_fas_block(&mut reader) {
             let block_names = block.names;
 
-            if args.contains_id("name") {
-                let name = args.get_one::<String>("name").unwrap();
-                if block_names.contains(name) {
-                    for entry in &block.entries {
-                        let entry_name = entry.range().name();
-                        //----------------------------
-                        // Output
-                        //----------------------------
-                        if entry_name == name {
-                            let status = check_seq(entry, genome)?;
-                            writer
-                                .write_all(format!("{}\t{}\n", entry.range(), status).as_ref())?;
-                        }
+            // Check if a specific species is requested
+            if !opt_name.is_empty() && block_names.contains(opt_name) {
+                for entry in &block.entries {
+                    let entry_name = entry.range().name();
+                    if entry_name == opt_name {
+                        let status = check_seq(entry, opt_genome)?;
+                        writer.write_all(format!("{}\t{}\n", entry.range(), status).as_ref())?;
                     }
                 }
-            } else {
+            } else if opt_name.is_empty() {
+                // Check all sequences in the block
                 for entry in &block.entries {
-                    let status = check_seq(entry, genome)?;
+                    let status = check_seq(entry, opt_genome)?;
                     writer.write_all(format!("{}\t{}\n", entry.range(), status).as_ref())?;
                 }
             }

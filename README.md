@@ -409,7 +409,7 @@ cargo run --bin hnsm manifold tests/clust/IBPA.fa.tsv --mode pcoa --dim 2
 
 ```
 
-### Block Fasta files
+### Block FA files
 
 ```shell
 fasr maf2fas tests/fasr/example.maf
