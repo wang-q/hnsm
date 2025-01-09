@@ -7,11 +7,23 @@ pub fn make_subcommand() -> Command {
         .about("Concatenate sequence pieces of the same species")
         .after_help(
             r###"
-* <name.lst> is a file with a list of names to keep, one per line
-    * Orders in the output file will following the ones in <name.lst>
+This subcommand concatenates sequence pieces of the same species from block FA files into a single sequence per species.
 
-* <infiles> are paths to block fasta files, .fas.gz is supported
-    * infile == stdin means reading from STDIN
+Input files can be gzipped. If the input file is 'stdin', data is read from standard input.
+
+Note:
+- The order of species in the output follows the order in the <name.lst> file.
+- Missing sequences are filled with gaps (`-`).
+
+Examples:
+1. Concatenate sequences and output in FASTA format:
+   fasr concat tests/fasr/name.lst tests/fasr/example.fas
+
+2. Concatenate sequences and output in relaxed PHYLIP format:
+   fasr concat tests/fasr/name.lst tests/fasr/example.fas --phylip
+
+3. Output results to a file:
+   fasr concat tests/fasr/name.lst tests/fasr/example.fas -o output.fas
 
 "###,
         )
@@ -20,20 +32,20 @@ pub fn make_subcommand() -> Command {
                 .required(true)
                 .num_args(1)
                 .index(1)
-                .help("Path to name.lst"),
+                .help("File with a list of species names to keep, one per line"),
         )
         .arg(
             Arg::new("infiles")
                 .required(true)
                 .num_args(1..)
                 .index(2)
-                .help("Set the input files to use"),
+                .help("Input block FA file(s) to process"),
         )
         .arg(
             Arg::new("phylip")
                 .long("phylip")
                 .action(ArgAction::SetTrue)
-                .help("Output relaxed phylip instead of fasta"),
+                .help("Output in relaxed PHYLIP format instead of FA"),
         )
         .arg(
             Arg::new("outfile")
@@ -58,11 +70,11 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     let mut seq_of: BTreeMap<String, String> = BTreeMap::new();
     for name in &needed {
         // default value
-        seq_of.insert(name.to_string(), "".to_string());
+        seq_of.insert(name.to_string(), String::new());
     }
 
     //----------------------------
-    // Operating
+    // Ops
     //----------------------------
     for infile in args.get_many::<String>("infiles").unwrap() {
         let mut reader = intspan::reader(infile);

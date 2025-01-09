@@ -1,20 +1,36 @@
 use clap::*;
-use crossbeam::channel::bounded;
 
 // Create clap subcommand arguments
 pub fn make_subcommand() -> Command {
     Command::new("consensus")
-        .about("Generate consensus sequences by POA")
+        .about("Generate consensus sequences using POA")
         .after_help(
             r###"
-* <infiles> are paths to block fasta files, .fas.gz is supported
-    * infile == stdin means reading from STDIN
+This subcommand generates consensus sequences from block FA files using the POA (Partial Order Alignment) algorithm.
 
-* Need `spoa` in $PATH
+Input files can be gzipped. If the input file is 'stdin', data is read from standard input.
+
+Note:
+- Requires `spoa` to be installed and available in $PATH.
     * The original `poa` was unstable and sometimes crashed
-
-* Running in parallel mode with 1 reader, 1 writer and the corresponding number of workers
+- Supports parallel processing for improved performance.
+    * Running in parallel mode with 1 reader, 1 writer and the corresponding number of workers
     * The order of output may be different from the original
+- If outgroups are present, they are handled appropriately.
+
+Examples:
+1. Generate consensus sequences from a block FA file:
+   fasr consensus tests/fasr/example.fas
+
+2. Generate consensus sequences with outgroups:
+   fasr consensus tests/fasr/example.fas --outgroup
+
+3. Run in parallel with 4 threads:
+   fasr consensus tests/fasr/example.fas --parallel 4
+
+4. Output results to a file:
+   fasr consensus tests/fasr/example.fas -o output.fas
+
 
 "###,
         )
@@ -23,20 +39,20 @@ pub fn make_subcommand() -> Command {
                 .required(true)
                 .num_args(1..)
                 .index(1)
-                .help("Set the input files to use"),
+                .help("Input block FA file(s) to process"),
         )
         .arg(
             Arg::new("cname")
                 .long("cname")
                 .num_args(1)
                 .default_value("consensus")
-                .help("Consensus name"),
+                .help("Name of the consensus"),
         )
         .arg(
             Arg::new("has_outgroup")
                 .long("outgroup")
                 .action(ArgAction::SetTrue)
-                .help("There are outgroups at the end of each block"),
+                .help("Indicates the presence of outgroups at the end of each block"),
         )
         .arg(
             Arg::new("parallel")
@@ -45,7 +61,7 @@ pub fn make_subcommand() -> Command {
                 .value_parser(value_parser!(usize))
                 .num_args(1)
                 .default_value("1")
-                .help("Running in parallel mode, the number of threads"),
+                .help("Number of threads for parallel processing"),
         )
         .arg(
             Arg::new("outfile")
@@ -62,12 +78,13 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     //----------------------------
     // Args
     //----------------------------
-    let parallel = *args.get_one::<usize>("parallel").unwrap();
+    let opt_parallel = *args.get_one::<usize>("parallel").unwrap();
 
     //----------------------------
     // Operating
     //----------------------------
-    if parallel == 1 {
+    if opt_parallel == 1 {
+        // Single-threaded mode
         let mut writer = intspan::writer(args.get_one::<String>("outfile").unwrap());
 
         for infile in args.get_many::<String>("infiles").unwrap() {
@@ -78,6 +95,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
             }
         }
     } else {
+        // Parallel mode
         proc_block_p(args)?;
     }
 
@@ -92,7 +110,7 @@ fn proc_block(block: &hnsm::FasBlock, args: &ArgMatches) -> anyhow::Result<Strin
     let has_outgroup = args.get_flag("has_outgroup");
 
     //----------------------------
-    // Operating
+    // Ops
     //----------------------------
     let mut seqs = vec![];
 
@@ -106,9 +124,10 @@ fn proc_block(block: &hnsm::FasBlock, args: &ArgMatches) -> anyhow::Result<Strin
         seqs.push(entry.seq().as_ref());
     }
     if outgroup.is_some() {
-        seqs.pop().unwrap();
+        seqs.pop().unwrap(); // Remove the outgroup sequence
     }
 
+    // Generate consensus sequence
     let mut cons = hnsm::get_consensus_poa(&seqs).unwrap();
     cons = cons.replace('-', "");
 
@@ -140,9 +159,9 @@ fn proc_block_p(args: &ArgMatches) -> anyhow::Result<()> {
     let mut writer = intspan::writer(args.get_one::<String>("outfile").unwrap());
 
     // Channel 1 - Read files to blocks
-    let (snd1, rcv1) = bounded::<hnsm::FasBlock>(10);
+    let (snd1, rcv1) = crossbeam::channel::bounded::<hnsm::FasBlock>(10);
     // Channel 2 - Results
-    let (snd2, rcv2) = bounded(10);
+    let (snd2, rcv2) = crossbeam::channel::bounded(10);
 
     crossbeam::scope(|s| {
         //----------------------------

@@ -6,7 +6,7 @@ pub fn make_subcommand() -> Command {
         .about("Check genome locations in block FA headers")
         .after_help(
             r###"
-This tool verifies that the sequences in block FA files match the corresponding locations in a reference genome.
+This subcommand verifies that the sequences in block FA files match the corresponding locations in a reference genome.
 
 Input files can be gzipped. If the input file is 'stdin', data is read from standard input.
 
