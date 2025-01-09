@@ -13,7 +13,7 @@
 - ⚡️ Parallel processing for large datasets
 
 <!-- TOC -->
-* [hnsm](#hnsm)
+* [hnsm - **H**omogeneous **N**ucleic acids/amino acids **S**mart **M**atching](#hnsm---homogeneous-nucleic-acidsamino-acids-smart-matching)
   * [Install](#install)
   * [Synopsis](#synopsis)
     * [`hnsm help`](#hnsm-help)
