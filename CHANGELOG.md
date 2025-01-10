@@ -10,7 +10,7 @@
 
 * Add `hnsm mask`
 * Add `hnsm sixframe`
-* Add --parallel and `--all` to `hnsm distance`
+* Add `--parallel` and `--all` to `hnsm distance`
 
 * Improve help texts
 

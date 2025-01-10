@@ -86,6 +86,14 @@ modes:
                 .value_parser(value_parser!(usize))
                 .help("Number of threads for parallel processing"),
         )
+        .arg(
+            Arg::new("outfile")
+                .long("outfile")
+                .short('o')
+                .num_args(1)
+                .default_value("stdout")
+                .help("Output filename. [stdout] for screen"),
+        )
 }
 
 // command implementation
@@ -107,6 +115,23 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
         .map(|s| s.as_str())
         .collect::<Vec<_>>();
 
+    // Create a channel for sending results to the writer thread
+    let (sender, receiver) = crossbeam::channel::bounded::<String>(256);
+
+    // Spawn a writer thread
+    let output = args.get_one::<String>("outfile").unwrap().to_string();
+    let writer_thread = std::thread::spawn(move || {
+        let mut writer = intspan::writer(&output);
+        for result in receiver {
+            writer.write_all(result.as_bytes()).unwrap();
+        }
+    });
+
+    // Set the number of threads for rayon
+    rayon::ThreadPoolBuilder::new()
+        .num_threads(opt_parallel)
+        .build_global()?;
+
     //----------------------------
     // Ops
     //----------------------------
@@ -117,21 +142,28 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
         entries.clone()
     };
 
-    // Set the number of threads for rayon
-    rayon::ThreadPoolBuilder::new()
-        .num_threads(opt_parallel)
-        .build_global()?;
-
     // Use rayon to parallelize the outer loop
     entries.par_iter().for_each(|e1| {
         let mut lines = "".to_string();
-        for e2 in &others {
+        for (i, e2) in others.iter().enumerate() {
             let score = calc(e1.list(), e2.list(), opt_mode, is_sim, is_dis);
             let out_string = format!("{}\t{}\t{:.4}\n", e1.name(), e2.name(), score);
+
             lines.push_str(&out_string);
+            if i > 1 && i % 1000 == 0 {
+                sender.send(lines.clone()).unwrap();
+                lines.clear();
+            }
         }
-        print!("{}", lines);
+        if !lines.is_empty() {
+            sender.send(lines).unwrap();
+        }
     });
+
+    // Drop the sender to signal the writer thread to exit
+    drop(sender);
+    // Wait for the writer thread to finish
+    writer_thread.join().unwrap();
 
     Ok(())
 }

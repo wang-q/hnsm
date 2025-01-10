@@ -4,7 +4,8 @@
 [![codecov](https://codecov.io/gh/wang-q/hnsm/branch/master/graph/badge.svg?token=8toyNHCsVU)](https://codecov.io/gh/wang-q/hnsm)
 [![license](https://img.shields.io/github/license/wang-q/hnsm)](https://github.com//wang-q/hnsm)
 
-`hnsm` is a high-performance bioinformatics toolkit for sequence analysis and comparison. It provides:
+`hnsm` is a high-performance bioinformatics toolkit for sequence analysis and comparison. It
+provides:
 
 - 🚀 Fast sequence alignment and comparison
 - 🧬 Support for both DNA and protein sequences
@@ -265,17 +266,17 @@ hnsm similarity tests/clust/domain.tsv --mode jaccard --bin
 
 hyperfine --warmup 1 \
     -n p1 \
-    'hnsm similarity data/Domian_content_1000.tsv -p 1 --mode jaccard --bin > /dev/null' \
+    'hnsm similarity data/Domian_content_1000.tsv --mode jaccard --bin -p 1 > /dev/null' \
     -n p2 \
-    'hnsm similarity data/Domian_content_1000.tsv -p 2 --mode jaccard --bin > /dev/null' \
+    'hnsm similarity data/Domian_content_1000.tsv --mode jaccard --bin -p 2 > /dev/null' \
     -n p3 \
-    'hnsm similarity data/Domian_content_1000.tsv -p 3 --mode jaccard --bin > /dev/null' \
+    'hnsm similarity data/Domian_content_1000.tsv --mode jaccard --bin -p 3 > /dev/null' \
     -n p4 \
-    'hnsm similarity data/Domian_content_1000.tsv -p 4 --mode jaccard --bin > /dev/null' \
+    'hnsm similarity data/Domian_content_1000.tsv --mode jaccard --bin -p 4 > /dev/null' \
     -n p6 \
-    'hnsm similarity data/Domian_content_1000.tsv -p 6 --mode jaccard --bin > /dev/null' \
+    'hnsm similarity data/Domian_content_1000.tsv --mode jaccard --bin -p 6 > /dev/null' \
     -n p8 \
-    'hnsm similarity data/Domian_content_1000.tsv -p 8 --mode jaccard --bin > /dev/null' \
+    'hnsm similarity data/Domian_content_1000.tsv --mode jaccard --bin -p 8 > /dev/null' \
     --export-markdown sim.md.tmp
 
 ```
@@ -284,12 +285,12 @@ hyperfine --warmup 1 \
 
 | Command |       Mean [s] | Min [s] | Max [s] |    Relative |
 |:--------|---------------:|--------:|--------:|------------:|
-| `p1`    | 11.701 ± 0.247 |  11.205 |  11.933 | 3.79 ± 0.14 |
-| `p2`    |  6.740 ± 0.071 |   6.573 |   6.809 | 2.18 ± 0.07 |
-| `p3`    |  5.073 ± 0.122 |   4.889 |   5.366 | 1.64 ± 0.07 |
-| `p4`    |  4.146 ± 0.102 |   3.919 |   4.244 | 1.34 ± 0.05 |
-| `p6`    |  3.474 ± 0.114 |   3.347 |   3.674 | 1.13 ± 0.05 |
-| `p8`    |  3.086 ± 0.098 |   2.934 |   3.209 |        1.00 |
+| `p1`    | 12.340 ± 0.270 |  11.762 |  12.697 | 3.79 ± 0.15 |
+| `p2`    |  6.952 ± 0.219 |   6.553 |   7.268 | 2.14 ± 0.10 |
+| `p3`    |  5.383 ± 0.344 |   5.171 |   6.287 | 1.66 ± 0.12 |
+| `p4`    |  4.375 ± 0.162 |   4.046 |   4.585 | 1.35 ± 0.07 |
+| `p6`    |  3.602 ± 0.069 |   3.445 |   3.712 | 1.11 ± 0.04 |
+| `p8`    |  3.252 ± 0.106 |   2.984 |   3.390 |        1.00 |
 
 #### Pairwise distances by Minimizer
 
@@ -355,18 +356,42 @@ hyperfine --warmup 1 \
     'hnsm distance tests/clust/mg1655.pro.fa.gz tests/clust/pao1.pro.fa.gz -k 7 -w 2 -p 8 > /dev/null' \
     --export-markdown dis.md.tmp
 
+hyperfine --warmup 1 \
+    -n p1 \
+    'hnsm distance tests/clust/mg1655.pro.fa.gz tests/clust/pao1.pro.fa.gz -k 7 -w 2 --zero -p 1 > /dev/null' \
+    -n p2 \
+    'hnsm distance tests/clust/mg1655.pro.fa.gz tests/clust/pao1.pro.fa.gz -k 7 -w 2 --zero -p 2 > /dev/null' \
+    -n p3 \
+    'hnsm distance tests/clust/mg1655.pro.fa.gz tests/clust/pao1.pro.fa.gz -k 7 -w 2 --zero -p 3 > /dev/null' \
+    -n p4 \
+    'hnsm distance tests/clust/mg1655.pro.fa.gz tests/clust/pao1.pro.fa.gz -k 7 -w 2 --zero -p 4 > /dev/null' \
+    -n p6 \
+    'hnsm distance tests/clust/mg1655.pro.fa.gz tests/clust/pao1.pro.fa.gz -k 7 -w 2 --zero -p 6 > /dev/null' \
+    -n p8 \
+    'hnsm distance tests/clust/mg1655.pro.fa.gz tests/clust/pao1.pro.fa.gz -k 7 -w 2 --zero -p 8 > /dev/null' \
+    --export-markdown dis.md.tmp
+
 ```
 
 * AMD Ryzen 7 8745HS
 
 | Command |       Mean [s] | Min [s] | Max [s] |    Relative |
 |:--------|---------------:|--------:|--------:|------------:|
-| `p1`    | 22.815 ± 0.682 |  21.859 |  23.764 | 8.22 ± 0.56 |
-| `p2`    | 10.909 ± 0.485 |  10.426 |  11.619 | 3.93 ± 0.30 |
-| `p3`    |  6.679 ± 0.172 |   6.528 |   7.119 | 2.41 ± 0.16 |
-| `p4`    |  4.968 ± 0.149 |   4.715 |   5.199 | 1.79 ± 0.12 |
-| `p6`    |  3.338 ± 0.122 |   3.226 |   3.608 | 1.20 ± 0.09 |
-| `p8`    |  2.777 ± 0.170 |   2.524 |   2.993 |        1.00 |
+| `p1`    | 24.840 ± 0.377 |  24.161 |  25.319 | 8.36 ± 0.45 |
+| `p2`    | 11.150 ± 0.153 |  10.958 |  11.481 | 3.75 ± 0.20 |
+| `p3`    |  6.877 ± 0.083 |   6.743 |   7.022 | 2.31 ± 0.12 |
+| `p4`    |  5.178 ± 0.107 |   5.033 |   5.317 | 1.74 ± 0.10 |
+| `p6`    |  3.745 ± 0.205 |   3.508 |   4.080 | 1.26 ± 0.10 |
+| `p8`    |  2.972 ± 0.155 |   2.842 |   3.347 |        1.00 |
+
+| Command |       Mean [s] | Min [s] | Max [s] |    Relative |
+|:--------|---------------:|--------:|--------:|------------:|
+| `p1`    | 32.044 ± 0.776 |  30.726 |  32.970 | 8.78 ± 0.25 |
+| `p2`    | 15.014 ± 0.110 |  14.842 |  15.212 | 4.12 ± 0.07 |
+| `p3`    |  9.182 ± 0.080 |   8.987 |   9.246 | 2.52 ± 0.04 |
+| `p4`    |  6.885 ± 0.087 |   6.735 |   6.974 | 1.89 ± 0.04 |
+| `p6`    |  4.569 ± 0.110 |   4.492 |   4.831 | 1.25 ± 0.04 |
+| `p8`    |  3.648 ± 0.055 |   3.587 |   3.774 |        1.00 |
 
 * Six-frame
 
