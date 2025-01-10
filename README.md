@@ -20,9 +20,9 @@ provides:
     * [`hnsm help`](#hnsm-help)
     * [`fasr help`](#fasr-help)
   * [Examples](#examples)
-    * [Fasta files](#fasta-files)
+    * [FA files](#fa-files)
     * [Index](#index)
-    * [Fastq](#fastq)
+    * [FQ](#fq)
     * [Clustering](#clustering)
       * [Similarity and dissimilarity (distance) of vectors](#similarity-and-dissimilarity-distance-of-vectors)
       * [Pairwise distances by Minimizer](#pairwise-distances-by-minimizer)
@@ -95,7 +95,7 @@ Commands:
   rc          Reverse complement a FA file
   replace     Replace headers of a FA file based on a TSV mapping
   manifold    Manifold learning based on pairwise distances
-  similarity  Similarity of vectors
+  similarity  Calculate similarity between vectors
   sixframe    Six-Frame Translation
   size        Count total bases in FA file(s)
   some        Extract some FA records based on a list of names
@@ -129,9 +129,6 @@ Subcommand groups:
 * Synteny
     * das
     * chain
-
-* <infiles> are paths to fasta files, .fa.gz is supported
-    * infile == stdin means reading from STDIN
 
 ```
 
@@ -174,7 +171,7 @@ Options:
 
 ## Examples
 
-### Fasta files
+### FA files
 
 ```shell
 hnsm size tests/fasta/ufasta.fa
@@ -238,7 +235,7 @@ hnsm range tests/index/final.contigs.fa.gz -r tests/index/sample.rg
 
 ```
 
-### Fastq
+### FQ
 
 ```shell
 hnsm interleave tests/fasta/ufasta.fa.gz tests/fasta/ufasta.fa

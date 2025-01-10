@@ -65,9 +65,6 @@ Subcommand groups:
     * das
     * chain
 
-* <infiles> are paths to fasta files, .fa.gz is supported
-    * infile == stdin means reading from STDIN
-
 "###,
         );
 
