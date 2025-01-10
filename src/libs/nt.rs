@@ -1,4 +1,5 @@
 /// Standard IUB/IUPAC Nucleic Acid Codes
+/// ```text
 /// Code =>  Nucleic Acid(s)
 ///  A   =>  Adenine
 ///  C   =>  Cytosine
@@ -16,6 +17,7 @@
 ///  D   =>  A or G or T
 ///  B   =>  C or G or T
 ///  N   =>  A or G or C or T (any)
+/// ```
 #[allow(dead_code)]
 #[repr(usize)]
 #[derive(Clone, Copy)]
@@ -34,7 +36,7 @@ impl Nt {
 }
 
 /// Maps an ASCII chars to index
-///
+/// ```text
 /// A = 65, a = 97  => 0
 /// C = 67, c = 99  => 1
 /// G = 71, g = 103 => 2
@@ -42,6 +44,7 @@ impl Nt {
 /// U = 85, u = 117 => 3
 /// N => 4
 /// Invalid => 255
+/// ```
 pub static NT_VAL: &[usize; 256] = &{
     let mut array = [255; 256];
 
