@@ -3,13 +3,34 @@ use clap::*;
 // Create clap subcommand arguments
 pub fn make_subcommand() -> Command {
     Command::new("filter")
-        .about("Filter blocks, and can also be used as a formatter")
+        .about("Filter blocks and optionally format sequences")
         .after_help(
             r###"
-* <infiles> are paths to block fasta files, .fas.gz is supported
-    * infile == stdin means reading from STDIN
+This subcommand filters blocks in block FA files based on species name and sequence length.
+It can also format sequences by converting them to uppercase or removing dashes.
 
-* If `--name` is not specified, it defaults to the first one in each block
+Input files can be gzipped. If the input file is 'stdin', data is read from standard input.
+
+Note:
+- If `--name` is not specified, the first species in each block is used as the default.
+- Sequences can be filtered based on length using `--ge` (greater than or equal) and `--le` (less than or equal).
+- Sequences can be formatted using `--upper` (convert to uppercase) and `--dash` (remove dashes).
+
+Examples:
+1. Filter blocks for a specific species:
+   fasr filter tests/fasr/example.fas --name S288c
+
+2. Filter blocks with sequences >= 100 bp:
+   fasr filter tests/fasr/example.fas --ge 100
+
+3. Filter blocks with sequences <= 200 bp:
+   fasr filter tests/fasr/example.fas --le 200
+
+4. Convert sequences to uppercase and remove dashes:
+   fasr filter tests/fasr/example.fas --upper --dash
+
+5. Output results to a file:
+   fasr filter tests/fasr/example.fas -o output.fas
 
 "###,
         )
@@ -18,7 +39,7 @@ pub fn make_subcommand() -> Command {
                 .required(true)
                 .num_args(1..)
                 .index(1)
-                .help("Set the input files to use"),
+                .help("Input block FA file(s) to process"),
         )
         .arg(
             Arg::new("name")
@@ -31,27 +52,21 @@ pub fn make_subcommand() -> Command {
                 .long("ge")
                 .value_parser(value_parser!(usize))
                 .num_args(1)
-                .help("The length of the sequence >= this value"),
+                .help("Filter sequences with length >= this value"),
         )
         .arg(
             Arg::new("le")
                 .long("le")
                 .value_parser(value_parser!(usize))
                 .num_args(1)
-                .help("The length of the sequence <= this value"),
+                .help("Filter sequences with length <= this value"),
         )
         .arg(
             Arg::new("upper")
                 .long("upper")
                 .action(ArgAction::SetTrue)
-                .help("Convert all sequences to upper cases"),
+                .help("Convert sequences to uppercase"),
         )
-        // .arg(
-        //     Arg::new("N")
-        //         .long("N")
-        //         .action(ArgAction::SetTrue)
-        //         .help("Convert IUPAC ambiguous codes to 'N' or 'n'"),
-        // )
         .arg(
             Arg::new("dash")
                 .long("dash")
@@ -74,24 +89,30 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     // Args
     //----------------------------
     let mut writer = intspan::writer(args.get_one::<String>("outfile").unwrap());
+    let opt_name = &args
+        .get_one::<String>("name")
+        .map(|s| s.as_str())
+        .unwrap_or("")
+        .to_string();
+    let opt_ge = args.get_one::<usize>("ge").copied().unwrap_or(usize::MAX);
+    let opt_le = args.get_one::<usize>("le").copied().unwrap_or(usize::MAX);
+
     let is_upper = args.get_flag("upper");
-    // let is_n = args.get_flag("N");
     let is_dash = args.get_flag("dash");
 
     //----------------------------
-    // Operating
+    // Ops
     //----------------------------
     for infile in args.get_many::<String>("infiles").unwrap() {
         let mut reader = intspan::reader(infile);
 
         'BLOCK: while let Ok(block) = hnsm::next_fas_block(&mut reader) {
-            // --name
-            let idx = if args.contains_id("name") {
-                let name = args.get_one::<String>("name").unwrap();
-                if !block.names.contains(name) {
+            // Determine the index of the species
+            let idx = if !opt_name.is_empty() {
+                if !block.names.contains(opt_name) {
                     continue 'BLOCK;
                 }
-                block.names.iter().position(|x| x == name).unwrap()
+                block.names.iter().position(|x| x == opt_name).unwrap()
             } else {
                 0
             };
@@ -99,19 +120,13 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
             let idx_seq = block.entries[idx].seq();
 
             // --ge
-            if args.contains_id("ge") {
-                let value = *args.get_one::<usize>("ge").unwrap();
-                if idx_seq.len() < value {
-                    continue 'BLOCK;
-                }
+            if opt_ge != usize::MAX && idx_seq.len() < opt_ge {
+                continue 'BLOCK;
             }
 
             // --le
-            if args.contains_id("le") {
-                let value = *args.get_one::<usize>("le").unwrap();
-                if idx_seq.len() > value {
-                    continue 'BLOCK;
-                }
+            if opt_le != usize::MAX && idx_seq.len() > opt_le {
+                continue 'BLOCK;
             }
 
             for entry in &block.entries {

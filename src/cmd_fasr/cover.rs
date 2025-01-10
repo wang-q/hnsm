@@ -4,11 +4,30 @@ use std::collections::BTreeMap;
 // Create clap subcommand arguments
 pub fn make_subcommand() -> Command {
     Command::new("cover")
-        .about("Output covers on chromosomes")
+        .about("Output covered regions on chromosomes")
         .after_help(
             r###"
-* <infiles> are paths to block fasta files, .fas.gz is supported
-    * infile == stdin means reading from STDIN
+This subcommand outputs the coverage of sequences on chromosomes from block FA files.
+
+Input files can be gzipped. If the input file is 'stdin', data is read from standard input.
+
+Note:
+- The output is in JSON format, showing the coverage of sequences on chromosomes.
+- Optionally, you can specify a species name to limit the output to that species.
+- For lastz results, use --trim 10
+
+Examples:
+1. Calculate coverage for all species:
+   fasr cover tests/fasr/example.fas
+
+2. Calculate coverage for a specific species:
+   fasr cover tests/fasr/example.fas --name S288c
+
+3. Trim alignment borders to avoid overlaps:
+   fasr cover tests/fasr/example.fas --trim 10
+
+4. Output results to a file:
+   fasr cover tests/fasr/example.fas -o output.json
 
 "###,
         )
@@ -17,13 +36,13 @@ pub fn make_subcommand() -> Command {
                 .required(true)
                 .num_args(1..)
                 .index(1)
-                .help("Set the input files to use"),
+                .help("Input block FA file(s) to process"),
         )
         .arg(
             Arg::new("name")
                 .long("name")
                 .num_args(1)
-                .help("Only output this species"),
+                .help("Only output regions for this species"),
         )
         .arg(
             Arg::new("trim")
@@ -31,7 +50,7 @@ pub fn make_subcommand() -> Command {
                 .num_args(1)
                 .value_parser(value_parser!(i32))
                 .default_value("0")
-                .help("Trim align borders to avoid overlaps in lastz results"),
+                .help("Trim align borders to avoid overlaps"),
         )
         .arg(
             Arg::new("outfile")
@@ -48,22 +67,27 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     //----------------------------
     // Args
     //----------------------------
-    let mut res_of: BTreeMap<String, BTreeMap<String, intspan::IntSpan>> = BTreeMap::new();
-    let trim = *args.get_one::<i32>("trim").unwrap();
+    let opt_trim = *args.get_one::<i32>("trim").unwrap();
+    let opt_name = &args
+        .get_one::<String>("name")
+        .map(|s| s.as_str())
+        .unwrap_or("")
+        .to_string();
 
     //----------------------------
-    // Operating
+    // Ops
     //----------------------------
+    let mut res_of: BTreeMap<String, BTreeMap<String, intspan::IntSpan>> = BTreeMap::new();
+
     for infile in args.get_many::<String>("infiles").unwrap() {
         let mut reader = intspan::reader(infile);
 
         while let Ok(block) = hnsm::next_fas_block(&mut reader) {
             let block_names = block.names;
 
-            if args.contains_id("name") {
-                let name = args.get_one::<String>("name").unwrap();
-                if !res_of.contains_key(name) {
-                    res_of.insert(name.to_string(), BTreeMap::new());
+            if !opt_name.is_empty() {
+                if !res_of.contains_key(opt_name) {
+                    res_of.insert(opt_name.to_string(), BTreeMap::new());
                 }
             } else {
                 for name in &block_names {
@@ -79,9 +103,8 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
                     continue;
                 }
 
-                if args.contains_id("name") {
-                    let name = args.get_one::<String>("name").unwrap();
-                    if name != range.name() {
+                if !opt_name.is_empty() {
+                    if opt_name != range.name() {
                         continue;
                     }
                 }
@@ -92,7 +115,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
                     res.insert(entry.range().chr().to_string(), intspan::IntSpan::new());
                 }
 
-                let intspan = range.intspan().clone().trim(trim);
+                let intspan = range.intspan().clone().trim(opt_trim);
                 res.get_mut(entry.range().chr()).unwrap().merge(&intspan);
             }
         }
@@ -101,11 +124,14 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     //----------------------------
     // Output
     //----------------------------
-    let out_json = if args.contains_id("name") {
+    let out_json = if !opt_name.is_empty() {
+        // Output coverage for a single species
         intspan::set2json(res_of.first_key_value().unwrap().1)
     } else {
+        // Output coverage for all species
         intspan::set2json_m(&res_of)
     };
+    // Write the JSON output to the specified file or stdout
     intspan::write_json(args.get_one::<String>("outfile").unwrap(), &out_json)?;
 
     Ok(())

@@ -28,7 +28,7 @@
       * [Matrix conversion](#matrix-conversion)
       * [DBSCAN](#dbscan)
       * [PCoA](#pcoa)
-    * [Block Fasta files](#block-fasta-files)
+    * [Block FA files](#block-fa-files)
     * [Genomes](#genomes)
   * [Author](#author)
   * [License](#license)

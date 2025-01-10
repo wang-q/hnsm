@@ -4,11 +4,30 @@ use itertools::Itertools;
 // Create clap subcommand arguments
 pub fn make_subcommand() -> Command {
     Command::new("link")
-        .about("Output bi/multi-lateral range links")
+        .about("Output bi/multi-lateral range links from block FA files")
         .after_help(
             r###"
-* <infiles> are paths to block fasta files, .fas.gz is supported
-    * infile == stdin means reading from STDIN
+This subcommand extracts bi/multi-lateral range links from block FA files.
+
+Input files can be gzipped. If the input file is 'stdin', data is read from standard input.
+
+Note:
+- By default, the tool outputs multi-lateral links (all ranges in a block).
+- Use `--pair` to output bilateral (pairwise) links.
+- Use `--best` to output best-to-best bilateral links based on sequence similarity.
+
+Examples:
+1. Output multi-lateral links:
+   fasr link tests/fasr/example.fas
+
+2. Output bilateral (pairwise) links:
+   fasr link tests/fasr/example.fas --pair
+
+3. Output best-to-best bilateral links:
+   fasr link tests/fasr/example.fas --best
+
+4. Output results to a file:
+   fasr link tests/fasr/example.fas -o output.tsv
 
 "###,
         )
@@ -17,19 +36,19 @@ pub fn make_subcommand() -> Command {
                 .required(true)
                 .num_args(1..)
                 .index(1)
-                .help("Set the input files to use"),
+                .help("Input block FA file(s) to process"),
         )
         .arg(
             Arg::new("pair")
                 .long("pair")
                 .action(ArgAction::SetTrue)
-                .help("Bilateral (pairwise) links"),
+                .help("Output bilateral (pairwise) links"),
         )
         .arg(
             Arg::new("best")
                 .long("best")
                 .action(ArgAction::SetTrue)
-                .help("best-to-best bilateral links"),
+                .help("Output best-to-best bilateral links"),
         )
         .arg(
             Arg::new("outfile")
@@ -51,27 +70,28 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     let is_best = args.get_flag("best");
 
     //----------------------------
-    // Operating
+    // Ops
     //----------------------------
     for infile in args.get_many::<String>("infiles").unwrap() {
         let mut reader = intspan::reader(infile);
 
         while let Ok(block) = hnsm::next_fas_block(&mut reader) {
-            let mut headers = vec![];
-            for entry in &block.entries {
-                headers.push(entry.range().to_string());
-            }
+            let headers: Vec<String> = block
+                .entries
+                .iter()
+                .map(|entry| entry.range().to_string())
+                .collect();
 
             //----------------------------
             // Output
             //----------------------------
             if is_pair {
-                for i in 0..headers.len() {
-                    for j in i + 1..headers.len() {
-                        writer.write_all(format!("{}\t{}\n", headers[i], headers[j]).as_ref())?;
-                    }
+                // Output bilateral (pairwise) links
+                for (i, j) in (0..headers.len()).tuple_combinations() {
+                    writer.write_all(format!("{}\t{}\n", headers[i], headers[j]).as_ref())?;
                 }
             } else if is_best {
+                // Output best-to-best bilateral links
                 let mut best_pair: Vec<(usize, usize)> = vec![];
                 for i in 0..headers.len() {
                     let mut dist_idx: (f32, usize) = (1.0, headers.len() - 1);
@@ -90,13 +110,14 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
                         best_pair.push((dist_idx.1, i));
                     }
                 }
-                // from itertools
+                // // Deduplicate pairs using itertools
                 let best_pair: Vec<(usize, usize)> = best_pair.into_iter().unique().collect();
 
                 for (i, j) in best_pair {
                     writer.write_all(format!("{}\t{}\n", headers[i], headers[j]).as_ref())?;
                 }
             } else {
+                // Output multi-lateral links
                 writer.write_all(format!("{}\n", headers.join("\t")).as_ref())?;
             }
         }
