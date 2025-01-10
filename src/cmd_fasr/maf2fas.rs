@@ -3,11 +3,20 @@ use clap::*;
 // Create clap subcommand arguments
 pub fn make_subcommand() -> Command {
     Command::new("maf2fas")
-        .about("Convert maf to block fasta")
+        .about("Convert MAF files to block FA format")
         .after_help(
             r###"
-* <infiles> are paths to maf files, .maf.gz is supported
-    * infile == stdin means reading from STDIN
+This subcommand converts MAF (Multiple Alignment Format) files into block FA format.
+
+Input files can be gzipped. If the input file is 'stdin', data is read from standard input.
+
+Note:
+- MAF files typically contain multiple sequence alignments, and this tool extracts each alignment into block FASTA format.
+- The output preserves the alignment structure, with each block separated by a newline.
+
+Examples:
+1. Convert a MAF file to block FASTA format:
+   fasr maf2fas tests/fasr/example.maf
 
 "###,
         )
@@ -16,7 +25,7 @@ pub fn make_subcommand() -> Command {
                 .required(true)
                 .num_args(1..)
                 .index(1)
-                .help("Set the input files to use"),
+                .help("Input MAF file(s) to process"),
         )
         .arg(
             Arg::new("outfile")
@@ -36,7 +45,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     let mut writer = intspan::writer(args.get_one::<String>("outfile").unwrap());
 
     //----------------------------
-    // Operating
+    // Ops
     //----------------------------
     for infile in args.get_many::<String>("infiles").unwrap() {
         let mut reader = intspan::reader(infile);

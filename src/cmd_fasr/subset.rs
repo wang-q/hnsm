@@ -3,9 +3,14 @@ use clap::*;
 // Create clap subcommand arguments
 pub fn make_subcommand() -> Command {
     Command::new("subset")
-        .about("Extract a subset of species")
+        .about("Extract a subset of species from block FA files")
         .after_help(
             r###"
+Extract a subset of species from block FA files based on a list of names.
+
+* <name.lst>: A file containing a list of species names to keep, one per line.
+    - The order of species in the output will follow the order in <name.lst>.
+
 * <name.lst> is a file with a list of names to keep, one per line
     * Orders in the output file will following the ones in <name.lst>
 
@@ -29,7 +34,7 @@ pub fn make_subcommand() -> Command {
                 .help("Set the input files to use"),
         )
         .arg(
-            Arg::new("is_required")
+            Arg::new("required")
                 .long("required")
                 .action(ArgAction::SetTrue)
                 .help("Skip blocks not containing all the names"),
@@ -50,7 +55,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     // Args
     //----------------------------
     let mut writer = intspan::writer(args.get_one::<String>("outfile").unwrap());
-    let is_required = args.get_flag("is_required");
+    let is_required = args.get_flag("required");
 
     let needed = intspan::read_first_column(args.get_one::<String>("name.lst").unwrap());
 

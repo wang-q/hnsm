@@ -1,18 +1,37 @@
 use clap::*;
 use std::collections::BTreeMap;
-use std::fs;
-use std::fs::{File, OpenOptions};
 use std::io::Write;
-use std::path::Path;
 
 // Create clap subcommand arguments
 pub fn make_subcommand() -> Command {
     Command::new("split")
-        .about("Split block fasta files to per-alignment/chromosome fasta files")
+        .about("Split block FA files into per-alignment or per-chromosome FA files")
         .after_help(
             r###"
-* <infiles> are paths to block fasta files, .fas.gz is supported
-    * infile == stdin means reading from STDIN
+This subcommand splits block FA files into individual FA files, either per alignment or per chromosome.
+
+Input files can be gzipped. If the input file is 'stdin', data is read from standard input.
+
+Note:
+- By default, each alignment block is written to a separate file.
+- Use `--chr` to split files by chromosome.
+- Use `--simple` to simplify headers by keeping only species names.
+
+Examples:
+1. Split block FA files into per-alignment files:
+   fasr split tests/fasr/example.fas -o output_dir
+
+2. Split block FA files into per-chromosome files:
+   fasr split tests/fasr/example.fas -o output_dir --chr
+
+3. Simplify headers in output files:
+   fasr split tests/fasr/example.fas -o output_dir --simple
+
+4. Use a custom suffix for output files:
+   fasr split tests/fasr/example.fas -o output_dir --suffix .fa
+
+5. Output to stdout:
+   fasr split tests/fasr/example.fas
 
 "###,
         )
@@ -21,7 +40,7 @@ pub fn make_subcommand() -> Command {
                 .required(true)
                 .num_args(1..)
                 .index(1)
-                .help("Set the input files to use"),
+                .help("Input block FA file(s) to process"),
         )
         .arg(
             Arg::new("suffix")
@@ -29,19 +48,19 @@ pub fn make_subcommand() -> Command {
                 .short('s')
                 .num_args(1)
                 .default_value(".fas")
-                .help("Extensions of output files"),
+                .help("File extension for output files"),
         )
         .arg(
             Arg::new("chr")
                 .long("chr")
                 .action(ArgAction::SetTrue)
-                .help("Split by chromosomes"),
+                .help("Split files by chromosomes"),
         )
         .arg(
             Arg::new("simple")
                 .long("simple")
                 .action(ArgAction::SetTrue)
-                .help("Only keep names in headers"),
+                .help("Simplify headers by keeping only species names"),
         )
         .arg(
             Arg::new("outdir")
@@ -60,17 +79,17 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     //----------------------------
     let outdir = args.get_one::<String>("outdir").unwrap();
     if outdir != "stdout" {
-        fs::create_dir_all(outdir)?;
+        std::fs::create_dir_all(outdir)?;
     }
 
-    let suffix = args.get_one::<String>("suffix").unwrap();
+    let opt_suffix = args.get_one::<String>("suffix").unwrap();
     let is_chr = args.get_flag("chr");
     let is_simple = args.get_flag("simple");
 
-    let mut file_of: BTreeMap<String, File> = BTreeMap::new();
+    let mut file_of: BTreeMap<String, std::fs::File> = BTreeMap::new();
 
     //----------------------------
-    // Operating
+    // Ops
     //----------------------------
     for infile in args.get_many::<String>("infiles").unwrap() {
         let mut reader = intspan::reader(infile);
@@ -103,8 +122,8 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
                     print!(">{}\n{}\n", header, seq);
                 } else {
                     if !file_of.contains_key(&filename) {
-                        let path = Path::new(outdir).join(filename.clone() + suffix);
-                        let file = OpenOptions::new()
+                        let path = std::path::Path::new(outdir).join(filename.clone() + opt_suffix);
+                        let file = std::fs::OpenOptions::new()
                             .create(true)
                             .write(true)
                             .truncate(true)

@@ -4,19 +4,23 @@ use std::collections::BTreeMap;
 // Create clap subcommand arguments
 pub fn make_subcommand() -> Command {
     Command::new("replace")
-        .about("Concatenate sequence pieces of the same species")
+        .about("Replace headers in block FA files")
         .after_help(
             r###"
-* <replace.tsv> is a tab-separated file containing one or more fields
+This subcommand replaces headers (name.range) in block FA files based on a TSV file.
 
-        original_name   replace_name    more_replace_name
+Input files can be gzipped. If the input file is 'stdin', data is read from standard input.
 
-    * Containing one field deletes the entire alignment block
-    * Containing three or more fields duplicates the entire alignment block
-    * Doesn't support replacing multiple records in one block
+Note:
+- The TSV file should contain one or more fields:
+  - `original_name  replace_name   more_replace_name`
+  - One field: Deletes the entire alignment block for the specified species.
+  - Three or more fields: Duplicates the entire alignment block for each replacement name.
+- Does not support replacing multiple records in one block.
 
-* <infiles> are paths to block fasta files, .fas.gz is supported
-    * infile == stdin means reading from STDIN
+Examples:
+1. Replace species names in a block FA file:
+   fasr replace tests/fasr/replace.tsv tests/fasr/example.fas
 
 "###,
         )
@@ -25,14 +29,14 @@ pub fn make_subcommand() -> Command {
                 .required(true)
                 .num_args(1)
                 .index(1)
-                .help("Path to replace.tsv"),
+                .help("Path to the TSV file containing replacement rules"),
         )
         .arg(
             Arg::new("infiles")
                 .required(true)
                 .num_args(1..)
                 .index(2)
-                .help("Set the input files to use"),
+                .help("Input block FA file(s) to process"),
         )
         .arg(
             Arg::new("outfile")
@@ -57,15 +61,15 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
 
         if rgs.is_empty() {
             continue;
-        } else {
-            let rg = rgs.first().unwrap().to_string();
-            let replaces = rgs
-                .iter()
-                .skip(1)
-                .map(|e| e.to_string())
-                .collect::<Vec<String>>();
-            replace_of.insert(rg.to_string(), replaces);
         }
+
+        let rg = rgs.first().unwrap().to_string();
+        let replacements = rgs
+            .iter()
+            .skip(1)
+            .map(|e| e.to_string())
+            .collect::<Vec<String>>();
+        replace_of.insert(rg.to_string(), replacements);
     }
 
     //----------------------------

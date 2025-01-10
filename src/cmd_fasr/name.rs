@@ -4,11 +4,23 @@ use std::collections::BTreeMap;
 // Create clap subcommand arguments
 pub fn make_subcommand() -> Command {
     Command::new("name")
-        .about("Output all species names")
+        .about("Output all species names from block FA files")
         .after_help(
             r###"
-* <infiles> are paths to block fasta files, .fas.gz is supported
-* infile == stdin means reading from STDIN
+This subcommand extracts and outputs all species names from block FA files.
+
+Input files can be gzipped. If the input file is 'stdin', data is read from standard input.
+
+Note:
+- By default, the subcommand outputs a list of unique species names.
+- Use `--count` to also output the number of occurrences of each species name.
+
+Examples:
+1. Output all species names:
+   fasr name tests/fasr/example.fas
+
+2. Output species names with occurrence counts:
+   fasr name tests/fasr/example.fas --count
 
 "###,
         )
@@ -17,14 +29,14 @@ pub fn make_subcommand() -> Command {
                 .required(true)
                 .num_args(1..)
                 .index(1)
-                .help("Set the input files to use"),
+                .help("Input block FA file(s) to process"),
         )
         .arg(
             Arg::new("count")
                 .long("count")
                 .short('c')
                 .action(ArgAction::SetTrue)
-                .help("Also count name occurrences"),
+                .help("Output species names with occurrence counts"),
         )
         .arg(
             Arg::new("outfile")
@@ -44,12 +56,12 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     let mut writer = intspan::writer(args.get_one::<String>("outfile").unwrap());
     let is_count = args.get_flag("count");
 
-    let mut names: Vec<String> = vec![];
-    let mut count_of: BTreeMap<String, i32> = BTreeMap::new();
-
     //----------------------------
     // Operating
     //----------------------------
+    let mut names: Vec<String> = vec![];
+    let mut count_of: BTreeMap<String, i32> = BTreeMap::new();
+
     for infile in args.get_many::<String>("infiles").unwrap() {
         let mut reader = intspan::reader(infile);
 
@@ -57,10 +69,12 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
             for entry in &block.entries {
                 let range = entry.range();
 
+                // Collect unique species names
                 if !names.contains(range.name()) {
                     names.push(range.name().to_string());
                 }
 
+                // Count occurrences of each species name
                 count_of
                     .entry(range.name().to_string())
                     .and_modify(|e| *e += 1)
