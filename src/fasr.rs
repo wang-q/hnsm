@@ -63,7 +63,6 @@ fn main() -> anyhow::Result<()> {
     Ok(())
 }
 
-// TODO: replace samtools
 // TODO: add more tools - vcf, match
 // TODO: fasr variation --indel
 // TODO: fasr xlsx --indel

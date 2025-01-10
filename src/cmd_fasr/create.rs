@@ -16,7 +16,7 @@ Note:
 - Two styles of FA headers are supported:
   - `>chr` for single-genome self-alignments.
   - `>name.chr` for multiple genomes.
-- Requires `samtools` to be installed and available in $PATH.
+- Requires `hnsm` to be installed and available in $PATH.
 
 Examples:
 1. Create block FA files for a single genome:
@@ -24,12 +24,6 @@ Examples:
 
 2. Create block FA files for a specific species:
    fasr create tests/fasr/genome.fa tests/fasr/I.connect.tsv --name S288c
-
-3. Create block FA files for multiple genomes:
-   fasr create tests/fasr/genomes.fa tests/fasr/I.connect.tsv --multi
-
-4. Output results to a file:
-   fasr create tests/fasr/genome.fa tests/fasr/I.connect.tsv -o output.fas
 
 "###,
         )
@@ -54,12 +48,6 @@ Examples:
                 .help("Set a species name for ranges. No effects if --multi"),
         )
         .arg(
-            Arg::new("multi")
-                .long("multi")
-                .action(ArgAction::SetTrue)
-                .help("Indicates the reference genome contains multiple genomes"),
-        )
-        .arg(
             Arg::new("outfile")
                 .long("outfile")
                 .short('o')
@@ -81,7 +69,6 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
         .map(|s| s.as_str())
         .unwrap_or("")
         .to_string();
-    let is_multi = args.get_flag("multi");
 
     //----------------------------
     // Ops
@@ -103,11 +90,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
                 }
 
                 // Fetch the sequence from the reference genome
-                let seq = if is_multi {
-                    get_seq_multi(&range, opt_genome)?
-                } else {
-                    get_seq(&range, opt_genome)?
-                };
+                let seq = hnsm::get_seq_loc(opt_genome, &range.to_string())?;
 
                 //----------------------------
                 // Output
@@ -121,36 +104,4 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     }
 
     Ok(())
-}
-
-fn get_seq(range: &intspan::Range, genome: &str) -> anyhow::Result<String> {
-    let pos = format!("{}:{}-{}", range.chr(), range.start(), range.end());
-    let mut gseq = intspan::get_seq_faidx(genome, &pos)?;
-
-    if range.strand() == "-" {
-        gseq = std::str::from_utf8(&bio::alphabets::dna::revcomp(gseq.bytes()))
-            .unwrap()
-            .to_string();
-    }
-
-    Ok(gseq)
-}
-
-fn get_seq_multi(range: &intspan::Range, genome: &str) -> anyhow::Result<String> {
-    let pos = format!(
-        "{}.{}:{}-{}",
-        range.name(),
-        range.chr(),
-        range.start(),
-        range.end()
-    );
-    let mut gseq = intspan::get_seq_faidx(genome, &pos)?;
-
-    if range.strand() == "-" {
-        gseq = std::str::from_utf8(&bio::alphabets::dna::revcomp(gseq.bytes()))
-            .unwrap()
-            .to_string();
-    }
-
-    Ok(gseq)
 }

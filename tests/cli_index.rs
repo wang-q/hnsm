@@ -48,7 +48,7 @@ fn command_range() -> anyhow::Result<()> {
     assert!(stdout.contains(">k81_130\nAGTTTCAACT"));
     assert!(stdout.contains(">k81_130:11-20\nGGTGAATCAA\n"));
     assert!(stdout.contains(">k81_170:304-323\nAGTTAAAAACCTGATTTATT\n"));
-    assert!(stdout.contains(">k81_170(-):1-20\nAATAAATCAGGTTTTTAACT\n"));
+    assert!(stdout.contains(">k81_170(-):1-20\nATTAACCTGTTGTAGGTGTT\n"));
     assert!(stdout.contains(">k81_158:70001-70020\nTGGCTATAACCTAATTTTGT\n"));
 
     Ok(())

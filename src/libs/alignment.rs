@@ -461,7 +461,7 @@ pub fn seq_intspan(seq: &[u8]) -> IntSpan {
 ///     Err(_) => {}
 /// }
 /// ```
-// cargo test --doc utils::get_consensus_poa
+// cargo test --doc alignment::get_consensus_poa
 pub fn get_consensus_poa(seqs: &[&[u8]]) -> anyhow::Result<String> {
     let mut bin = String::new();
     for e in &["spoa"] {
@@ -499,6 +499,56 @@ pub fn get_consensus_poa(seqs: &[&[u8]]) -> anyhow::Result<String> {
 
     // closing the `TempPath` explicitly
     seq_in_path.close()?;
+
+    for line in output.stdout.lines().map_while(Result::ok) {
+        // header
+        if line.starts_with('>') {
+            continue;
+        }
+
+        seq += line.as_str();
+    }
+
+    Ok(seq)
+}
+
+/// ```
+/// match which::which("hnsm") {
+///     Ok(_) => {
+///         let seq = hnsm::get_seq_loc("tests/fasr/NC_000932.fa", "NC_000932:1-10").unwrap();
+///         assert_eq!(seq, "ATGGGCGAAC".to_string());
+///         let seq = hnsm::get_seq_loc("tests/fasr/NC_000932.fa", "NC_000932(-):1-10").unwrap();
+///         assert_eq!(seq, "GTTCGCCCAT".to_string());
+///         let res = hnsm::get_seq_loc("tests/fasr/NC_000932.fa", "FAKE:1-10");
+///         assert_eq!(res.unwrap(), "".to_string());
+///     }
+///     Err(_) => {}
+/// }
+/// ```
+// cargo test --doc alignment::get_seq_loc
+pub fn get_seq_loc(file: &str, range: &str) -> anyhow::Result<String> {
+    let mut bin = String::new();
+    for e in &["hnsm"] {
+        if let Ok(pth) = which::which(e) {
+            bin = pth.to_string_lossy().to_string();
+            break;
+        }
+    }
+
+    if bin.is_empty() {
+        return Err(anyhow!("Can't find the external command"));
+    }
+
+    let mut seq = String::new();
+    let output = Command::new(bin)
+        .arg("range")
+        .arg(file)
+        .arg(range)
+        .output()?;
+
+    if !output.status.success() {
+        return Err(anyhow!("Command executed with failing error code"));
+    }
 
     for line in output.stdout.lines().map_while(Result::ok) {
         // header

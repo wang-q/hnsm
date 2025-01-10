@@ -226,7 +226,7 @@ hnsm gz tests/index/final.contigs.fa -o tmp
 # range
 samtools faidx tests/index/final.contigs.fa
 samtools faidx tests/index/final.contigs.fa \
-    "k81_130" "k81_130:11-20" "k81_170:304-323" "k81_158:70001-70020"
+    "k81_130" "k81_130:11-20" "k81_170:304-323" "k81_170:1-20" "k81_158:70001-70020"
 samtools faidx tests/index/final.contigs.fa -r tests/index/sample.rg
 
 hnsm range tests/index/final.contigs.fa.gz \

@@ -267,7 +267,7 @@ fn command_replace() -> anyhow::Result<()> {
 
 #[test]
 fn command_check() -> anyhow::Result<()> {
-    match which::which("samtools") {
+    match which::which("hnsm") {
         Err(_) => return Ok(()),
         Ok(_) => {}
     }
@@ -306,7 +306,7 @@ fn command_check() -> anyhow::Result<()> {
 
 #[test]
 fn command_create() -> anyhow::Result<()> {
-    match which::which("samtools") {
+    match which::which("hnsm") {
         Err(_) => return Ok(()),
         Ok(_) => {}
     }

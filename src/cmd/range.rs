@@ -13,9 +13,15 @@ pub fn make_subcommand() -> Command {
         .after_help(
             r###"
 * <infile> can be plain text or bgzf but not stdin or gzip
-* Range - seq_name(strand):start-end
-          ^^^^^^^^ required
 
+* Range Format:
+  - General format: <seq_name>(<strand>):<start>-<end>
+    - <seq_name>: Required. The name of the sequence (e.g., chromosome or contig).
+    - <strand>: Optional. Indicates the strand:
+      - (+) for the positive strand (default if omitted).
+      - (-) for the negative strand.
+    - <start> and <end>: Required. The start and end positions of the range (1-based coordinates).
+  - Examples:
     Mito
     I:1-100
     I(+):90-150
@@ -23,8 +29,12 @@ pub fn make_subcommand() -> Command {
     II:21294-22075
     II:23537-24097
 
-* The default capacity of the LRU cache is 1, i.e., the most recent record is cached
-* Sorting the rgfile will speed up the extraction
+* Notes on Coordinates:
+  - All coordinates (<start> and <end>) are based on the positive strand, regardless of the specified strand.
+
+* Performance Tips:
+  - The default capacity of the LRU cache is 1, meaning only the most recent record is cached.
+  - Sorting the range file (<rgfile>) will significantly speed up the extraction process.
 
 "###,
         )
@@ -152,18 +162,12 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
         let start = Position::new(*rg.start() as usize).unwrap();
         let end = Position::new(*rg.end() as usize).unwrap();
 
-        let record_rg = if rg.strand() == "-" {
-            let seq_rc: fasta::record::Sequence = record
-                .sequence()
-                .complement()
-                .rev()
-                .collect::<Result<_, _>>()?;
-            let slice = seq_rc.slice(start..=end).unwrap();
-            fasta::Record::new(definition, slice)
-        } else {
-            let slice = record.sequence().slice(start..=end).unwrap();
-            fasta::Record::new(definition, slice)
-        };
+        let mut slice = record.sequence().slice(start..=end).unwrap();
+        if rg.strand() == "-" {
+            slice = slice.complement().rev().collect::<Result<_, _>>()?;
+        }
+        let record_rg = fasta::Record::new(definition, slice);
+
         fa_out.write_record(&record_rg)?;
     }
 

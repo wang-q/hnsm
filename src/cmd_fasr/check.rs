@@ -12,7 +12,7 @@ Input files can be gzipped. If the input file is 'stdin', data is read from stan
 
 Note:
 - The reference genome must be provided as a multi-FASTA file.
-- `samtools` must be installed and available in $PATH.
+- `hnsm` must be installed and available in $PATH.
 
 Examples:
 1. Check all sequences in a block FA file:
@@ -99,19 +99,13 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
 
 fn check_seq(entry: &hnsm::FasEntry, genome: &str) -> anyhow::Result<String> {
     let range = entry.range();
-    let seq = if range.strand() == "-" {
-        bio::alphabets::dna::revcomp(entry.seq())
-    } else {
-        entry.seq().to_vec()
-    };
-    let seq = std::str::from_utf8(&seq)
-        .unwrap()
+    let seq = entry.seq().to_vec();
+    let seq = std::str::from_utf8(&seq)?
         .to_string()
         .to_ascii_uppercase()
         .replace('-', "");
 
-    let pos = format!("{}:{}-{}", range.chr(), range.start(), range.end());
-    let gseq = intspan::get_seq_faidx(genome, &pos)?.to_ascii_uppercase();
+    let gseq = hnsm::get_seq_loc(genome, &range.to_string())?.to_ascii_uppercase();
 
     let status = if seq == gseq { "OK" } else { "FAILED" };
 

@@ -97,9 +97,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
                 };
 
                 // Remove dashes from the sequence
-                let seq = std::str::from_utf8(&seq)?
-                    .to_string()
-                    .replace('-', "");
+                let seq = std::str::from_utf8(&seq)?.to_string().replace('-', "");
 
                 //----------------------------
                 // Output
@@ -108,7 +106,8 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
                     print!(">{}\n{}\n", range, seq);
                 } else {
                     if !file_of.contains_key(entry_name) {
-                        let path = std::path::Path::new(outdir).join(range.name().to_owned() + opt_suffix);
+                        let path =
+                            std::path::Path::new(outdir).join(range.name().to_owned() + opt_suffix);
                         let file = std::fs::OpenOptions::new()
                             .create(true)
                             .write(true)
