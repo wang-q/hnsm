@@ -163,6 +163,38 @@ impl fmt::Display for Substitution {
     }
 }
 
+#[derive(Default, Clone)]
+pub struct Indel {
+    pub start: i32,
+    pub end: i32,
+    pub length: i32,
+    pub seq: String,
+    pub all_seqs: String,
+    pub freq: i32,
+    pub occurred: String,
+    pub itype: String,
+    pub og_seq: String,
+}
+
+/// To string for Indel
+impl fmt::Display for Indel {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(
+            f,
+            "{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}",
+            self.start,
+            self.end,
+            self.length,
+            self.seq,
+            self.all_seqs,
+            self.freq,
+            self.occurred,
+            self.itype,
+            self.og_seq,
+        )
+    }
+}
+
 /// Returns unpolarized substitutions
 ///
 /// ```
@@ -381,6 +413,312 @@ pub fn polarize_subs(subs: &mut Vec<Substitution>, og: &[u8]) {
             sub.freq = -1;
             sub.pattern = "unknown".to_string();
             sub.obase = obase.clone();
+        }
+    }
+}
+
+/// Returns unpolarized indels
+///
+/// 'D': means deletion relative to target/first seq
+///      target is ----
+/// 'I': means insertion relative to target/first seq
+///      target is AAAA
+///
+/// ```
+/// let seqs = vec![
+///     //        ****
+///     b"AAAATTTTGGGG".as_ref(),
+///     b"AAAATTTT----".as_ref(),
+///     b"AAAATTTTGGGG".as_ref(),
+/// ];
+/// let indels = hnsm::get_indels(&seqs).unwrap();
+/// let indel = indels.first().unwrap();
+/// assert_eq!(indel.start, 9);
+/// assert_eq!(indel.end, 12);
+/// assert_eq!(indel.length, 4);
+/// assert_eq!(indel.seq, "GGGG");
+/// assert_eq!(indel.all_seqs, "GGGG|----|GGGG");
+/// assert_eq!(indel.freq, 1);
+/// assert_eq!(indel.occurred, "101");
+/// assert_eq!(indel.itype, "I");
+///
+/// let seqs = vec![
+///     //****
+///     b"----TTTTGGGG".as_ref(),
+///     b"AAAATTTTGGGG".as_ref(),
+///     b"----TTTTGGGG".as_ref(),
+/// ];
+/// let indels = hnsm::get_indels(&seqs).unwrap();
+/// let indel = indels.first().unwrap();
+/// assert_eq!(indel.start, 1);
+/// assert_eq!(indel.end, 4);
+/// assert_eq!(indel.length, 4);
+/// assert_eq!(indel.seq, "AAAA");
+/// assert_eq!(indel.all_seqs, "----|AAAA|----");
+/// assert_eq!(indel.freq, 1);
+/// assert_eq!(indel.occurred, "101");
+/// assert_eq!(indel.itype, "D");
+///
+/// let seqs = vec![
+///     //*   **     * *
+///     b"TTAG--GCTGAGAAGC".as_ref(),
+///     b"GTAGCCGCTGA-AGGC".as_ref(),
+/// ];
+/// let indels = hnsm::get_indels(&seqs).unwrap();
+/// let indel = indels.first().unwrap();
+/// assert_eq!(indel.start, 5);
+/// assert_eq!(indel.end, 6);
+/// assert_eq!(indel.length, 2);
+/// assert_eq!(indel.seq, "CC");
+/// assert_eq!(indel.all_seqs, "--|CC");
+/// assert_eq!(indel.freq, 1);
+/// assert_eq!(indel.occurred, "10");
+/// assert_eq!(indel.itype, "D");
+///
+/// let indel = indels.get(1).unwrap();
+/// assert_eq!(indel.start, 12);
+/// assert_eq!(indel.end, 12);
+/// assert_eq!(indel.length, 1);
+/// assert_eq!(indel.seq, "G");
+/// assert_eq!(indel.all_seqs, "G|-");
+/// assert_eq!(indel.freq, 1);
+/// assert_eq!(indel.occurred, "10");
+/// assert_eq!(indel.itype, "I");
+///
+/// ```
+// cargo test --doc alignment::get_indels
+pub fn get_indels(seqs: &[&[u8]]) -> anyhow::Result<Vec<Indel>> {
+    let seq_count = seqs.len();
+
+    // Find all indel regions
+    let mut indel_set = IntSpan::new();
+    for seq in seqs {
+        let seq_indel_set = indel_intspan(seq);
+        indel_set.merge(&seq_indel_set);
+    }
+
+    let mut sites = vec![];
+    for (start, end) in indel_set.spans() {
+        let indel_length = end - start + 1;
+
+        // Extract subsequences for each sequence
+        let mut indel_seqs = vec![];
+        for seq in seqs {
+            let subseq = seq[(start - 1) as usize..end as usize].to_vec();
+            indel_seqs.push(String::from_utf8(subseq)?);
+        }
+        let all_seqs = indel_seqs.join("|");
+
+        // Determine the indel type
+        let uniq_indel_seqs = indel_seqs.iter().unique().collect::<Vec<_>>();
+        // seqs with least '-' char wins
+        let indel_seq = uniq_indel_seqs
+            .iter()
+            .min_by_key(|s| s.chars().filter(|c| *c == '-').count())
+            .unwrap()
+            .to_string();
+
+        let itype = if uniq_indel_seqs.len() < 2 {
+            bail!("No indel found at position {}..{}", start, end);
+        } else if uniq_indel_seqs.len() > 2 || indel_seq.contains('-') {
+            "C".to_string() // Complex indel
+        } else if indel_seqs[0] == indel_seq {
+            "I".to_string() // Insertion
+        } else {
+            "D".to_string() // Deletion
+        };
+
+        // Calculate frequency and occurrence pattern
+        let (freq, occurred) = if itype == "C" {
+            (-1, "unknown".to_string())
+        } else {
+            let mut freq = 0;
+            let mut occurred = String::new();
+            for seq in &indel_seqs {
+                if seq == &indel_seqs[0] {
+                    freq += 1;
+                    occurred.push('1');
+                } else {
+                    occurred.push('0');
+                }
+            }
+            (freq.min(seq_count as i32 - freq), occurred)
+        };
+
+        // Add to sites
+        sites.push(Indel {
+            start,
+            end,
+            length: indel_length,
+            seq: indel_seq,
+            all_seqs,
+            freq,
+            occurred,
+            itype,
+            og_seq: "".to_string(),
+        });
+    }
+
+    Ok(sites)
+}
+
+/// Polarize indels based on outgroup sequence
+///
+/// ```
+/// let seqs = vec![
+///     //        ****
+///     b"AAAATTTTGGGG".as_ref(),
+///     b"AAAATTTT----".as_ref(),
+///     b"AAAATTTTGGGG".as_ref(),
+/// ];
+/// let mut indels = hnsm::get_indels(&seqs[0..2]).unwrap();
+/// hnsm::polarize_indels(&mut indels, &seqs[2]);
+/// let indel = indels.first().unwrap();
+/// assert_eq!(indel.start, 9);
+/// assert_eq!(indel.end, 12);
+/// assert_eq!(indel.length, 4);
+/// assert_eq!(indel.seq, "GGGG");
+/// assert_eq!(indel.all_seqs, "GGGG|----");
+/// assert_eq!(indel.freq, 1);
+/// assert_eq!(indel.occurred, "01");
+/// assert_eq!(indel.itype, "D");
+/// assert_eq!(indel.og_seq, "GGGG");
+///
+/// let seqs = vec![
+///     //  ****
+///     b"----TTTTGGGG".as_ref(),
+///     b"AAAATTTTGGGG".as_ref(),
+///     b"----TTTTGGGG".as_ref(),
+/// ];
+/// let mut indels = hnsm::get_indels(&seqs[0..2]).unwrap();
+/// hnsm::polarize_indels(&mut indels, &seqs[2]);
+/// let indel = indels.first().unwrap();
+/// assert_eq!(indel.start, 1);
+/// assert_eq!(indel.end, 4);
+/// assert_eq!(indel.length, 4);
+/// assert_eq!(indel.seq, "AAAA");
+/// assert_eq!(indel.all_seqs, "----|AAAA");
+/// assert_eq!(indel.freq, 1);
+/// assert_eq!(indel.occurred, "01");
+/// assert_eq!(indel.itype, "I");
+/// assert_eq!(indel.og_seq, "----");
+///
+/// let seqs = vec![
+///     //*   **     * *
+///     b"TTAG--GCTGAGAAGC".as_ref(),
+///     b"GTAGCCGCTGA-AGGC".as_ref(),
+///     b"GTAGCCGCTGA--GGC".as_ref(),
+/// ];
+/// let mut indels = hnsm::get_indels(&seqs[0..2]).unwrap();
+/// hnsm::polarize_indels(&mut indels, &seqs[2]);
+/// let indel = indels.first().unwrap();
+/// assert_eq!(indel.start, 5);
+/// assert_eq!(indel.end, 6);
+/// assert_eq!(indel.length, 2);
+/// assert_eq!(indel.seq, "CC");
+/// assert_eq!(indel.all_seqs, "--|CC");
+/// assert_eq!(indel.freq, 1);
+/// assert_eq!(indel.occurred, "10");
+/// assert_eq!(indel.itype, "D");
+/// assert_eq!(indel.og_seq, "CC");
+///
+/// let indel = indels.get(1).unwrap();
+/// assert_eq!(indel.start, 12);
+/// assert_eq!(indel.end, 12);
+/// assert_eq!(indel.length, 1);
+/// assert_eq!(indel.seq, "G");
+/// assert_eq!(indel.all_seqs, "G|-");
+/// assert_eq!(indel.freq, -1);
+/// assert_eq!(indel.occurred, "unknown");
+/// assert_eq!(indel.itype, "C");
+/// assert_eq!(indel.og_seq, "-");
+///
+/// ```
+// cargo test --doc alignment::polarize_indels
+pub fn polarize_indels(indels: &mut Vec<Indel>, og: &[u8]) {
+    let og_indel_set = indel_intspan(og);
+
+    for indel in indels {
+        let og_seq = og[(indel.start - 1) as usize..indel.end as usize].to_vec();
+        let og_seq = String::from_utf8(og_seq).unwrap();
+        indel.og_seq = og_seq.clone();
+
+        let indel_seqs: Vec<String> = indel.all_seqs.split('|').map(|s| s.to_string()).collect();
+
+        // Unique indel sequences including outgroup
+        let mut uniq_indel_seqs = indel_seqs.clone();
+        uniq_indel_seqs.push(og_seq.clone());
+        uniq_indel_seqs.sort();
+        uniq_indel_seqs.dedup();
+
+        // Find the sequence with the least gaps
+        let indel_seq = uniq_indel_seqs
+            .iter()
+            .min_by_key(|s| s.chars().filter(|c| *c == '-').count())
+            .unwrap()
+            .clone();
+
+        if uniq_indel_seqs.len() < 2 {
+            panic!("No indel found at position {}..{}", indel.start, indel.end);
+        } else if uniq_indel_seqs.len() > 2 || indel_seq.contains('-') {
+            indel.itype = "C".to_string(); // Complex indel
+        } else {
+            // Check outgroup sequence and indel set
+            let indel_set = IntSpan::from_pair(indel.start, indel.end);
+
+            if !og_seq.contains('-') && indel_seq != og_seq {
+                // Outgroup has no gaps and is different from the reference
+                //    AAA
+                //    A-A
+                // og ACA
+                indel.itype = "C".to_string(); // Complex indel
+            } else if !og_indel_set.intersect(&indel_set).is_empty() {
+                let island = og_indel_set.find_islands_ints(&indel_set);
+                if island.equals(&indel_set) {
+                    // Outgroup has the same indel
+                    //    NNNN
+                    //    N--N
+                    // og N--N
+                    indel.itype = "I".to_string(); // Insertion
+                } else {
+                    // Outgroup has a different indel
+                    //    NNNN
+                    //    N-NN
+                    // og N--N
+                    // or
+                    //    NNNN
+                    //    N--N
+                    // og N-NN
+                    indel.itype = "C".to_string(); // Complex indel
+                }
+            } else if og_indel_set.intersect(&indel_set).is_empty() {
+                // Outgroup has no gaps in this region
+                //    NNNN
+                //    N--N
+                // og NNNN
+                indel.itype = "D".to_string(); // Deletion
+            } else {
+                panic!("Errors when polarizing indel at position {}..{}", indel.start, indel.end);
+            }
+        }
+
+        // Update frequency and occurrence pattern
+        if indel.itype == "C" {
+            indel.freq = -1;
+            indel.occurred = "unknown".to_string();
+        } else {
+            let mut freq = 0;
+            let mut occurred = String::new();
+            for seq in &indel_seqs {
+                if seq == &og_seq {
+                    occurred.push('0');
+                } else {
+                    occurred.push('1');
+                    freq += 1;
+                }
+            }
+            indel.freq = freq;
+            indel.occurred = occurred;
         }
     }
 }
