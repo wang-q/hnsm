@@ -10,9 +10,8 @@ fn command_interleave() -> anyhow::Result<()> {
         .arg("interleave")
         .arg("tests/fasta/ufasta.fa.gz")
         .arg("tests/fasta/ufasta.fa")
-        .output()
-        .unwrap();
-    let stdout = String::from_utf8(output.stdout).unwrap();
+        .output()?;
+    let stdout = String::from_utf8(output.stdout)?;
 
     assert_eq!(stdout.lines().into_iter().filter(|e| *e == "").count(), 10);
 
@@ -21,9 +20,8 @@ fn command_interleave() -> anyhow::Result<()> {
     let output = cmd
         .arg("interleave")
         .arg("tests/fasta/ufasta.fa")
-        .output()
-        .unwrap();
-    let stdout = String::from_utf8(output.stdout).unwrap();
+        .output()?;
+    let stdout = String::from_utf8(output.stdout)?;
 
     assert_eq!(stdout.lines().into_iter().filter(|e| *e == "").count(), 5);
 
@@ -33,9 +31,8 @@ fn command_interleave() -> anyhow::Result<()> {
         .arg("interleave")
         .arg("tests/fasta/ufasta.fa")
         .arg("--fq")
-        .output()
-        .unwrap();
-    let stdout = String::from_utf8(output.stdout).unwrap();
+        .output()?;
+    let stdout = String::from_utf8(output.stdout)?;
 
     assert_eq!(stdout.lines().into_iter().filter(|e| *e == "").count(), 10);
 
@@ -51,9 +48,8 @@ fn command_interleave_fq() -> anyhow::Result<()> {
         .arg("--fq")
         .arg("tests/fastq/R1.fq.gz")
         .arg("tests/fastq/R2.fq.gz")
-        .output()
-        .unwrap();
-    let stdout = String::from_utf8(output.stdout).unwrap();
+        .output()?;
+    let stdout = String::from_utf8(output.stdout)?;
 
     assert_eq!(stdout.lines().into_iter().filter(|e| *e == "!").count(), 0);
     assert_eq!(stdout.lines().into_iter().filter(|e| *e == "+").count(), 50);
@@ -80,9 +76,8 @@ fn command_interleave_fq() -> anyhow::Result<()> {
         .arg("interleave")
         .arg("--fq")
         .arg("tests/fastq/R1.fq.gz")
-        .output()
-        .unwrap();
-    let stdout = String::from_utf8(output.stdout).unwrap();
+        .output()?;
+    let stdout = String::from_utf8(output.stdout)?;
 
     assert_eq!(stdout.lines().into_iter().filter(|e| *e == "!").count(), 25);
     assert_eq!(stdout.lines().into_iter().filter(|e| *e == "+").count(), 50);

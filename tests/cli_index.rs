@@ -10,7 +10,7 @@ fn command_gz() -> anyhow::Result<()> {
         Ok(_) => {}
     }
 
-    let tempdir = TempDir::new().unwrap();
+    let tempdir = TempDir::new()?;
     let tempdir_str = tempdir.path().to_str().unwrap();
 
     let mut cmd = Command::cargo_bin("hnsm")?;
@@ -40,9 +40,8 @@ fn command_range() -> anyhow::Result<()> {
         .arg("k81_170:304-323")
         .arg("k81_170(-):1-20")
         .arg("k81_158:70001-70020")
-        .output()
-        .unwrap();
-    let stdout = String::from_utf8(output.stdout).unwrap();
+        .output()?;
+    let stdout = String::from_utf8(output.stdout)?;
 
     assert_eq!(stdout.lines().count(), 10);
     assert!(stdout.contains(">k81_130\nAGTTTCAACT"));
@@ -62,9 +61,8 @@ fn command_range_r() -> anyhow::Result<()> {
         .arg("tests/index/final.contigs.fa.gz")
         .arg("-r")
         .arg("tests/index/sample.rg")
-        .output()
-        .unwrap();
-    let stdout = String::from_utf8(output.stdout).unwrap();
+        .output()?;
+    let stdout = String::from_utf8(output.stdout)?;
 
     assert_eq!(stdout.lines().count(), 12);
     assert!(stdout.contains(">k81_130:11-20\nGGTGAATCAA\n"));

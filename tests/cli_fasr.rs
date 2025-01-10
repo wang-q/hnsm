@@ -21,9 +21,8 @@ fn command_name() -> anyhow::Result<()> {
         .arg("name")
         .arg("tests/fasr/example.fas")
         .arg("-c")
-        .output()
-        .unwrap();
-    let stdout = String::from_utf8(output.stdout).unwrap();
+        .output()?;
+    let stdout = String::from_utf8(output.stdout)?;
 
     assert_eq!(stdout.lines().count(), 4);
     assert!(stdout.contains("S288c\t3"), "count");
@@ -35,12 +34,8 @@ fn command_name() -> anyhow::Result<()> {
 #[test]
 fn command_maf2fas() -> anyhow::Result<()> {
     let mut cmd = Command::cargo_bin("fasr")?;
-    let output = cmd
-        .arg("maf2fas")
-        .arg("tests/fasr/example.maf")
-        .output()
-        .unwrap();
-    let stdout = String::from_utf8(output.stdout).unwrap();
+    let output = cmd.arg("maf2fas").arg("tests/fasr/example.maf").output()?;
+    let stdout = String::from_utf8(output.stdout)?;
 
     assert_eq!(stdout.lines().count(), 18);
     assert!(stdout.contains("S288c.VIII"), "name list");
@@ -58,9 +53,8 @@ fn command_axt2fas() -> anyhow::Result<()> {
         .arg("tests/fasr/example.axt")
         .arg("--qname")
         .arg("RM11_1a")
-        .output()
-        .unwrap();
-    let stdout = String::from_utf8(output.stdout).unwrap();
+        .output()?;
+    let stdout = String::from_utf8(output.stdout)?;
 
     assert_eq!(stdout.lines().count(), 10);
     assert!(stdout.contains("target.I(+)"), "name list");
@@ -74,12 +68,8 @@ fn command_axt2fas() -> anyhow::Result<()> {
 #[test]
 fn command_cover() -> anyhow::Result<()> {
     let mut cmd = Command::cargo_bin("fasr")?;
-    let output = cmd
-        .arg("cover")
-        .arg("tests/fasr/example.fas")
-        .output()
-        .unwrap();
-    let stdout = String::from_utf8(output.stdout).unwrap();
+    let output = cmd.arg("cover").arg("tests/fasr/example.fas").output()?;
+    let stdout = String::from_utf8(output.stdout)?;
 
     assert_eq!(stdout.lines().count(), 16);
     assert!(stdout.contains("S288c"), "name list");
@@ -95,9 +85,8 @@ fn command_cover() -> anyhow::Result<()> {
         .arg("S288c")
         .arg("--trim")
         .arg("10")
-        .output()
-        .unwrap();
-    let stdout = String::from_utf8(output.stdout).unwrap();
+        .output()?;
+    let stdout = String::from_utf8(output.stdout)?;
 
     assert_eq!(stdout.lines().count(), 3);
     assert!(!stdout.contains("S288c"), "name list");
@@ -114,9 +103,8 @@ fn command_concat() -> anyhow::Result<()> {
         .arg("concat")
         .arg("tests/fasr/name.lst")
         .arg("tests/fasr/example.fas")
-        .output()
-        .unwrap();
-    let stdout = String::from_utf8(output.stdout).unwrap();
+        .output()?;
+    let stdout = String::from_utf8(output.stdout)?;
 
     assert_eq!(stdout.lines().count(), 4);
     assert_eq!(stdout.lines().next().unwrap().len(), 5); // >Spar
@@ -135,9 +123,8 @@ fn command_concat_phylip() -> anyhow::Result<()> {
         .arg("tests/fasr/name.lst")
         .arg("tests/fasr/example.fas")
         .arg("--phylip")
-        .output()
-        .unwrap();
-    let stdout = String::from_utf8(output.stdout).unwrap();
+        .output()?;
+    let stdout = String::from_utf8(output.stdout)?;
 
     assert_eq!(stdout.lines().count(), 3);
     assert_eq!(
@@ -155,9 +142,8 @@ fn command_subset() -> anyhow::Result<()> {
         .arg("subset")
         .arg("tests/fasr/name.lst")
         .arg("tests/fasr/example.fas")
-        .output()
-        .unwrap();
-    let stdout = String::from_utf8(output.stdout).unwrap();
+        .output()?;
+    let stdout = String::from_utf8(output.stdout)?;
 
     assert_eq!(stdout.lines().count(), 15);
     assert!(stdout.lines().next().unwrap().contains("Spar")); // >Spar.
@@ -168,9 +154,8 @@ fn command_subset() -> anyhow::Result<()> {
         .arg("tests/fasr/name.lst")
         .arg("tests/fasr/example.fas")
         .arg("--required")
-        .output()
-        .unwrap();
-    let stdout = String::from_utf8(output.stdout).unwrap();
+        .output()?;
+    let stdout = String::from_utf8(output.stdout)?;
 
     assert_eq!(stdout.lines().count(), 15);
     assert!(stdout.lines().next().unwrap().contains("Spar")); // >Spar.
@@ -181,12 +166,8 @@ fn command_subset() -> anyhow::Result<()> {
 #[test]
 fn command_link() -> anyhow::Result<()> {
     let mut cmd = Command::cargo_bin("fasr")?;
-    let output = cmd
-        .arg("link")
-        .arg("tests/fasr/example.fas")
-        .output()
-        .unwrap();
-    let stdout = String::from_utf8(output.stdout).unwrap();
+    let output = cmd.arg("link").arg("tests/fasr/example.fas").output()?;
+    let stdout = String::from_utf8(output.stdout)?;
 
     assert_eq!(stdout.lines().count(), 3);
     assert_eq!(stdout.lines().next().unwrap().split_whitespace().count(), 4);
@@ -197,9 +178,8 @@ fn command_link() -> anyhow::Result<()> {
         .arg("link")
         .arg("tests/fasr/example.fas")
         .arg("--pair")
-        .output()
-        .unwrap();
-    let stdout = String::from_utf8(output.stdout).unwrap();
+        .output()?;
+    let stdout = String::from_utf8(output.stdout)?;
 
     assert_eq!(stdout.lines().count(), 18);
     assert_eq!(stdout.lines().next().unwrap().split_whitespace().count(), 2);
@@ -210,9 +190,8 @@ fn command_link() -> anyhow::Result<()> {
         .arg("link")
         .arg("tests/fasr/example.fas")
         .arg("--best")
-        .output()
-        .unwrap();
-    let stdout = String::from_utf8(output.stdout).unwrap();
+        .output()?;
+    let stdout = String::from_utf8(output.stdout)?;
 
     assert_eq!(stdout.lines().count(), 9);
     assert_eq!(stdout.lines().next().unwrap().split_whitespace().count(), 2);
@@ -227,9 +206,8 @@ fn command_replace() -> anyhow::Result<()> {
         .arg("replace")
         .arg("tests/fasr/replace.tsv")
         .arg("tests/fasr/example.fas")
-        .output()
-        .unwrap();
-    let stdout = String::from_utf8(output.stdout).unwrap();
+        .output()?;
+    let stdout = String::from_utf8(output.stdout)?;
 
     assert_eq!(stdout.lines().count(), 36);
     assert!(stdout.contains(">query.VIII(+)"));
@@ -240,10 +218,9 @@ fn command_replace() -> anyhow::Result<()> {
         .arg("replace")
         .arg("tests/fasr/replace.fail.tsv")
         .arg("tests/fasr/example.fas")
-        .output()
-        .unwrap();
-    let stdout = String::from_utf8(output.stdout).unwrap();
-    let stderr = String::from_utf8(output.stderr).unwrap();
+        .output()?;
+    let stdout = String::from_utf8(output.stdout)?;
+    let stderr = String::from_utf8(output.stderr)?;
 
     assert_eq!(stdout.lines().count(), 27);
     assert!(!stdout.contains("query"), "not replaced");
@@ -255,9 +232,8 @@ fn command_replace() -> anyhow::Result<()> {
         .arg("replace")
         .arg("tests/fasr/replace.remove.tsv")
         .arg("tests/fasr/example.fas")
-        .output()
-        .unwrap();
-    let stdout = String::from_utf8(output.stdout).unwrap();
+        .output()?;
+    let stdout = String::from_utf8(output.stdout)?;
 
     assert_eq!(stdout.lines().count(), 18);
     assert!(!stdout.contains("13267-13287"), "block removed");
@@ -277,9 +253,8 @@ fn command_check() -> anyhow::Result<()> {
         .arg("check")
         .arg("tests/fasr/NC_000932.fa")
         .arg("tests/fasr/A_tha.pair.fas")
-        .output()
-        .unwrap();
-    let stdout = String::from_utf8(output.stdout).unwrap();
+        .output()?;
+    let stdout = String::from_utf8(output.stdout)?;
 
     assert_eq!(stdout.lines().count(), 3);
     assert!(stdout.lines().next().unwrap().contains("\tOK"));
@@ -293,9 +268,8 @@ fn command_check() -> anyhow::Result<()> {
         .arg("tests/fasr/A_tha.pair.fas")
         .arg("--name")
         .arg("A_tha")
-        .output()
-        .unwrap();
-    let stdout = String::from_utf8(output.stdout).unwrap();
+        .output()?;
+    let stdout = String::from_utf8(output.stdout)?;
 
     assert_eq!(stdout.lines().count(), 2);
     assert!(stdout.lines().next().unwrap().contains("\tOK"));
@@ -318,9 +292,8 @@ fn command_create() -> anyhow::Result<()> {
         .arg("tests/fasr/I.connect.tsv")
         .arg("--name")
         .arg("S288c")
-        .output()
-        .unwrap();
-    let stdout = String::from_utf8(output.stdout).unwrap();
+        .output()?;
+    let stdout = String::from_utf8(output.stdout)?;
 
     assert_eq!(stdout.lines().count(), 10);
     assert!(stdout.contains("tgtgtgggtgtggtgtgg"), "revcom sequences");
@@ -336,9 +309,8 @@ fn command_separate() -> anyhow::Result<()> {
         .arg("separate")
         .arg("tests/fasr/example.fas")
         .arg("--rc")
-        .output()
-        .unwrap();
-    let stdout = String::from_utf8(output.stdout).unwrap();
+        .output()?;
+    let stdout = String::from_utf8(output.stdout)?;
 
     assert_eq!(stdout.lines().count(), 24);
     assert_eq!(
@@ -354,7 +326,7 @@ fn command_separate() -> anyhow::Result<()> {
 
 #[test]
 fn command_separate_to() -> anyhow::Result<()> {
-    let tempdir = TempDir::new().unwrap();
+    let tempdir = TempDir::new()?;
     let tempdir_str = tempdir.path().to_str().unwrap();
 
     let mut cmd = Command::cargo_bin("fasr")?;
@@ -378,12 +350,8 @@ fn command_separate_to() -> anyhow::Result<()> {
 #[test]
 fn command_split() -> anyhow::Result<()> {
     let mut cmd = Command::cargo_bin("fasr")?;
-    let output = cmd
-        .arg("split")
-        .arg("tests/fasr/example.fas")
-        .output()
-        .unwrap();
-    let stdout = String::from_utf8(output.stdout).unwrap();
+    let output = cmd.arg("split").arg("tests/fasr/example.fas").output()?;
+    let stdout = String::from_utf8(output.stdout)?;
 
     assert_eq!(stdout.lines().count(), 27);
 
@@ -392,9 +360,8 @@ fn command_split() -> anyhow::Result<()> {
         .arg("split")
         .arg("tests/fasr/example.fas")
         .arg("--simple")
-        .output()
-        .unwrap();
-    let stdout = String::from_utf8(output.stdout).unwrap();
+        .output()?;
+    let stdout = String::from_utf8(output.stdout)?;
 
     assert!(stdout.contains(">S288c\n"), "simple headers");
     assert!(!stdout.contains("I(+)"), "no positions");
@@ -404,7 +371,7 @@ fn command_split() -> anyhow::Result<()> {
 
 #[test]
 fn command_split_to() -> anyhow::Result<()> {
-    let tempdir = TempDir::new().unwrap();
+    let tempdir = TempDir::new()?;
     let tempdir_str = tempdir.path().to_str().unwrap();
 
     let mut cmd = Command::cargo_bin("fasr")?;
@@ -442,12 +409,8 @@ fn command_consensus() -> anyhow::Result<()> {
     }
 
     let mut cmd = Command::cargo_bin("fasr")?;
-    let output = cmd
-        .arg("consensus")
-        .arg("tests/fasr/refine.fas")
-        .output()
-        .unwrap();
-    let stdout = String::from_utf8(output.stdout).unwrap();
+    let output = cmd.arg("consensus").arg("tests/fasr/refine.fas").output()?;
+    let stdout = String::from_utf8(output.stdout)?;
 
     assert_eq!(stdout.lines().count(), 6);
     assert!(stdout.contains(">consensus\n"), "simple name");
@@ -460,9 +423,8 @@ fn command_consensus() -> anyhow::Result<()> {
         .arg("--outgroup")
         .arg("--parallel")
         .arg("2")
-        .output()
-        .unwrap();
-    let stdout = String::from_utf8(output.stdout).unwrap();
+        .output()?;
+    let stdout = String::from_utf8(output.stdout)?;
 
     assert_eq!(stdout.lines().count(), 10);
     assert!(stdout.contains(">Spar"), "outgroup");
@@ -478,9 +440,8 @@ fn command_refine() -> anyhow::Result<()> {
         .arg("tests/fasr/example.fas")
         .arg("--msa")
         .arg("none")
-        .output()
-        .unwrap();
-    let stdout = String::from_utf8(output.stdout).unwrap();
+        .output()?;
+    let stdout = String::from_utf8(output.stdout)?;
 
     assert_eq!(stdout.lines().count(), 27);
 
@@ -493,9 +454,8 @@ fn command_refine() -> anyhow::Result<()> {
         .arg("none")
         .arg("-p")
         .arg("2")
-        .output()
-        .unwrap();
-    let stdout = String::from_utf8(output.stdout).unwrap();
+        .output()?;
+    let stdout = String::from_utf8(output.stdout)?;
 
     assert_eq!(stdout.lines().count(), 27);
 
@@ -508,9 +468,8 @@ fn command_refine() -> anyhow::Result<()> {
         .arg("none")
         .arg("-p")
         .arg("2")
-        .output()
-        .unwrap();
-    let stdout = String::from_utf8(output.stdout).unwrap();
+        .output()?;
+    let stdout = String::from_utf8(output.stdout)?;
 
     assert_eq!(stdout.lines().count(), 7);
 
@@ -523,9 +482,8 @@ fn command_refine() -> anyhow::Result<()> {
         .arg("none")
         .arg("--chop")
         .arg("10")
-        .output()
-        .unwrap();
-    let stdout = String::from_utf8(output.stdout).unwrap();
+        .output()?;
+    let stdout = String::from_utf8(output.stdout)?;
 
     assert_eq!(stdout.lines().count(), 27);
     assert!(stdout.contains("185276-185332"), "new header"); // 185273-185334
@@ -557,9 +515,8 @@ fn command_refine_msa() -> anyhow::Result<()> {
         .arg("tests/fasr/refine.fas")
         .arg("--msa")
         .arg("clustalw")
-        .output()
-        .unwrap();
-    let stdout = String::from_utf8(output.stdout).unwrap();
+        .output()?;
+    let stdout = String::from_utf8(output.stdout)?;
 
     assert_eq!(stdout.lines().count(), 18);
     assert!(stdout.contains("---"), "dashes added");
@@ -572,9 +529,8 @@ fn command_refine_msa() -> anyhow::Result<()> {
         .arg("--msa")
         .arg("clustalw")
         .arg("--outgroup")
-        .output()
-        .unwrap();
-    let stdout = String::from_utf8(output.stdout).unwrap();
+        .output()?;
+    let stdout = String::from_utf8(output.stdout)?;
 
     assert_eq!(stdout.lines().count(), 7);
     assert!(stdout.contains("CA-GT"), "outgroup trimmed");
@@ -585,9 +541,8 @@ fn command_refine_msa() -> anyhow::Result<()> {
         .arg("tests/fasr/refine2.fas")
         .arg("--msa")
         .arg("clustalw")
-        .output()
-        .unwrap();
-    let stdout = String::from_utf8(output.stdout).unwrap();
+        .output()?;
+    let stdout = String::from_utf8(output.stdout)?;
 
     assert_eq!(stdout.lines().count(), 7);
     assert!(stdout.contains("CA--GT"), "outgroup not trimmed");
@@ -600,9 +555,8 @@ fn command_refine_msa() -> anyhow::Result<()> {
         .arg("--msa")
         .arg("clustalw")
         .arg("--quick")
-        .output()
-        .unwrap();
-    let stdout = String::from_utf8(output.stdout).unwrap();
+        .output()?;
+    let stdout = String::from_utf8(output.stdout)?;
 
     assert_eq!(stdout.lines().count(), 7);
     assert!(stdout.contains("CA--GT"), "outgroup not trimmed");
@@ -618,9 +572,8 @@ fn command_join() -> anyhow::Result<()> {
         .arg("tests/fasr/S288cvsSpar.slice.fas")
         .arg("--name")
         .arg("Spar")
-        .output()
-        .unwrap();
-    let stdout = String::from_utf8(output.stdout).unwrap();
+        .output()?;
+    let stdout = String::from_utf8(output.stdout)?;
 
     assert_eq!(stdout.lines().count(), 5);
     assert!(
@@ -634,9 +587,8 @@ fn command_join() -> anyhow::Result<()> {
         .arg("tests/fasr/S288cvsRM11_1a.slice.fas")
         .arg("tests/fasr/S288cvsYJM789.slice.fas")
         .arg("tests/fasr/S288cvsSpar.slice.fas")
-        .output()
-        .unwrap();
-    let stdout = String::from_utf8(output.stdout).unwrap();
+        .output()?;
+    let stdout = String::from_utf8(output.stdout)?;
 
     assert_eq!(stdout.lines().count(), 9);
     assert!(
@@ -656,9 +608,8 @@ fn command_slice() -> anyhow::Result<()> {
         .arg("tests/fasr/slice.fas")
         .arg("--name")
         .arg("S288c")
-        .output()
-        .unwrap();
-    let stdout = String::from_utf8(output.stdout).unwrap();
+        .output()?;
+    let stdout = String::from_utf8(output.stdout)?;
 
     assert_eq!(stdout.lines().count(), 7);
     assert!(stdout.contains("13301-13400"), "sliced S288c");
@@ -671,12 +622,8 @@ fn command_slice() -> anyhow::Result<()> {
 #[test]
 fn command_stat() -> anyhow::Result<()> {
     let mut cmd = Command::cargo_bin("fasr")?;
-    let output = cmd
-        .arg("stat")
-        .arg("tests/fasr/example.fas")
-        .output()
-        .unwrap();
-    let stdout = String::from_utf8(output.stdout).unwrap();
+    let output = cmd.arg("stat").arg("tests/fasr/example.fas").output()?;
+    let stdout = String::from_utf8(output.stdout)?;
 
     assert_eq!(stdout.lines().count(), 4);
     assert!(stdout.contains("0.192\t6\n"), "all together");
@@ -686,9 +633,8 @@ fn command_stat() -> anyhow::Result<()> {
         .arg("stat")
         .arg("tests/fasr/example.fas")
         .arg("--outgroup")
-        .output()
-        .unwrap();
-    let stdout = String::from_utf8(output.stdout).unwrap();
+        .output()?;
+    let stdout = String::from_utf8(output.stdout)?;
 
     assert_eq!(stdout.lines().count(), 4);
     assert!(stdout.contains("0.12\t3\n"), "exclude outgroup");
@@ -702,9 +648,8 @@ fn command_variation() -> anyhow::Result<()> {
     let output = cmd
         .arg("variation")
         .arg("tests/fasr/example.fas")
-        .output()
-        .unwrap();
-    let stdout = String::from_utf8(output.stdout).unwrap();
+        .output()?;
+    let stdout = String::from_utf8(output.stdout)?;
 
     assert_eq!(stdout.lines().count(), 81);
 
@@ -713,9 +658,8 @@ fn command_variation() -> anyhow::Result<()> {
         .arg("variation")
         .arg("tests/fasr/example.fas")
         .arg("--outgroup")
-        .output()
-        .unwrap();
-    let stdout = String::from_utf8(output.stdout).unwrap();
+        .output()?;
+    let stdout = String::from_utf8(output.stdout)?;
 
     assert_eq!(stdout.lines().count(), 49);
 
@@ -724,7 +668,7 @@ fn command_variation() -> anyhow::Result<()> {
 
 #[test]
 fn command_xlsx() -> anyhow::Result<()> {
-    let tempfile = NamedTempFile::new().unwrap().into_temp_path();
+    let tempfile = NamedTempFile::new()?.into_temp_path();
 
     let mut cmd = Command::cargo_bin("fasr")?;
     let output = cmd
@@ -732,9 +676,8 @@ fn command_xlsx() -> anyhow::Result<()> {
         .arg("tests/fasr/example.fas")
         .arg("--outgroup")
         .arg(tempfile.to_str().unwrap())
-        .output()
-        .unwrap();
-    let stdout = String::from_utf8(output.stdout).unwrap();
+        .output()?;
+    let stdout = String::from_utf8(output.stdout)?;
 
     assert_eq!(stdout.lines().count(), 0);
     assert!(tempfile.is_file());
@@ -745,12 +688,8 @@ fn command_xlsx() -> anyhow::Result<()> {
 #[test]
 fn command_filter() -> anyhow::Result<()> {
     let mut cmd = Command::cargo_bin("fasr")?;
-    let output = cmd
-        .arg("filter")
-        .arg("tests/fasr/example.fas")
-        .output()
-        .unwrap();
-    let stdout = String::from_utf8(output.stdout).unwrap();
+    let output = cmd.arg("filter").arg("tests/fasr/example.fas").output()?;
+    let stdout = String::from_utf8(output.stdout)?;
 
     assert_eq!(stdout.lines().count(), 27);
 
@@ -760,9 +699,8 @@ fn command_filter() -> anyhow::Result<()> {
         .arg("tests/fasr/example.fas")
         .arg("--ge")
         .arg("30")
-        .output()
-        .unwrap();
-    let stdout = String::from_utf8(output.stdout).unwrap();
+        .output()?;
+    let stdout = String::from_utf8(output.stdout)?;
 
     assert_eq!(stdout.lines().count(), 18);
 
@@ -777,9 +715,8 @@ fn command_filter() -> anyhow::Result<()> {
         .arg("--name")
         .arg("S288c")
         .arg("--dash")
-        .output()
-        .unwrap();
-    let stdout = String::from_utf8(output.stdout).unwrap();
+        .output()?;
+    let stdout = String::from_utf8(output.stdout)?;
 
     assert_eq!(stdout.lines().count(), 9);
     assert!(stdout.contains("\nGCTAAAATATGAACG"), "no dash");
@@ -794,7 +731,7 @@ fn command_pl_p2m() -> anyhow::Result<()> {
         Ok(_) => {}
     }
 
-    let tempdir = TempDir::new().unwrap();
+    let tempdir = TempDir::new()?;
     let tempdir_str = tempdir.path().to_str().unwrap();
 
     let mut cmd = Command::cargo_bin("fasr")?;
@@ -805,9 +742,8 @@ fn command_pl_p2m() -> anyhow::Result<()> {
         .arg("tests/fasr/S288cvsSpar.slice.fas")
         .arg("-o")
         .arg(tempdir_str)
-        .output()
-        .unwrap();
-    let stdout = String::from_utf8(output.stdout).unwrap();
+        .output()?;
+    let stdout = String::from_utf8(output.stdout)?;
 
     assert_eq!(stdout.lines().count(), 13);
     assert!(&tempdir.path().join("merge.json").is_file());
