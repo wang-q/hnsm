@@ -501,6 +501,13 @@ cargo run --bin fasr variation tests/fasr/example.fas --outgroup
 cargo run --bin fasr xlsx tests/fasr/example.fas
 cargo run --bin fasr xlsx tests/fasr/example.fas --outgroup
 
+cat t/example.fas | perl -I lib script/fasops xlsx stdin -o example.xlsx
+cat t/example.fas | perl -I lib script/fasops xlsx stdin -l 50 --outgroup -o example.outgroup.xlsx
+cat t/example.fas | perl -I lib script/fasops xlsx stdin --nosingle -o example.xlsx
+cat t/example.fas | perl -I lib script/fasops xlsx stdin --noindel -o example.xlsx
+cat t/example.fas | perl -I lib script/fasops xlsx stdin --nocomplex -o example.xlsx
+cat t/example.fas | perl -I lib script/fasops xlsx stdin --min 0.3 --max 0.7 -o example.xlsx
+
 cargo run --bin fasr pl-p2m tests/fasr/S288cvsRM11_1a.slice.fas tests/fasr/S288cvsSpar.slice.fas
 
 ```

@@ -675,6 +675,7 @@ fn command_xlsx() -> anyhow::Result<()> {
         .arg("xlsx")
         .arg("tests/fasr/example.fas")
         .arg("--outgroup")
+        .arg("-o")
         .arg(tempfile.to_str().unwrap())
         .output()?;
     let stdout = String::from_utf8(output.stdout)?;

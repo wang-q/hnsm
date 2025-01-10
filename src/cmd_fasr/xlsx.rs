@@ -36,7 +36,7 @@ pub fn make_subcommand() -> Command {
                 .help("List indels"),
         )
         .arg(
-            Arg::new("has_outgroup")
+            Arg::new("outgroup")
                 .long("outgroup")
                 .action(ArgAction::SetTrue)
                 .help("There are outgroups at the end of each block"),
@@ -57,10 +57,13 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     // Args
     //----------------------------
     let outfile = args.get_one::<String>("outfile").unwrap();
-    let has_outgroup = args.get_flag("has_outgroup");
+
+    let opt_wrap = args.get_one::<usize>("wrap").unwrap();
+    let is_outgroup = args.get_flag("outgroup");
+    let is_indel = args.get_flag("indel");
 
     //----------------------------
-    // Operating
+    // Ops
     //----------------------------
 
     // Create workbook and worksheet objects
@@ -71,7 +74,6 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     let mut max_name_len = 1;
     let mut sec_cursor = 1;
     let color_loop = 15;
-    let wrap = args.get_one::<usize>("wrap").unwrap();
 
     // eprintln!("format_of = {:#?}", format_of.keys());
 
@@ -87,7 +89,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
             // pos, tbase, qbase, bases, mutant_to, freq, pattern, obase
             //   0,     1,     2,     3,         4,    5,       6,     7
             let mut seq_count = seqs.len();
-            let subs = if has_outgroup {
+            let subs = if is_outgroup {
                 let mut unpolarized = hnsm::get_subs(&seqs[..(seq_count - 1)]).unwrap();
                 hnsm::polarize_subs(&mut unpolarized, seqs[seq_count - 1]);
                 unpolarized
@@ -115,7 +117,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
                 max_name_len = max(rg.len(), max_name_len);
             }
 
-            if has_outgroup {
+            if is_outgroup {
                 seq_count -= 1;
             }
 
@@ -155,7 +157,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
                 }
 
                 // outgroup bases with no bg colors
-                if has_outgroup {
+                if is_outgroup {
                     let base_color = format!("sub_{}_unknown", s.obase);
                     let format = format_of.get(&base_color).unwrap();
                     worksheet.write_with_format(
@@ -170,7 +172,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
                 col_cursor += 1;
 
                 // wrap
-                if col_cursor > *wrap as u16 {
+                if col_cursor > *opt_wrap as u16 {
                     col_cursor = 1;
                     sec_cursor += 1;
                 }
@@ -181,7 +183,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     }
 
     worksheet.set_column_width(0, max_name_len as f64)?;
-    for i in 1..=(*wrap + 3) {
+    for i in 1..=(*opt_wrap + 3) {
         worksheet.set_column_width(i as u16, 1.6)?;
     }
 
