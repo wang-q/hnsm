@@ -132,7 +132,7 @@ pub fn alignment_stat(seqs: &[&[u8]]) -> (i32, i32, i32, i32, i32, f32) {
     )
 }
 
-#[derive(Default, Clone)]
+#[derive(Default, Clone, Debug)]
 pub struct Substitution {
     pub pos: i32,
     pub tbase: String,
@@ -160,38 +160,6 @@ impl fmt::Display for Substitution {
             self.obase,
         )?;
         Ok(())
-    }
-}
-
-#[derive(Default, Clone)]
-pub struct Indel {
-    pub start: i32,
-    pub end: i32,
-    pub length: i32,
-    pub seq: String,
-    pub all_seqs: String,
-    pub freq: i32,
-    pub occurred: String,
-    pub itype: String,
-    pub og_seq: String,
-}
-
-/// To string for Indel
-impl fmt::Display for Indel {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(
-            f,
-            "{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}",
-            self.start,
-            self.end,
-            self.length,
-            self.seq,
-            self.all_seqs,
-            self.freq,
-            self.occurred,
-            self.itype,
-            self.og_seq,
-        )
     }
 }
 
@@ -414,6 +382,38 @@ pub fn polarize_subs(subs: &mut Vec<Substitution>, og: &[u8]) {
             sub.pattern = "unknown".to_string();
             sub.obase = obase.clone();
         }
+    }
+}
+
+#[derive(Default, Clone, Debug)]
+pub struct Indel {
+    pub start: i32,
+    pub end: i32,
+    pub length: i32,
+    pub seq: String,
+    pub all_seqs: String,
+    pub freq: i32,
+    pub occurred: String,
+    pub itype: String,
+    pub og_seq: String,
+}
+
+/// To string for Indel
+impl fmt::Display for Indel {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(
+            f,
+            "{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}",
+            self.start,
+            self.end,
+            self.length,
+            self.seq,
+            self.all_seqs,
+            self.freq,
+            self.occurred,
+            self.itype,
+            self.og_seq,
+        )
     }
 }
 
@@ -698,7 +698,10 @@ pub fn polarize_indels(indels: &mut Vec<Indel>, og: &[u8]) {
                 // og NNNN
                 indel.itype = "D".to_string(); // Deletion
             } else {
-                panic!("Errors when polarizing indel at position {}..{}", indel.start, indel.end);
+                panic!(
+                    "Errors when polarizing indel at position {}..{}",
+                    indel.start, indel.end
+                );
             }
         }
 
