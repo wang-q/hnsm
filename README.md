@@ -499,12 +499,12 @@ cargo run --bin fasr variation tests/fasr/example.fas
 cargo run --bin fasr variation tests/fasr/example.fas --outgroup
 
 #fasops xlsx tests/fasr/example.fas -o example.xlsx
-#fasops xlsx tests/fasr/example.fas --outgroup -o example.outgroup.xlsx
-cargo run --bin fasr xlsx tests/fasr/example.fas
-cargo run --bin fasr xlsx tests/fasr/example.fas --indel --outgroup
-cargo run --bin fasr xlsx tests/fasr/example.fas --nosingle
-cargo run --bin fasr xlsx tests/fasr/example.fas --nocomplex
-cargo run --bin fasr xlsx tests/fasr/example.fas --min 0.3 --max 0.7
+#fasops xlsx tests/fasr/example.fas -l 50 --outgroup -o example.outgroup.xlsx
+fasr xlsx tests/fasr/example.fas --indel
+fasr xlsx tests/fasr/example.fas --indel --outgroup
+fasr xlsx tests/fasr/example.fas --nosingle
+fasr xlsx tests/fasr/example.fas --indel --nocomplex
+fasr xlsx tests/fasr/example.fas --indel --min 0.3 --max 0.7
 
 cargo run --bin fasr pl-p2m tests/fasr/S288cvsRM11_1a.slice.fas tests/fasr/S288cvsSpar.slice.fas
 
