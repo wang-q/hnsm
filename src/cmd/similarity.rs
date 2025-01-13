@@ -2,8 +2,7 @@ use clap::*;
 use rayon::prelude::*;
 use std::io::BufRead;
 use std::simd::prelude::*;
-
-const LANES: usize = 8; // 32 * 8 = 256, AVX2
+use hnsm::libs::linalg;
 
 // Create clap subcommand arguments
 pub fn make_subcommand() -> Command {
@@ -191,7 +190,7 @@ fn load_file(infile: &str, is_bin: bool) -> Vec<hnsm::AsmEntry> {
 
 fn calc(l1: &[f32], l2: &[f32], mode: &str, is_sim: bool, is_dis: bool) -> f32 {
     let mut score = match mode {
-        "euclid" => euclidean_distance(l1, l2),
+        "euclid" => linalg::euclidean_distance(l1, l2),
         "cosine" => cosine_similarity(l1, l2),
         "jaccard" => weighted_jaccard_similarity(l1, l2),
         _ => unreachable!(),
@@ -207,63 +206,9 @@ fn calc(l1: &[f32], l2: &[f32], mode: &str, is_sim: bool, is_dis: bool) -> f32 {
     score
 }
 
-// https://www.maartengrootendorst.com/blog/distances/
-// https://crates.io/crates/semanticsimilarity_rs
-fn euclidean_distance(a: &[f32], b: &[f32]) -> f32 {
-    let (a_extra, a_chunks): (&[f32], &[[f32; LANES]]) = a.as_rchunks();
-    let (b_extra, b_chunks): (&[f32], &[[f32; LANES]]) = b.as_rchunks();
-
-    let mut sums = [0.0; LANES];
-    for ((x, y), d) in std::iter::zip(a_extra, b_extra).zip(&mut sums) {
-        let diff = x - y;
-        *d = diff * diff;
-    }
-
-    let mut sums = f32x8::from_array(sums);
-    std::iter::zip(a_chunks, b_chunks).for_each(|(x, y)| {
-        let diff = f32x8::from_array(*x) - f32x8::from_array(*y);
-        sums += diff * diff;
-    });
-
-    sums.reduce_sum().sqrt()
-}
-
-fn dot_product(a: &[f32], b: &[f32]) -> f32 {
-    let (a_extra, a_chunks): (&[f32], &[[f32; LANES]]) = a.as_rchunks();
-    let (b_extra, b_chunks): (&[f32], &[[f32; LANES]]) = b.as_rchunks();
-
-    let mut sums = [0.0; LANES];
-    for ((x, y), d) in std::iter::zip(a_extra, b_extra).zip(&mut sums) {
-        *d = x * y;
-    }
-
-    let mut sums = f32x8::from_array(sums);
-    std::iter::zip(a_chunks, b_chunks).for_each(|(x, y)| {
-        sums += f32x8::from_array(*x) * f32x8::from_array(*y);
-    });
-
-    sums.reduce_sum()
-}
-
-fn norm(a: &[f32]) -> f32 {
-    let (a_extra, a_chunks): (&[f32], &[[f32; LANES]]) = a.as_rchunks();
-
-    let mut sums = [0.0; LANES];
-    for (x, d) in std::iter::zip(a_extra, &mut sums) {
-        *d = x * x;
-    }
-
-    let mut sums = f32x8::from_array(sums);
-    a_chunks.into_iter().for_each(|x| {
-        sums += f32x8::from_array(*x) * f32x8::from_array(*x);
-    });
-
-    sums.reduce_sum().sqrt()
-}
-
 fn cosine_similarity(a: &[f32], b: &[f32]) -> f32 {
-    let dot_product = dot_product(a, b);
-    let denominator = norm(a) * norm(b);
+    let dot_product = linalg::dot_product(a, b);
+    let denominator = linalg::norm_l2(a) * linalg::norm_l2(b);
 
     if denominator == 0.0 {
         0.0
@@ -272,43 +217,9 @@ fn cosine_similarity(a: &[f32], b: &[f32]) -> f32 {
     }
 }
 
-fn jaccard_intersection(a: &[f32], b: &[f32]) -> f32 {
-    let (a_extra, a_chunks): (&[f32], &[[f32; LANES]]) = a.as_rchunks();
-    let (b_extra, b_chunks): (&[f32], &[[f32; LANES]]) = b.as_rchunks();
-
-    let mut sums = [0.0; LANES];
-    for ((x, y), d) in std::iter::zip(a_extra, b_extra).zip(&mut sums) {
-        *d = f32::min(*x, *y);
-    }
-
-    let mut sums = f32x8::from_array(sums);
-    std::iter::zip(a_chunks, b_chunks).for_each(|(x, y)| {
-        sums += f32x8::simd_min(f32x8::from_array(*x), f32x8::from_array(*y));
-    });
-
-    sums.reduce_sum()
-}
-
-fn jaccard_union(a: &[f32], b: &[f32]) -> f32 {
-    let (a_extra, a_chunks): (&[f32], &[[f32; LANES]]) = a.as_rchunks();
-    let (b_extra, b_chunks): (&[f32], &[[f32; LANES]]) = b.as_rchunks();
-
-    let mut sums = [0.0; LANES];
-    for ((x, y), d) in std::iter::zip(a_extra, b_extra).zip(&mut sums) {
-        *d = f32::max(*x, *y);
-    }
-
-    let mut sums = f32x8::from_array(sums);
-    std::iter::zip(a_chunks, b_chunks).for_each(|(x, y)| {
-        sums += f32x8::simd_max(f32x8::from_array(*x), f32x8::from_array(*y));
-    });
-
-    sums.reduce_sum()
-}
-
 fn weighted_jaccard_similarity(a: &[f32], b: &[f32]) -> f32 {
-    let numerator = jaccard_intersection(a, b);
-    let denominator = jaccard_union(a, b);
+    let numerator = linalg::jaccard_intersection(a, b);
+    let denominator = linalg::jaccard_union(a, b);
 
     if denominator == 0.0 {
         0.0
