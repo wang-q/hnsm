@@ -2,7 +2,7 @@ use clap::*;
 
 use itertools::Itertools;
 use std::cmp::Ordering;
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 use std::io::{self, BufRead};
 
 // Create clap subcommand arguments

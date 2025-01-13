@@ -1,7 +1,4 @@
 use clap::*;
-use itertools::Itertools;
-use std::collections::VecDeque;
-use std::io::BufRead;
 
 // Create clap subcommand arguments
 pub fn make_subcommand() -> Command {
@@ -85,7 +82,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     //----------------------------
     // Args
     //----------------------------
-    let infile = args.get_one::<String>("infile").unwrap();
+    // let infile = args.get_one::<String>("infile").unwrap();
 
     let das_opt = DasOpt {
         ma: *args.get_one::<f32>("ma").unwrap(),
@@ -96,7 +93,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     let opt_sep = args.get_one::<String>("sep").unwrap();
     // let is_header = args.get_flag("header");
     //
-    let mut writer = intspan::writer(args.get_one::<String>("outfile").unwrap());
+    // let mut writer = intspan::writer(args.get_one::<String>("outfile").unwrap());
 
     //----------------------------
     // Ops
