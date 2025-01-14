@@ -3,6 +3,7 @@ use std::simd::prelude::*;
 use rand::{Rng, RngCore, SeedableRng};
 use rapidhash::{RapidHashSet, RapidRng};
 
+#[allow(dead_code)]
 // The original implementation is i16
 fn hash_hv_serial(kmer_hash_set: &RapidHashSet<u64>, hv_d: usize) -> Vec<i32> {
     // Convert the k-mer hash set to a Vec for faster iteration
@@ -100,6 +101,7 @@ pub fn hash_hv(kmer_hash_set: &RapidHashSet<u64>, hv_d: usize) -> Vec<i32> {
     hv
 }
 
+#[allow(dead_code)]
 fn hv_norm_l2_sq_serial(hv: &Vec<i32>) -> f32 {
     let norm_sq = hv
         .iter()
@@ -178,6 +180,7 @@ pub fn hv_dot(a: &[i32], b: &[i32]) -> f32 {
 //     }
 // }
 
+#[cfg(test)]
 mod tests {
     use super::*;
 

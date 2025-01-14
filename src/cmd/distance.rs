@@ -15,7 +15,7 @@ This command calculates pairwise distances between sequences in FA file(s) using
 
 * The outputs are printed to stdout in the following format:
     <sequence1> <sequence2> <mash_distance> <jaccard_index> <containment_index>
-* With --all
+* With --merge
     <file1> <file2> <total1> <total2> <inter> <union> <mash_distance> <jaccard_index> <containment_index>
 
 * Minimizers
@@ -30,30 +30,65 @@ This command calculates pairwise distances between sequences in FA file(s) using
 * To get accurate pairwise sequence identities, use clustalo
   https://lh3.github.io/2018/11/25/on-the-definition-of-sequence-identity
 
+* Input Modes:
+    * By default (--list is false):
+        * Single file: Treat the file as a sequence file and calculate pairwise distances
+          for all sequences within it.
+        * Two files: Treat both files as sequence files and calculate pairwise distances
+          between sequences from the two files.
+    * When --list is set:
+        * Single file: Treat the file as a list file (each line is a path to a sequence file)
+          and calculate pairwise distances for all sequences in the listed files.
+        * Two files: Treat both files as list files and calculate pairwise distances
+          between sequences from the two list files.
+
+* --merge Behavior:
+  - By default (--merge is false):
+    * Distances are calculated between individual sequences.
+  - When --merge is set:
+    * For a single sequence file: Merge all sequences within the file into a single set
+      of minimizers. Note that comparing this set to itself (self-comparison) is not
+      meaningful, as the distance will always be 0 and the similarity will always be 1.
+    * For two sequence files: Merge all sequences within each file into a single set,
+      and calculate distances between the two sets.
+    * When --list is set, --merge operates on each sequence file individually:
+      - For each file listed in the list file, merge all sequences within that file
+        into a single set, and calculate distances between these sets.
+      - The merging does not span across multiple files listed in the list file.
+
 Examples:
-    1. Calculate distances with default parameters:
-       hnsm distance input.fa
+1. Calculate distances with default parameters:
+   hnsm distance input.fa
 
-    2. Use MurmurHash instead of RapidHash:
-       hnsm distance input.fa --hasher murmur
+2. Use MurmurHash instead of RapidHash:
+   hnsm distance input.fa --hasher murmur
 
-    3. Set custom k-mer size and window size:
-       hnsm distance input.fa -k 21 -w 5
+3. Set custom k-mer size and window size:
+   hnsm distance input.fa -k 21 -w 5
 
-    4. Convert distance to similarity:
-       hnsm distance input.fa --sim
+4. Convert distance to similarity:
+   hnsm distance input.fa --sim
 
-    5. Use 4 threads for parallel processing:
-       hnsm distance input.fa --parallel 4
+5. Use 4 threads for parallel processing:
+   hnsm distance input.fa --parallel 4
 
-    6. Compare two FA files:
-       hnsm distance file1.fa file2.fa
+6. Compare two FA files:
+   hnsm distance file1.fa file2.fa
 
-    7. Include results with zero Jaccard index:
-       hnsm distance input.fa --zero
+7. Include results with zero Jaccard index:
+   hnsm distance input.fa --zero
 
-    8. Gather all k-mers in a file and compare to another:
-       hnsm distance file1.fa file2.fa --all
+8. Merge all sequences in a file and compare to another:
+   hnsm distance file1.fa file2.fa --merge
+
+9. Treat input as a list file:
+   hnsm distance list.txt --list
+
+10. Compare two list files:
+    hnsm distance list1.txt list2.txt --list
+
+11. Merge all sequences in each file of a list and compare:
+    hnsm distance list1.txt list2.txt --list --merge
 
 "###,
         )
@@ -73,6 +108,7 @@ Examples:
                     builder::PossibleValue::new("rapid"),
                     builder::PossibleValue::new("fx"),
                     builder::PossibleValue::new("murmur"),
+                    builder::PossibleValue::new("mod"),
                 ])
                 .default_value("rapid")
                 .help("Hash algorithm to use"),
@@ -108,20 +144,25 @@ Examples:
                 .help("Also write results with zero Jaccard index"),
         )
         .arg(
-            Arg::new("all")
-                .long("all")
+            Arg::new("merge")
+                .long("merge")
                 .action(ArgAction::SetTrue)
-                .help("Gather all k-mers in a file and compare to another"),
+                .help("Merge all sequences within a file into a single set for comparison"),
         )
         .arg(
-            Arg::new("parallel")
-                .long("parallel")
-                .short('p')
-                .num_args(1)
-                .default_value("1")
-                .value_parser(value_parser!(usize))
-                .help("Number of threads for parallel processing"),
-        )
+            Arg::new("list")
+                .long("list")
+                .action(ArgAction::SetTrue)
+                .help("Treat infiles as list files, where each line is a path to a sequence file"),
+        ).arg(
+        Arg::new("parallel")
+            .long("parallel")
+            .short('p')
+            .num_args(1)
+            .default_value("1")
+            .value_parser(value_parser!(usize))
+            .help("Number of threads for parallel processing"),
+    )
         .arg(
             Arg::new("outfile")
                 .long("outfile")
@@ -148,7 +189,8 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     let opt_window = *args.get_one::<usize>("window").unwrap();
     let is_sim = args.get_flag("sim");
     let is_zero = args.get_flag("zero");
-    let is_all = args.get_flag("all");
+    let is_merge = args.get_flag("merge"); // Whether to merge all sequences within a file
+    let is_list = args.get_flag("list"); // Whether to treat infiles as list files
     let opt_parallel = *args.get_one::<usize>("parallel").unwrap();
 
     let infiles = args
@@ -157,6 +199,36 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
         .map(|s| s.as_str())
         .collect::<Vec<_>>();
 
+    // Load data based on the number of input files and the --list flag
+    let (entries1, entries2) = if infiles.len() == 1 {
+        // Single file
+        let paths = if is_list {
+            intspan::read_first_column(infiles[0])
+        } else {
+            vec![infiles[0].to_string()] // Treat the input as a sequence file
+        };
+        let entries = load_entries(&paths, opt_hasher, opt_kmer, opt_window, is_merge)?;
+        (entries.clone(), entries) // Calculate pairwise distances within the same set
+    } else {
+        // Two files
+        let paths1 = if is_list {
+            intspan::read_first_column(infiles[0])
+        } else {
+            vec![infiles[0].to_string()]
+        };
+        let paths2 = if is_list {
+            intspan::read_first_column(infiles[1])
+        } else {
+            vec![infiles[1].to_string()]
+        };
+        let entries1 = load_entries(&paths1, opt_hasher, opt_kmer, opt_window, is_merge)?;
+        let entries2 = load_entries(&paths2, opt_hasher, opt_kmer, opt_window, is_merge)?;
+        (entries1, entries2) // Calculate pairwise distances between the two sets
+    };
+
+    //----------------------------
+    // Ops
+    //----------------------------
     // Create a channel for sending results to the writer thread
     let (sender, receiver) = crossbeam::channel::bounded::<String>(256);
 
@@ -174,32 +246,10 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
         .num_threads(opt_parallel)
         .build_global()?;
 
-    //----------------------------
-    // Ops
-    //----------------------------
-    let entries = load_file(
-        infiles.get(0).unwrap(),
-        opt_hasher,
-        opt_kmer,
-        opt_window,
-        is_all,
-    );
-    let others = if infiles.len() == 2 {
-        load_file(
-            infiles.get(1).unwrap(),
-            opt_hasher,
-            opt_kmer,
-            opt_window,
-            is_all,
-        )
-    } else {
-        entries.clone()
-    };
-
     // Use rayon to parallelize the outer loop
-    entries.par_iter().for_each(|e1| {
+    entries1.par_iter().for_each(|e1| {
         let mut lines = "".to_string();
-        for (i, e2) in others.iter().enumerate() {
+        for (i, e2) in entries2.iter().enumerate() {
             let (total1, total2, inter, union, jaccard, containment, mash) =
                 calc_distances(&e1.set, &e2.set);
 
@@ -207,7 +257,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
                 continue;
             }
 
-            let out_string = if is_all {
+            let out_string = if is_merge {
                 format!(
                     "{}\t{}\t{}\t{}\t{}\t{}\t{:.4}\t{:.4}\t{:.4}\n",
                     e1.name,
@@ -250,51 +300,79 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     Ok(())
 }
 
-fn load_file(
-    infile: &str,
-    opt_hasher: &String,
+// Load entries from a list of paths
+fn load_entries(
+    paths: &[String],
+    opt_hasher: &str,
     opt_kmer: usize,
     opt_window: usize,
-    is_all: bool,
-) -> Vec<MinimizerEntry> {
+    is_merge: bool,
+) -> anyhow::Result<Vec<MinimizerEntry>> {
+    let mut entries = Vec::new();
+
+    for path in paths {
+        let mut loaded = load_file(path, opt_hasher, opt_kmer, opt_window, is_merge)?;
+        entries.append(&mut loaded);
+    }
+
+    Ok(entries)
+}
+
+fn load_file(
+    infile: &str,
+    opt_hasher: &str,
+    opt_kmer: usize,
+    opt_window: usize,
+    is_merge: bool,
+) -> anyhow::Result<Vec<MinimizerEntry>> {
     let reader = intspan::reader(infile);
     let mut fa_in = fasta::io::Reader::new(reader);
 
     let mut entries = vec![];
+    // Set to merge all minimizers if --merge is true
     let mut all_set = rapidhash::RapidHashSet::default();
 
     for result in fa_in.records() {
         // obtain record or fail with error
-        let record = result.unwrap();
+        let record = result?;
 
-        let name = String::from_utf8(record.name().into()).unwrap();
+        let name = String::from_utf8(record.name().into())?;
         let seq = record.sequence();
 
-        let minimizers = match opt_hasher.as_str() {
+        let minimizers: Vec<u64> = match opt_hasher {
             "rapid" => hnsm::JumpingMinimizer {
                 w: opt_window,
                 k: opt_kmer,
                 hasher: hnsm::RapidHash,
             }
-            .minimizer(&seq[..]),
+            .mins(&seq[..]),
             "fx" => hnsm::JumpingMinimizer {
                 w: opt_window,
                 k: opt_kmer,
                 hasher: hnsm::FxHash,
             }
-            .minimizer(&seq[..]),
+            .mins(&seq[..]),
             "murmur" => hnsm::JumpingMinimizer {
                 w: opt_window,
                 k: opt_kmer,
                 hasher: hnsm::MurmurHash3,
             }
-            .minimizer(&seq[..]),
+            .mins(&seq[..]),
+            "mod" => {
+                let min_iter = minimizer_iter::MinimizerBuilder::<u64, _>::new_mod()
+                    .canonical()
+                    .minimizer_size(opt_kmer)
+                    .width(opt_window as u16)
+                    .iter(&seq[..]);
+
+                min_iter.map(|(min, _, _)| min).collect()
+            }
             _ => unreachable!(),
         };
         let set: rapidhash::RapidHashSet<u64> =
-            rapidhash::RapidHashSet::from_iter(minimizers.iter().map(|t| t.1));
+            rapidhash::RapidHashSet::from_iter(minimizers);
 
-        if is_all {
+        if is_merge {
             all_set.extend(set);
         } else {
             let entry = MinimizerEntry { name, set };
@@ -302,7 +380,7 @@ fn load_file(
         }
     }
 
-    if is_all {
+    if is_merge {
         let entry = MinimizerEntry {
             name: infile.to_string(),
             set: all_set,
@@ -310,7 +388,7 @@ fn load_file(
         entries.push(entry);
     }
 
-    entries
+    Ok(entries)
 }
 
 // Calculate Jaccard, Containment, and Mash distance between two sets

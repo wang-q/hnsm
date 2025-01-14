@@ -34,7 +34,8 @@ impl Hasher for RapidHash {
 
 pub trait Minimizer {
     /// The absolute positions of all minimizers in the text.
-    fn minimizer(&mut self, text: &[u8]) -> Vec<(usize, u64)>;
+    fn minimizer(&mut self, text: &[u8]) -> Vec<(u64, usize)>;
+    fn mins(&mut self, text: &[u8]) -> Vec<u64>;
 }
 
 pub struct JumpingMinimizer<H = FxHash> {
@@ -44,7 +45,7 @@ pub struct JumpingMinimizer<H = FxHash> {
 }
 
 impl<H: Hasher> Minimizer for JumpingMinimizer<H> {
-    fn minimizer(&mut self, text: &[u8]) -> Vec<(usize, u64)> {
+    fn minimizer(&mut self, text: &[u8]) -> Vec<(u64, usize)> {
         let mut minimizers = Vec::new();
 
         // Precompute hashes of all k-mers.
@@ -67,6 +68,10 @@ impl<H: Hasher> Minimizer for JumpingMinimizer<H> {
         if minimizers.last() != Some(&min_pos) {
             minimizers.push(min_pos);
         }
-        minimizers.iter().map(|e| (*e, hashes[*e])).collect()
+        minimizers.iter().map(|e| (hashes[*e], *e)).collect()
+    }
+
+    fn mins(&mut self, text: &[u8]) -> Vec<u64> {
+        self.minimizer(text).iter().map(|(min, _)| *min).collect()
     }
 }

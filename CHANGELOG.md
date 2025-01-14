@@ -10,7 +10,7 @@
 
 * Add `hnsm mask`
 * Add `hnsm sixframe`
-* Add `--parallel` and `--all` to `hnsm distance`
+* Add `--merge`, `--list`, and `--parallel` to `hnsm distance`
 * Finish `fasr xlsx`
 
 * Improve help texts
