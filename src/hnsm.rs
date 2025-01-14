@@ -1,8 +1,3 @@
-#![feature(array_chunks)]
-#![feature(slice_as_chunks)]
-// Add these imports to use the stdsimd library
-#![feature(portable_simd)]
-
 extern crate clap;
 use clap::*;
 
@@ -108,3 +103,4 @@ Subcommand groups:
 }
 
 // TODO: Remove fully contained sequences
+// TODO: We lack the canonical k-mers

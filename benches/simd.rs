@@ -73,7 +73,9 @@ pub fn bench_norm(c: &mut Criterion) {
     c.bench_function("norm_map", |b| b.iter(|| norm_map(black_box(&v1))));
     c.bench_function("norm_fold", |b| b.iter(|| norm_fold(black_box(&v1))));
     c.bench_function("norm_simd", |b| b.iter(|| norm_simd(black_box(&v1))));
-    c.bench_function("norm_nalgebra", |b| b.iter(|| norm_nalgebra(black_box(&v1))));
+    c.bench_function("norm_nalgebra", |b| {
+        b.iter(|| norm_nalgebra(black_box(&v1)))
+    });
 }
 
 criterion_group!(benches, bench_rand, bench_norm);

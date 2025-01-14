@@ -1,7 +1,7 @@
 use clap::*;
+use hnsm::libs::linalg;
 use rayon::prelude::*;
 use std::io::BufRead;
-use hnsm::libs::linalg;
 
 // Create clap subcommand arguments
 pub fn make_subcommand() -> Command {
