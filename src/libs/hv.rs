@@ -73,7 +73,7 @@ pub fn hash_hv(kmer_hash_set: &RapidHashSet<u64>, hv_d: usize) -> Vec<i32> {
 
         // SIMD-based HV encoding
         for i in 0..num_chunk {
-            let rnd_bits = rng.gen::<u64>();
+            let rnd_bits = rng.next_u64();
 
             // Use SIMD to process 4 bits at a time
             for j in (0..64).step_by(4) {
@@ -83,7 +83,7 @@ pub fn hash_hv(kmer_hash_set: &RapidHashSet<u64>, hv_d: usize) -> Vec<i32> {
                     Simd::from_array([j as u64, (j + 1) as u64, (j + 2) as u64, (j + 3) as u64]);
                 let bits = (u64x4::splat(rnd_bits) >> shift) & bit_mask;
 
-                // Convert bits to i16 and shift left by 1
+                // Convert bits to i32 and shift left by 1
                 let bits_i32 = bits.cast::<i32>() << Simd::splat(1);
 
                 // Load the target HV values

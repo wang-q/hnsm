@@ -27,7 +27,7 @@ pub fn encode_hash_hd_simd(kmer_hash_set: &HashSet<u64>, hv_d: usize) -> Vec<i16
 
         // SIMD-based HV encoding
         for i in 0..num_chunk {
-            let rnd_bits = rng.gen::<u64>();
+            let rnd_bits = rng.next_u64();
 
             // Use SIMD to process 4 bits at a time
             for j in (0..64).step_by(4) {
