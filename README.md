@@ -527,17 +527,45 @@ curl -L https://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/000/008/865/GCF_000008865.2
 
 ```
 
+* mash
+
+```shell
+hnsm distance tests/pgr/sakai.fa.gz tests/pgr/mg1655.fa.gz --hasher mod -k 21 -w 1
+#NC_002695       NC_000913       0.0221  0.4580  0.5881
+#NC_002127       NC_000913       0.6640  0.0000  0.0006
+#NC_002128       NC_000913       0.4031  0.0001  0.0053
+
+hnsm rc tests/pgr/mg1655.fa.gz |
+    hnsm distance tests/pgr/sakai.fa.gz stdin --hasher mod -k 21 -w 1
+#NC_002695       RC_NC_000913    0.0221  0.4580  0.5881
+#NC_002127       RC_NC_000913    0.6640  0.0000  0.0006
+#NC_002128       RC_NC_000913    0.4031  0.0001  0.0053
+
+hnsm rc tests/pgr/mg1655.fa.gz |
+    hnsm distance tests/pgr/mg1655.fa.gz stdin --hasher mod -k 21 -w 1
+#NC_000913       RC_NC_000913    0.0000  1.0000  1.0000
+hnsm rc tests/pgr/mg1655.fa.gz |
+    hnsm distance tests/pgr/mg1655.fa.gz stdin --hasher rapid -k 21 -w 1
+#NC_000913       RC_NC_000913    0.2289  0.0041  0.0082
+
+hnsm distance tests/pgr/sakai.fa.gz tests/pgr/mg1655.fa.gz --merge --hasher mod -k 21 -w 1
+#tests/pgr/sakai.fa.gz   tests/pgr/mg1655.fa.gz  5302382 4543891 3064483 6781790 0.0226  0.4519  0.5779
+
+hnsm distance tests/pgr/sakai.fa.gz tests/pgr/mg1655.fa.gz --merge --hasher rapid -k 21 -w 1
+#tests/pgr/sakai.fa.gz   tests/pgr/mg1655.fa.gz  5394043 4562542 3071076 6885509 0.0230  0.4460  0.5693
+
+echo -e "tests/pgr/sakai.fa.gz\ntests/pgr/mg1655.fa.gz" |
+    hnsm distance stdin --merge --list --hasher mod -k 21 -w 1
+#tests/pgr/sakai.fa.gz   tests/pgr/sakai.fa.gz   5302382 5302382 5302382 5302382 0.0000  1.0000  1.0000
+#tests/pgr/sakai.fa.gz   tests/pgr/mg1655.fa.gz  5302382 4543891 3064483 6781790 0.0226  0.4519  0.5779
+#tests/pgr/mg1655.fa.gz  tests/pgr/sakai.fa.gz   4543891 5302382 3064483 6781790 0.0226  0.4519  0.6744
+#tests/pgr/mg1655.fa.gz  tests/pgr/mg1655.fa.gz  4543891 4543891 4543891 4543891 0.0000  1.0000  1.0000
+
+```
+
 * plot
 
 ```shell
-hnsm distance tests/pgr/sakai.fa.gz tests/pgr/mg1655.fa.gz -k 21 -w 1
-#NC_002695       NC_000913       0.0677  0.4520  0.5793
-#NC_002127       NC_000913       1.9925  0.0000  0.0006
-#NC_002128       NC_000913       1.2133  0.0001  0.0052
-
-hnsm distance tests/pgr/sakai.fa.gz tests/pgr/mg1655.fa.gz -k 21 -w 1 --all
-#tests/pgr/sakai.fa.gz   tests/pgr/mg1655.fa.gz  5394043 4562542 3071076 6885509 0.0690  0.4460  0.5693
-
 FastGA -v -pafx tests/pgr/sakai.fa.gz tests/pgr/mg1655.fa.gz > tmp.paf
 FastGA -v -psl tests/pgr/sakai.fa.gz tests/pgr/mg1655.fa.gz > tmp.psl
 

@@ -251,7 +251,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
         let mut lines = "".to_string();
         for (i, e2) in entries2.iter().enumerate() {
             let (total1, total2, inter, union, jaccard, containment, mash) =
-                calc_distances(&e1.set, &e2.set);
+                calc_distances(&e1.set, &e2.set, opt_kmer);
 
             if !is_zero && jaccard == 0. {
                 continue;
@@ -395,6 +395,7 @@ fn load_file(
 fn calc_distances(
     s1: &rapidhash::RapidHashSet<u64>,
     s2: &rapidhash::RapidHashSet<u64>,
+    opt_kmer: usize,
 ) -> (usize, usize, usize, usize, f64, f64, f64) {
     let total1 = s1.len();
     let total2 = s2.len();
@@ -408,7 +409,7 @@ fn calc_distances(
     let mash = if jaccard == 0.0 {
         1.0
     } else {
-        ((-1.0 / 7.0) * ((2.0 * jaccard) / (1.0 + jaccard)).ln()).abs()
+        ((-1.0 / opt_kmer as f64) * ((2.0 * jaccard) / (1.0 + jaccard)).ln()).abs()
     };
 
     (total1, total2, inter, union, jaccard, containment, mash)
