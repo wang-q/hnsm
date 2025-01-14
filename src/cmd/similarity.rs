@@ -1,7 +1,6 @@
 use clap::*;
 use rayon::prelude::*;
 use std::io::BufRead;
-use std::simd::prelude::*;
 use hnsm::libs::linalg;
 
 // Create clap subcommand arguments

@@ -7,4 +7,5 @@ pub mod loc;
 pub mod matrix;
 pub mod mds;
 pub mod nt;
+pub mod hv;
 pub mod linalg;
