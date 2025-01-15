@@ -27,6 +27,18 @@ This command calculates pairwise distances between sequences in FA file(s) using
     * DNA: `-k 21 -w 5`
     * Increasing the window size speeds up processing
 
+* Hash Algorithms (--hasher):
+    * The `--hasher` parameter selects the hash algorithm used for minimizer calculation.
+    * Available options:
+        - `rapid`: RapidHash (default)
+        - `fx`: FxHash
+        - `murmur`: MurmurHash3
+    * Note: The `mod` option is not a hash algorithm but a special mode for DNA sequences.
+
+* Mod-Minimizer (--hasher mod):
+    * It generates canonical k-mers, meaning that a sequence and its reverse complement
+      are generating the same k-mer set.
+
 * To get accurate pairwise sequence identities, use clustalo
   https://lh3.github.io/2018/11/25/on-the-definition-of-sequence-identity
 
@@ -60,35 +72,20 @@ Examples:
 1. Calculate distances with default parameters:
    hnsm distance input.fa
 
-2. Use MurmurHash instead of RapidHash:
-   hnsm distance input.fa --hasher murmur
+2. Use Mod-Minimizer for DNA sequences (canonical k-mers):
+   hnsm distance input.fa --hasher mod -k 21 -w 5
 
-3. Set custom k-mer size and window size:
-   hnsm distance input.fa -k 21 -w 5
-
-4. Convert distance to similarity:
-   hnsm distance input.fa --sim
-
-5. Use 4 threads for parallel processing:
-   hnsm distance input.fa --parallel 4
-
-6. Compare two FA files:
+3. Compare two FA files:
    hnsm distance file1.fa file2.fa
 
-7. Include results with zero Jaccard index:
-   hnsm distance input.fa --zero
-
-8. Merge all sequences in a file and compare to another:
+4. Merge all sequences in a file and compare to another:
    hnsm distance file1.fa file2.fa --merge
 
-9. Treat input as a list file:
+5. Treat input as a list file and calculate distances:
    hnsm distance list.txt --list
 
-10. Compare two list files:
-    hnsm distance list1.txt list2.txt --list
-
-11. Merge all sequences in each file of a list and compare:
-    hnsm distance list1.txt list2.txt --list --merge
+6. Use 4 threads for parallel processing:
+   hnsm distance input.fa --parallel 4
 
 "###,
         )
@@ -173,7 +170,7 @@ Examples:
         )
 }
 
-#[derive(Default, Clone)]
+#[derive(Debug, Default, Clone)]
 struct MinimizerEntry {
     name: String,
     set: rapidhash::RapidHashSet<u64>,
@@ -248,7 +245,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
 
     // Use rayon to parallelize the outer loop
     entries1.par_iter().for_each(|e1| {
-        let mut lines = "".to_string();
+        let mut lines = String::with_capacity(1024);
         for (i, e2) in entries2.iter().enumerate() {
             let (total1, total2, inter, union, jaccard, containment, mash) =
                 calc_distances(&e1.set, &e2.set, opt_kmer);
@@ -369,8 +366,7 @@ fn load_file(
             }
             _ => unreachable!(),
         };
-        let set: rapidhash::RapidHashSet<u64> =
-            rapidhash::RapidHashSet::from_iter(minimizers);
+        let set: rapidhash::RapidHashSet<u64> = rapidhash::RapidHashSet::from_iter(minimizers);
 
         if is_merge {
             all_set.extend(set);
