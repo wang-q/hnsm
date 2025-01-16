@@ -1,5 +1,4 @@
 use clap::*;
-
 use noodles_bgzf as bgzf;
 use noodles_core::Position;
 use noodles_fasta as fasta;
@@ -138,7 +137,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
         }
 
         if !cache.contains(&seq_id) {
-            let record = hnsm::record_loc(&mut reader, &loc_of, &seq_id)?;
+            let record = hnsm::record_rg(&mut reader, &loc_of, &seq_id)?;
             cache.put(seq_id.clone(), record);
         }
 

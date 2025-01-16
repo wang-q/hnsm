@@ -76,7 +76,7 @@ pub fn reader_buf(infile: &str) -> Box<dyn BufRead> {
     reader
 }
 
-pub fn load_loc(loc_file: &String) -> anyhow::Result<IndexMap<String, (u64, usize)>> {
+pub fn load_loc(loc_file: &str) -> anyhow::Result<IndexMap<String, (u64, usize)>> {
     let mut reader = reader_buf(loc_file);
 
     let mut loc_of: IndexMap<String, (u64, usize)> = IndexMap::new();
@@ -101,7 +101,7 @@ pub fn load_loc(loc_file: &String) -> anyhow::Result<IndexMap<String, (u64, usiz
     Ok(loc_of)
 }
 
-pub fn record_loc(
+pub fn record_rg(
     reader: &mut Input,
     loc_of: &IndexMap<String, (u64, usize)>,
     rg: &str,
