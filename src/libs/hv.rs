@@ -21,19 +21,17 @@ fn hash_hv_serial(kmer_hash_set: &RapidHashSet<u64>, hv_d: usize) -> Vec<i32> {
         let mut rng = RapidRng::seed_from_u64(hash);
 
         // Generate a random stream of bits of sufficient length
-        for i in 0..(hv_d / 64) {
+        for i in 0..(hv_d / 32) {
             // Generate a 64-bit random number
-            let rnd_bits = rng.next_u64();
+            let rnd_bits = rng.next_u32();
 
             // Iterate over each bit in the random number
-            // Extract the j-th bit from the random number, shift it left by 1,
-            //   and add it to the corresponding position in the hypervector
             // Formula: hv[i * 64 + j] += (((rnd_bits >> j) & 1) << 1) as i32
             // - (rnd_bits >> j) & 1: Extract the j-th bit (0 or 1)
             // - << 1: Shift the bit left by 1 (resulting in 0 or 2, i.e. multiply by 2)
             // - Add the result to the hypervector at position i * 64 + j
-            for j in 0..64 {
-                hv[i * 64 + j] += (((rnd_bits >> j) & 1) << 1) as i32;
+            for j in 0..32 {
+                hv[i * 32 + j] += (((rnd_bits >> j) & 1) << 1) as i32;
             }
         }
     }
@@ -63,8 +61,9 @@ pub fn hash_hv(kmer_hash_set: &RapidHashSet<u64>, hv_d: usize) -> Vec<i32> {
     let num_seed = kmer_hash_set.len();
     let mut hv = vec![-(num_seed as i32); hv_d];
 
-    let num_chunk = hv_d / 64;
+    let num_chunk = hv_d / 32;
 
+    // Convert HashSet to Vec
     let seed_vec: Vec<u64> = kmer_hash_set.iter().cloned().collect();
 
     // Loop through all seeds
@@ -73,27 +72,34 @@ pub fn hash_hv(kmer_hash_set: &RapidHashSet<u64>, hv_d: usize) -> Vec<i32> {
 
         // SIMD-based HV encoding
         for i in 0..num_chunk {
-            let rnd_bits = rng.next_u64();
+            let rnd_bits = rng.next_u32();
 
-            // Use SIMD to process 4 bits at a time
-            for j in (0..64).step_by(4) {
-                // Create a SIMD vector of 4 bits
-                let bit_mask = u64x4::splat(1);
-                let shift =
-                    Simd::from_array([j as u64, (j + 1) as u64, (j + 2) as u64, (j + 3) as u64]);
-                let bits = (u64x4::splat(rnd_bits) >> shift) & bit_mask;
+            // Use SIMD to process 8 bits at a time
+            for j in (0..32).step_by(8) {
+                let bit_mask = u32x8::splat(1);
+                let shift = Simd::from_array([
+                    j as u32,
+                    (j + 1) as u32,
+                    (j + 2) as u32,
+                    (j + 3) as u32,
+                    (j + 4) as u32,
+                    (j + 5) as u32,
+                    (j + 6) as u32,
+                    (j + 7) as u32,
+                ]);
+                let bits = (u32x8::splat(rnd_bits) >> shift) & bit_mask;
 
                 // Convert bits to i32 and shift left by 1
                 let bits_i32 = bits.cast::<i32>() << Simd::splat(1);
 
                 // Load the target HV values
-                let mut hv_simd = i32x4::from_slice(&hv[i * 64 + j..i * 64 + j + 4]);
+                let mut hv_simd = i32x8::from_slice(&hv[i * 32 + j..i * 32 + j + 8]);
 
                 // Accumulate the bits
                 hv_simd += bits_i32;
 
                 // Store the updated HV values
-                hv_simd.copy_to_slice(&mut hv[i * 64 + j..i * 64 + j + 4]);
+                hv_simd.copy_to_slice(&mut hv[i * 32 + j..i * 32 + j + 8]);
             }
         }
     }
@@ -183,6 +189,7 @@ pub fn hv_dot(a: &[i32], b: &[i32]) -> f32 {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use rand::Rng;
 
     #[test]
     fn test_hash_hv() {

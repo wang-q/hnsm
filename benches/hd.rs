@@ -55,6 +55,56 @@ pub fn encode_hash_hd_simd(kmer_hash_set: &HashSet<u64>, hv_d: usize) -> Vec<i16
     hv
 }
 
+pub fn encode_hash_hd_simd2(kmer_hash_set: &HashSet<u64>, hv_d: usize) -> Vec<i32> {
+    let num_seed = kmer_hash_set.len();
+    let mut hv = vec![-(num_seed as i32); hv_d];
+
+    let num_chunk = hv_d / 32;
+
+    // Convert HashSet to Vec
+    let seed_vec: Vec<u64> = kmer_hash_set.iter().cloned().collect();
+
+    // Loop through all seeds
+    for hash in seed_vec {
+        let mut rng = RapidRng::seed_from_u64(hash);
+
+        // SIMD-based HV encoding
+        for i in 0..num_chunk {
+            let rnd_bits = rng.next_u32();
+
+            // Use SIMD to process 8 bits at a time
+            for j in (0..32).step_by(8) {
+                let bit_mask = u32x8::splat(1);
+                let shift = Simd::from_array([
+                    j as u32,
+                    (j + 1) as u32,
+                    (j + 2) as u32,
+                    (j + 3) as u32,
+                    (j + 4) as u32,
+                    (j + 5) as u32,
+                    (j + 6) as u32,
+                    (j + 7) as u32,
+                ]);
+                let bits = (u32x8::splat(rnd_bits) >> shift) & bit_mask;
+
+                // Convert bits to i32 and shift left by 1
+                let bits_i32 = bits.cast::<i32>() << Simd::splat(1);
+
+                // Load the target HV values
+                let mut hv_simd = i32x8::from_slice(&hv[i * 32 + j..i * 32 + j + 8]);
+
+                // Accumulate the bits
+                hv_simd += bits_i32;
+
+                // Store the updated HV values
+                hv_simd.copy_to_slice(&mut hv[i * 32 + j..i * 32 + j + 8]);
+            }
+        }
+    }
+
+    hv
+}
+
 pub fn encode_hash_hd_rapid(kmer_hash_set: &HashSet<u64>, hv_d: usize) -> Vec<i16> {
     let seed_vec = Vec::from_iter(kmer_hash_set.clone());
     let mut hv = vec![-(kmer_hash_set.len() as i16); hv_d];
@@ -154,6 +204,9 @@ fn bench_encode_hash_hd(c: &mut Criterion) {
     // Benchmark small dataset
     c.bench_function("encode_hash_hd_simd_small", |b| {
         b.iter(|| encode_hash_hd_simd(black_box(&kmer_hash_set_small), hv_d))
+    });
+    c.bench_function("encode_hash_hd_simd2_small", |b| {
+        b.iter(|| encode_hash_hd_simd2(black_box(&kmer_hash_set_small), hv_d))
     });
     c.bench_function("encode_hash_hd_rapid_small", |b| {
         b.iter(|| encode_hash_hd_rapid(black_box(&kmer_hash_set_small), hv_d))
