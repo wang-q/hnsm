@@ -1,5 +1,4 @@
 use std::simd::prelude::*;
-
 use rand::{RngCore, SeedableRng};
 use rapidhash::{RapidHashSet, RapidRng};
 
@@ -7,7 +6,7 @@ use rapidhash::{RapidHashSet, RapidRng};
 // The original implementation is i16
 fn hash_hv_serial(kmer_hash_set: &RapidHashSet<u64>, hv_d: usize) -> Vec<i32> {
     // Convert the k-mer hash set to a Vec for faster iteration
-    let seed_vec = Vec::from_iter(kmer_hash_set.clone());
+    let seed_vec: Vec<u64> = kmer_hash_set.iter().cloned().collect();
 
     // Initialize the hypervector (HV)
     // The initial value of HV is -(kmer_hash_set.len() as i32), which is the negative of the k-mer hash set size,
@@ -56,12 +55,11 @@ fn hash_hv_serial(kmer_hash_set: &RapidHashSet<u64>, hv_d: usize) -> Vec<i32> {
 /// where \(N\) is the number of k-mer hash values, and \(hv^{i}\) is a binary hypervector derived from the k-mer hash.
 ///
 /// # Notes
-/// This function uses SIMD instructions to process 4 bits at a time, improving performance over the serial implementation.
+/// This function uses SIMD instructions to process 8 bits at a time, improving performance over the serial implementation.
 pub fn hash_hv(kmer_hash_set: &RapidHashSet<u64>, hv_d: usize) -> Vec<i32> {
     let num_seed = kmer_hash_set.len();
-    let mut hv = vec![-(num_seed as i32); hv_d];
-
     let num_chunk = hv_d / 32;
+    let mut hv = vec![-(num_seed as i32); hv_d];
 
     // Convert HashSet to Vec
     let seed_vec: Vec<u64> = kmer_hash_set.iter().cloned().collect();
@@ -72,6 +70,7 @@ pub fn hash_hv(kmer_hash_set: &RapidHashSet<u64>, hv_d: usize) -> Vec<i32> {
 
         // SIMD-based HV encoding
         for i in 0..num_chunk {
+            // 32 * 8 can be fit into an AVX2 register
             let rnd_bits = rng.next_u32();
 
             // Use SIMD to process 8 bits at a time
@@ -118,12 +117,12 @@ fn hv_norm_l2_sq_serial(hv: &Vec<i32>) -> f32 {
 /// Computes the squared L2 norm of a hypervector using a SIMD-optimized implementation.
 ///
 /// # Arguments
-/// * `a` - The hypervector represented as a slice of `i32`.
+/// * `hv` - The hypervector represented as a slice of `i32`.
 ///
 /// # Returns
 /// The squared L2 norm of the hypervector as an `f32`.
-pub fn hv_norm_l2_sq(a: &[i32]) -> f32 {
-    let a_f32: Vec<f32> = a.iter().map(|&x| x as f32).collect();
+pub fn hv_norm_l2_sq(hv: &[i32]) -> f32 {
+    let a_f32: Vec<f32> = hv.iter().map(|&x| x as f32).collect();
     crate::norm_l2_sq(&a_f32)
 }
 
