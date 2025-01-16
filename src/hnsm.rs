@@ -43,8 +43,8 @@ Subcommand groups:
     * info: size / count / masked / n50
     * records: one / some / order / split
     * transform: replace / rc / filter / dedup / mask / sixframe
-    * indexing: gz / range
-        * `hnsm gz` writes out the BGZF format and `hnsm range` reads it
+    * indexing: gz / range / chunk
+        * `hnsm gz` writes out the BGZF format
 
 * Fastq files
     * interleave
@@ -102,5 +102,6 @@ Subcommand groups:
     Ok(())
 }
 
+// TODO: chunk
 // TODO: Remove fully contained sequences
 // TODO: We lack the canonical k-mers

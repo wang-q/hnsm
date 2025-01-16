@@ -14,6 +14,7 @@
 * Finish `fasr xlsx`
 
 * Improve help texts
+* Use IndexMap for .loc
 
 ## 0.2.0 - 2024-12-20
 

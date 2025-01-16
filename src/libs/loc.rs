@@ -1,13 +1,12 @@
+use indexmap::IndexMap;
 use noodles_bgzf as bgzf;
 use noodles_fasta as fasta;
-use std::collections::HashMap;
-use std::io::{self, BufRead, Read, Seek, SeekFrom, Write};
-use std::{fs, path};
+use std::io::{BufRead, Read, Seek, SeekFrom};
 
 pub enum Input {
-    Buf(Box<dyn io::BufRead>),
-    File(fs::File),
-    Bgzf(bgzf::IndexedReader<fs::File>),
+    Buf(Box<dyn BufRead>),
+    File(std::fs::File),
+    Bgzf(bgzf::IndexedReader<std::fs::File>),
 }
 
 pub fn create_loc(infile: &str, locfile: &str, is_bgzf: bool) -> anyhow::Result<()> {
@@ -15,17 +14,13 @@ pub fn create_loc(infile: &str, locfile: &str, is_bgzf: bool) -> anyhow::Result<
         // http://www.htslib.org/doc/bgzip.html
         // Bgzip will attempt to ensure BGZF blocks end on a newline when the input is a text file.
         // The exception to this is where a single line is larger than a BGZF block (64Kb).
-        Input::Bgzf(
-            bgzf::indexed_reader::Builder::default()
-                .build_from_path(infile)
-                .unwrap(),
-        )
+        Input::Bgzf(bgzf::indexed_reader::Builder::default().build_from_path(infile)?)
     } else {
         Input::Buf(reader_buf(infile))
     };
 
-    let mut writer: Box<dyn io::Write> =
-        Box::new(io::BufWriter::new(fs::File::create(locfile).unwrap()));
+    let mut writer: Box<dyn std::io::Write> =
+        Box::new(std::io::BufWriter::new(std::fs::File::create(locfile)?));
 
     // https://www.ginkgobioworks.com/2023/03/17/even-more-rapid-retrieval-from-very-large-files-with-rust/
     let mut record_size = 0; // including header, sequence, newlines
@@ -68,23 +63,23 @@ pub fn create_loc(infile: &str, locfile: &str, is_bgzf: bool) -> anyhow::Result<
 }
 
 pub fn reader_buf(infile: &str) -> Box<dyn BufRead> {
-    let reader: Box<dyn io::BufRead> = {
-        let path = path::Path::new(infile);
-        let file = match fs::File::open(path) {
+    let reader: Box<dyn BufRead> = {
+        let path = std::path::Path::new(infile);
+        let file = match std::fs::File::open(path) {
             Err(why) => panic!("could not open {}: {}", path.display(), why),
             Ok(file) => file,
         };
 
-        Box::new(io::BufReader::new(file))
+        Box::new(std::io::BufReader::new(file))
     };
 
     reader
 }
 
-pub fn load_loc(loc_file: &String) -> anyhow::Result<HashMap<String, (u64, usize)>> {
+pub fn load_loc(loc_file: &String) -> anyhow::Result<IndexMap<String, (u64, usize)>> {
     let mut reader = reader_buf(loc_file);
 
-    let mut loc_of: HashMap<String, (u64, usize)> = HashMap::new();
+    let mut loc_of: IndexMap<String, (u64, usize)> = IndexMap::new();
     let mut line = String::new();
     while let Ok(num) = reader.by_ref().read_line(&mut line) {
         if num == 0 {
@@ -97,10 +92,7 @@ pub fn load_loc(loc_file: &String) -> anyhow::Result<HashMap<String, (u64, usize
 
         loc_of.insert(
             fields[0].to_string(),
-            (
-                fields[1].parse::<u64>().unwrap(),
-                fields[2].parse::<usize>().unwrap(),
-            ),
+            (fields[1].parse::<u64>()?, fields[2].parse::<usize>()?),
         );
 
         line.clear();
@@ -111,7 +103,7 @@ pub fn load_loc(loc_file: &String) -> anyhow::Result<HashMap<String, (u64, usize
 
 pub fn record_loc(
     reader: &mut Input,
-    loc_of: &HashMap<String, (u64, usize)>,
+    loc_of: &IndexMap<String, (u64, usize)>,
     rg: &str,
 ) -> anyhow::Result<fasta::Record> {
     let (offset, size) = loc_of.get(rg).unwrap();

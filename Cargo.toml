@@ -33,6 +33,7 @@ noodles-bgzf = "0.34.0"
 
 # data structure
 petgraph = "0.6.5"
+indexmap = "2.7.0"
 lru = "0.12.5"
 
 # hashing

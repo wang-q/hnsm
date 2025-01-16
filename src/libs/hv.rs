@@ -1,6 +1,6 @@
-use std::simd::prelude::*;
 use rand::{RngCore, SeedableRng};
 use rapidhash::{RapidHashSet, RapidRng};
+use std::simd::prelude::*;
 
 #[allow(dead_code)]
 // The original implementation is i16

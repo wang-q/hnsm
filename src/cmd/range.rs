@@ -1,6 +1,4 @@
 use clap::*;
-use std::collections::HashMap;
-use std::{ffi, fs, num, path};
 
 use noodles_bgzf as bgzf;
 use noodles_core::Position;
@@ -62,7 +60,7 @@ pub fn make_subcommand() -> Command {
             Arg::new("cache")
                 .long("cache")
                 .short('c')
-                .value_parser(value_parser!(num::NonZeroUsize))
+                .value_parser(value_parser!(std::num::NonZeroUsize))
                 .num_args(1)
                 .default_value("1")
                 .help("Set the capacity of the LRU cache"),
@@ -92,8 +90,8 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     };
 
     let is_bgzf = {
-        let path = path::Path::new(infile);
-        path.extension() == Some(ffi::OsStr::new("gz"))
+        let path = std::path::Path::new(infile);
+        path.extension() == Some(std::ffi::OsStr::new("gz"))
     };
 
     let mut ranges = if args.contains_id("ranges") {
@@ -110,26 +108,22 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
         ranges.append(&mut rgs);
     }
 
-    let opt_cache = *args.get_one::<num::NonZeroUsize>("cache").unwrap();
+    let opt_cache = *args.get_one::<std::num::NonZeroUsize>("cache").unwrap();
     let mut cache: lru::LruCache<String, fasta::Record> = lru::LruCache::new(opt_cache);
 
     //----------------------------
     // Open files
     //----------------------------
     let loc_file = format!("{}.loc", infile);
-    if !path::Path::new(&loc_file).is_file() {
+    if !std::path::Path::new(&loc_file).is_file() {
         hnsm::create_loc(infile, &loc_file, is_bgzf)?;
     }
-    let loc_of: HashMap<String, (u64, usize)> = hnsm::load_loc(&loc_file).unwrap();
+    let loc_of: indexmap::IndexMap<String, (u64, usize)> = hnsm::load_loc(&loc_file)?;
 
     let mut reader = if is_bgzf {
-        hnsm::Input::Bgzf(
-            bgzf::indexed_reader::Builder::default()
-                .build_from_path(infile)
-                .unwrap(),
-        )
+        hnsm::Input::Bgzf(bgzf::indexed_reader::Builder::default().build_from_path(infile)?)
     } else {
-        hnsm::Input::File(fs::File::open(path::Path::new(infile))?)
+        hnsm::Input::File(std::fs::File::open(std::path::Path::new(infile))?)
     };
 
     //----------------------------
