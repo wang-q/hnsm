@@ -1,9 +1,7 @@
 use clap::*;
-use hnsm::Minimizer;
 use noodles_fasta as fasta;
 use rayon::prelude::*;
 use std::io::Write;
-use std::iter::FromIterator;
 
 // Create clap subcommand arguments
 pub fn make_subcommand() -> Command {
@@ -337,37 +335,8 @@ fn load_file(
         let name = String::from_utf8(record.name().into())?;
         let seq = record.sequence();
 
-        let minimizers: Vec<u64> = match opt_hasher {
-            "rapid" => hnsm::JumpingMinimizer {
-                w: opt_window,
-                k: opt_kmer,
-                hasher: hnsm::RapidHash,
-            }
-            .mins(&seq[..]),
-            "fx" => hnsm::JumpingMinimizer {
-                w: opt_window,
-                k: opt_kmer,
-                hasher: hnsm::FxHash,
-            }
-            .mins(&seq[..]),
-            "murmur" => hnsm::JumpingMinimizer {
-                w: opt_window,
-                k: opt_kmer,
-                hasher: hnsm::MurmurHash3,
-            }
-            .mins(&seq[..]),
-            "mod" => {
-                let min_iter = minimizer_iter::MinimizerBuilder::<u64, _>::new_mod()
-                    .canonical()
-                    .minimizer_size(opt_kmer)
-                    .width(opt_window as u16)
-                    .iter(&seq[..]);
-
-                min_iter.map(|(min, _, _)| min).collect()
-            }
-            _ => unreachable!(),
-        };
-        let set: rapidhash::RapidHashSet<u64> = rapidhash::RapidHashSet::from_iter(minimizers);
+        let set: rapidhash::RapidHashSet<u64> =
+            hnsm::seq_mins(&seq[..], opt_hasher, opt_kmer, opt_window)?;
 
         if is_merge {
             all_set.extend(set);
