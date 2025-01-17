@@ -26,6 +26,7 @@ fn main() -> anyhow::Result<()> {
         .subcommand(cmd::n50::make_subcommand())
         .subcommand(cmd::one::make_subcommand())
         .subcommand(cmd::order::make_subcommand())
+        .subcommand(cmd::prefilter::make_subcommand())
         .subcommand(cmd::range::make_subcommand())
         .subcommand(cmd::rc::make_subcommand())
         .subcommand(cmd::replace::make_subcommand())
@@ -43,7 +44,7 @@ Subcommand groups:
     * info: size / count / masked / n50
     * records: one / some / order / split
     * transform: replace / rc / filter / dedup / mask / sixframe
-    * indexing: gz / range / chunk
+    * indexing: gz / range / prefilter
         * `hnsm gz` writes out the BGZF format
 
 * Fastq files
@@ -85,6 +86,7 @@ Subcommand groups:
         // index
         Some(("gz", sub_matches)) => cmd::gz::execute(sub_matches),
         Some(("range", sub_matches)) => cmd::range::execute(sub_matches),
+        Some(("prefilter", sub_matches)) => cmd::prefilter::execute(sub_matches),
         // fastq
         Some(("interleave", sub_matches)) => cmd::interleave::execute(sub_matches),
         // clustering
@@ -102,6 +104,5 @@ Subcommand groups:
     Ok(())
 }
 
-// TODO: chunk
 // TODO: Remove fully contained sequences
 // TODO: We lack the canonical k-mers
