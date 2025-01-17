@@ -1,4 +1,5 @@
 use itertools::Itertools;
+use std::iter::FromIterator;
 
 // These codes were adapted from https://curiouscoding.nl/posts/fast-minimizers/
 pub trait Hasher: Clone {

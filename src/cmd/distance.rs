@@ -248,7 +248,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     entries1.par_iter().for_each(|e1| {
         let mut lines = String::with_capacity(1024);
         for (i, e2) in entries2.iter().enumerate() {
-            let (total1, total2, inter, union, jaccard, containment, mash) =
+            let (total1, total2, inter, union, mash, jaccard, containment) =
                 calc_distances(&e1.set, &e2.set, opt_kmer);
 
             if !is_zero && jaccard == 0. {
@@ -409,5 +409,5 @@ fn calc_distances(
         ((-1.0 / opt_kmer as f64) * ((2.0 * jaccard) / (1.0 + jaccard)).ln()).abs()
     };
 
-    (total1, total2, inter, union, jaccard, containment, mash)
+    (total1, total2, inter, union, mash, jaccard, containment)
 }
