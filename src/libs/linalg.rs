@@ -125,6 +125,84 @@ pub fn norm_l2_sq(a: &[f32]) -> f32 {
     sums.reduce_sum()
 }
 
+/// Computes the mean (average) of a vector `a`.
+///
+/// # Arguments
+/// * `a` - The vector.
+///
+/// # Returns
+/// The mean of the vector `a`.
+///
+/// # Examples
+/// ```
+/// let a = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0];
+/// let mean_value = hnsm::mean(&a);
+/// assert_eq!(mean_value, 5.5);
+/// ```
+pub fn mean(a: &[f32]) -> f32 {
+    let (a_extra, a_chunks): (&[f32], &[[f32; LANES]]) = a.as_rchunks();
+
+    // Sum the extra elements (elements that don't fit into a full SIMD chunk)
+    let mut sum = a_extra.iter().sum::<f32>();
+
+    // Sum the elements in the SIMD chunks
+    let mut simd_sum = f32x8::splat(0.0);
+    a_chunks.into_iter().for_each(|chunk| {
+        simd_sum += f32x8::from_array(*chunk);
+    });
+
+    // Reduce the SIMD sum to a scalar value and add it to the total sum
+    sum += simd_sum.reduce_sum();
+
+    sum / a.len() as f32
+}
+
+/// Computes the Pearson correlation coefficient between two vectors `a` and `b`.
+///
+/// # Arguments
+/// * `a` - The first vector.
+/// * `b` - The second vector.
+///
+/// # Returns
+/// The Pearson correlation coefficient between `a` and `b`.
+/// If either vector is empty or their lengths do not match, returns `NaN`.
+///
+/// # Examples
+/// ```
+/// let a = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0];
+/// let b = [10.0, 9.0, 8.0, 7.0, 6.0, 5.0, 4.0, 3.0, 2.0, 1.0];
+/// let correlation = hnsm::pearson_correlation(&a, &b);
+/// assert_eq!(format!("{:.4}", correlation), "-1.0000".to_string()); // Perfect negative correlation
+///
+/// let empty: [f32; 0] = [];
+/// assert!(hnsm::pearson_correlation(&empty, &empty).is_nan()); // Check handling of empty vectors
+/// ```
+pub fn pearson_correlation(a: &[f32], b: &[f32]) -> f32 {
+    if a.len() != b.len() || a.is_empty() {
+        return f32::NAN; // Return NaN if lengths do not match or vectors are empty
+    }
+
+    // Compute means of a and b
+    let mean_a = mean(a);
+    let mean_b = mean(b);
+
+    let numerator = a.iter().zip(b.iter())
+        .map(|(a, b)| (a - mean_a) * (b - mean_b))
+        .sum::<f32>();
+
+    let denom1 = a.iter()
+        .map(|a| (a - mean_a).powi(2))
+        .sum::<f32>()
+        .sqrt();
+
+    let denom2 = b.iter()
+        .map(|b| (b - mean_b).powi(2))
+        .sum::<f32>()
+        .sqrt();
+
+    numerator / (denom1 * denom2)
+}
+
 /// Computes the Jaccard intersection of two vectors `a` and `b`.
 /// The Jaccard intersection is the sum of the minimum values of corresponding elements.
 ///
