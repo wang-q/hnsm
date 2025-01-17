@@ -14,7 +14,10 @@
 * Finish `fasr xlsx`
 
 * Improve help texts
-* Use IndexMap for .loc
+* `libs/loc.rs`
+  * Use IndexMap
+  * Add `read_offset()`
+  * Add `records_offset()`
 
 ## 0.2.0 - 2024-12-20
 

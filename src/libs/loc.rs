@@ -107,23 +107,11 @@ pub fn record_rg(
     rg: &str,
 ) -> anyhow::Result<fasta::Record> {
     let (offset, size) = loc_of.get(rg).unwrap();
-    let mut data_buf = vec![0; *size];
 
-    match reader {
-        Input::File(rdr) => {
-            rdr.seek(SeekFrom::Start(*offset))?;
-            rdr.read_exact(&mut data_buf)?;
-        }
-        Input::Bgzf(rdr) => {
-            rdr.seek(SeekFrom::Start(*offset))?;
-            rdr.read_exact(&mut data_buf)?;
-        }
-        Input::Buf(_) => unreachable!(),
-    }
-
+    let data_buf = read_offset(reader, *offset, *size)?;
     let mut fa_in = fasta::io::Reader::new(&data_buf[..]);
-    fa_in.read_definition(&mut String::new())?;
 
+    fa_in.read_definition(&mut String::new())?;
     let mut buf = Vec::new();
     fa_in.read_sequence(&mut buf)?;
 
@@ -133,6 +121,26 @@ pub fn record_rg(
 
     Ok(record)
 }
+
+pub fn records_offset(
+    reader: &mut Input,
+    offset: u64,
+    size: usize,
+) -> anyhow::Result<Vec<fasta::Record>> {
+    let mut records = Vec::new();
+
+    let data_buf = read_offset(reader, offset, size)?;
+    let mut fa_in = fasta::io::Reader::new(&data_buf[..]);
+
+    for result in fa_in.records() {
+        // obtain record or fail with error
+        let record = result?;
+        records.push(record);
+    }
+
+    Ok(records)
+}
+
 pub fn read_offset(
     reader: &mut Input,
     offset: u64,
