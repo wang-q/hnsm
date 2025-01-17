@@ -15,14 +15,14 @@ and identifies open reading frames (ORFs) in the translated protein sequences.
 The output includes the ORF sequences along with their positions and frames.
 
 Examples:
-    1. Perform six-frame translation on a FA file and output to stdout:
-       hnsm sixframe input.fa
+1. Perform six-frame translation on a FA file and output to stdout:
+   hnsm sixframe input.fa
 
-    2. Perform six-frame translation and save the results to a file:
-       hnsm sixframe input.fa -o output.fa
+2. Perform six-frame translation and save the results to a file:
+   hnsm sixframe input.fa -o output.fa
 
-    3. Combine filters (e.g., ORFs starting with M, ending with *, and at least 50 amino acids):
-       hnsm sixframe input.fa --len 50 --start --end
+3. Combine filters (e.g., ORFs starting with M, ending with *, and at least 50 amino acids):
+   hnsm sixframe input.fa --len 50 --start --end
 
 For more information on six-frame translation, visit: https://web.expasy.org/translate/
 

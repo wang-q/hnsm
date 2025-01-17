@@ -141,11 +141,7 @@ pub fn records_offset(
     Ok(records)
 }
 
-pub fn read_offset(
-    reader: &mut Input,
-    offset: u64,
-    size: usize,
-) -> anyhow::Result<Vec<u8>> {
+pub fn read_offset(reader: &mut Input, offset: u64, size: usize) -> anyhow::Result<Vec<u8>> {
     let mut data_buf = vec![0; size];
 
     match reader {
