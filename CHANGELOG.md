@@ -10,15 +10,18 @@
 
 * Add `hnsm mask`
 * Add `hnsm sixframe`
+* Add `hnsm hv`
 * Add `hnsm prefilter`
 * Add `--merge`, `--list`, and `--parallel` to `hnsm distance`
 * Finish `fasr xlsx`
 
 * Improve help texts
 * `libs/loc.rs`
-  * Use IndexMap
-  * Add `read_offset()`
-  * Add `records_offset()`
+    * Use IndexMap
+    * Add `read_offset()`
+    * Add `records_offset()`
+* `libs/hash.rs`
+    * Add `seq_mins()`
 
 ## 0.2.0 - 2024-12-20
 

@@ -79,11 +79,11 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
 
     let hnsm = std::env::current_exe()?.display().to_string();
 
-    for (i, (first, offset, size)) in chunks.iter().enumerate() {
-        let records = hnsm::read_offset(&mut reader, *offset, *size)?;
+    for (first, offset, size) in chunks.iter() {
+        let chunk = hnsm::read_offset(&mut reader, *offset, *size)?;
 
         let mut temp_file = tempfile::NamedTempFile::new()?;
-        temp_file.write_all(&records)?;
+        temp_file.write_all(&chunk)?;
         let temp_path = temp_file.path().to_str().unwrap().to_string();
 
         run_cmd!(

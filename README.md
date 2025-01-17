@@ -31,6 +31,7 @@ provides:
       * [PCoA](#pcoa)
     * [Block FA files](#block-fa-files)
     * [Genomes](#genomes)
+    * [Proteomes](#proteomes)
     * [Assemblies](#assemblies)
   * [Author](#author)
   * [License](#license)
@@ -324,85 +325,6 @@ K1J4J6_9GAMM        0.372263 0.416058 0.496350 0.518248 0.569343 0.372263 0.3722
 
 ```
 
-* proteomes
-
-```shell
-curl -L https://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/000/005/845/GCF_000005845.2_ASM584v2/GCF_000005845.2_ASM584v2_protein.faa.gz \
-    > tests/clust/mg1655.pro.fa.gz
-
-curl -L https://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/000/008/865/GCF_000008865.2_ASM886v2/GCF_000008865.2_ASM886v2_protein.faa.gz \
-    > tests/clust/sakai.pro.fa.gz
-
-curl -L https://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/000/006/765/GCF_000006765.1_ASM676v1/GCF_000006765.1_ASM676v1_protein.faa.gz \
-    > tests/clust/pao1.pro.fa.gz
-
-hnsm distance tests/clust/mg1655.pro.fa.gz tests/clust/pao1.pro.fa.gz -k 7 -w 2 |
-    rgr filter stdin --ne 3:1
-
-hyperfine --warmup 1 \
-    -n p1 \
-    'hnsm distance tests/clust/mg1655.pro.fa.gz tests/clust/pao1.pro.fa.gz -k 7 -w 2 -p 1 > /dev/null' \
-    -n p2 \
-    'hnsm distance tests/clust/mg1655.pro.fa.gz tests/clust/pao1.pro.fa.gz -k 7 -w 2 -p 2 > /dev/null' \
-    -n p3 \
-    'hnsm distance tests/clust/mg1655.pro.fa.gz tests/clust/pao1.pro.fa.gz -k 7 -w 2 -p 3 > /dev/null' \
-    -n p4 \
-    'hnsm distance tests/clust/mg1655.pro.fa.gz tests/clust/pao1.pro.fa.gz -k 7 -w 2 -p 4 > /dev/null' \
-    -n p6 \
-    'hnsm distance tests/clust/mg1655.pro.fa.gz tests/clust/pao1.pro.fa.gz -k 7 -w 2 -p 6 > /dev/null' \
-    -n p8 \
-    'hnsm distance tests/clust/mg1655.pro.fa.gz tests/clust/pao1.pro.fa.gz -k 7 -w 2 -p 8 > /dev/null' \
-    --export-markdown dis.md.tmp
-
-hyperfine --warmup 1 \
-    -n p1 \
-    'hnsm distance tests/clust/mg1655.pro.fa.gz tests/clust/pao1.pro.fa.gz -k 7 -w 2 --zero -p 1 > /dev/null' \
-    -n p2 \
-    'hnsm distance tests/clust/mg1655.pro.fa.gz tests/clust/pao1.pro.fa.gz -k 7 -w 2 --zero -p 2 > /dev/null' \
-    -n p3 \
-    'hnsm distance tests/clust/mg1655.pro.fa.gz tests/clust/pao1.pro.fa.gz -k 7 -w 2 --zero -p 3 > /dev/null' \
-    -n p4 \
-    'hnsm distance tests/clust/mg1655.pro.fa.gz tests/clust/pao1.pro.fa.gz -k 7 -w 2 --zero -p 4 > /dev/null' \
-    -n p6 \
-    'hnsm distance tests/clust/mg1655.pro.fa.gz tests/clust/pao1.pro.fa.gz -k 7 -w 2 --zero -p 6 > /dev/null' \
-    -n p8 \
-    'hnsm distance tests/clust/mg1655.pro.fa.gz tests/clust/pao1.pro.fa.gz -k 7 -w 2 --zero -p 8 > /dev/null' \
-    --export-markdown dis.md.tmp
-
-```
-
-* AMD Ryzen 7 8745HS
-
-| Command |       Mean [s] | Min [s] | Max [s] |    Relative |
-|:--------|---------------:|--------:|--------:|------------:|
-| `p1`    | 24.840 ± 0.377 |  24.161 |  25.319 | 8.36 ± 0.45 |
-| `p2`    | 11.150 ± 0.153 |  10.958 |  11.481 | 3.75 ± 0.20 |
-| `p3`    |  6.877 ± 0.083 |   6.743 |   7.022 | 2.31 ± 0.12 |
-| `p4`    |  5.178 ± 0.107 |   5.033 |   5.317 | 1.74 ± 0.10 |
-| `p6`    |  3.745 ± 0.205 |   3.508 |   4.080 | 1.26 ± 0.10 |
-| `p8`    |  2.972 ± 0.155 |   2.842 |   3.347 |        1.00 |
-
-| Command |       Mean [s] | Min [s] | Max [s] |    Relative |
-|:--------|---------------:|--------:|--------:|------------:|
-| `p1`    | 32.044 ± 0.776 |  30.726 |  32.970 | 8.78 ± 0.25 |
-| `p2`    | 15.014 ± 0.110 |  14.842 |  15.212 | 4.12 ± 0.07 |
-| `p3`    |  9.182 ± 0.080 |   8.987 |   9.246 | 2.52 ± 0.04 |
-| `p4`    |  6.885 ± 0.087 |   6.735 |   6.974 | 1.89 ± 0.04 |
-| `p6`    |  4.569 ± 0.110 |   4.492 |   4.831 | 1.25 ± 0.04 |
-| `p8`    |  3.648 ± 0.055 |   3.587 |   3.774 |        1.00 |
-
-* Six-frame
-
-```shell
-hnsm sixframe tests/pgr/sakai.fa.gz --len 35 |
-    hnsm distance stdin tests/clust/mg1655.pro.fa.gz -k 7 -w 2 -p 4 |
-    wc -l
-#21124
-
-hnsm range tests/pgr/sakai.fa.gz "NC_002695(+):4468532-4468696|frame=1"
-
-```
-
 #### Matrix conversion
 
 ```shell
@@ -664,6 +586,93 @@ lastz tests/pgr/pseudocat.fa tests/pgr/pseudopig.fa |
 pgr chain tests/pgr/pseudocat.fa tests/pgr/pseudopig.fa tests/pgr/lastz.psl
 
 lastz --self <(gzip -dcf tests/pgr/mg1655.fa.gz)
+
+```
+
+### Proteomes
+
+```shell
+curl -L https://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/000/005/845/GCF_000005845.2_ASM584v2/GCF_000005845.2_ASM584v2_protein.faa.gz \
+    > tests/clust/mg1655.pro.fa.gz
+
+curl -L https://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/000/008/865/GCF_000008865.2_ASM886v2/GCF_000008865.2_ASM886v2_protein.faa.gz \
+    > tests/clust/sakai.pro.fa.gz
+
+curl -L https://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/000/006/765/GCF_000006765.1_ASM676v1/GCF_000006765.1_ASM676v1_protein.faa.gz \
+    > tests/clust/pao1.pro.fa.gz
+
+hnsm distance tests/clust/mg1655.pro.fa.gz tests/clust/pao1.pro.fa.gz -k 7 -w 2 |
+    rgr filter stdin --ne 3:1
+
+hyperfine --warmup 1 \
+    -n p1 \
+    'hnsm distance tests/clust/mg1655.pro.fa.gz tests/clust/pao1.pro.fa.gz -k 7 -w 2 -p 1 > /dev/null' \
+    -n p2 \
+    'hnsm distance tests/clust/mg1655.pro.fa.gz tests/clust/pao1.pro.fa.gz -k 7 -w 2 -p 2 > /dev/null' \
+    -n p3 \
+    'hnsm distance tests/clust/mg1655.pro.fa.gz tests/clust/pao1.pro.fa.gz -k 7 -w 2 -p 3 > /dev/null' \
+    -n p4 \
+    'hnsm distance tests/clust/mg1655.pro.fa.gz tests/clust/pao1.pro.fa.gz -k 7 -w 2 -p 4 > /dev/null' \
+    -n p6 \
+    'hnsm distance tests/clust/mg1655.pro.fa.gz tests/clust/pao1.pro.fa.gz -k 7 -w 2 -p 6 > /dev/null' \
+    -n p8 \
+    'hnsm distance tests/clust/mg1655.pro.fa.gz tests/clust/pao1.pro.fa.gz -k 7 -w 2 -p 8 > /dev/null' \
+    --export-markdown dis.md.tmp
+
+hyperfine --warmup 1 \
+    -n p1 \
+    'hnsm distance tests/clust/mg1655.pro.fa.gz tests/clust/pao1.pro.fa.gz -k 7 -w 2 --zero -p 1 > /dev/null' \
+    -n p2 \
+    'hnsm distance tests/clust/mg1655.pro.fa.gz tests/clust/pao1.pro.fa.gz -k 7 -w 2 --zero -p 2 > /dev/null' \
+    -n p3 \
+    'hnsm distance tests/clust/mg1655.pro.fa.gz tests/clust/pao1.pro.fa.gz -k 7 -w 2 --zero -p 3 > /dev/null' \
+    -n p4 \
+    'hnsm distance tests/clust/mg1655.pro.fa.gz tests/clust/pao1.pro.fa.gz -k 7 -w 2 --zero -p 4 > /dev/null' \
+    -n p6 \
+    'hnsm distance tests/clust/mg1655.pro.fa.gz tests/clust/pao1.pro.fa.gz -k 7 -w 2 --zero -p 6 > /dev/null' \
+    -n p8 \
+    'hnsm distance tests/clust/mg1655.pro.fa.gz tests/clust/pao1.pro.fa.gz -k 7 -w 2 --zero -p 8 > /dev/null' \
+    --export-markdown dis.md.tmp
+
+```
+
+* AMD Ryzen 7 8745HS
+
+| Command |       Mean [s] | Min [s] | Max [s] |    Relative |
+|:--------|---------------:|--------:|--------:|------------:|
+| `p1`    | 24.840 ± 0.377 |  24.161 |  25.319 | 8.36 ± 0.45 |
+| `p2`    | 11.150 ± 0.153 |  10.958 |  11.481 | 3.75 ± 0.20 |
+| `p3`    |  6.877 ± 0.083 |   6.743 |   7.022 | 2.31 ± 0.12 |
+| `p4`    |  5.178 ± 0.107 |   5.033 |   5.317 | 1.74 ± 0.10 |
+| `p6`    |  3.745 ± 0.205 |   3.508 |   4.080 | 1.26 ± 0.10 |
+| `p8`    |  2.972 ± 0.155 |   2.842 |   3.347 |        1.00 |
+
+| Command |       Mean [s] | Min [s] | Max [s] |    Relative |
+|:--------|---------------:|--------:|--------:|------------:|
+| `p1`    | 32.044 ± 0.776 |  30.726 |  32.970 | 8.78 ± 0.25 |
+| `p2`    | 15.014 ± 0.110 |  14.842 |  15.212 | 4.12 ± 0.07 |
+| `p3`    |  9.182 ± 0.080 |   8.987 |   9.246 | 2.52 ± 0.04 |
+| `p4`    |  6.885 ± 0.087 |   6.735 |   6.974 | 1.89 ± 0.04 |
+| `p6`    |  4.569 ± 0.110 |   4.492 |   4.831 | 1.25 ± 0.04 |
+| `p8`    |  3.648 ± 0.055 |   3.587 |   3.774 |        1.00 |
+
+
+```shell
+hnsm hv tests/clust/mg1655.pro.fa.gz tests/clust/pao1.pro.fa.gz -k 7 -w 2
+
+hnsm distance tests/clust/mg1655.pro.fa.gz tests/clust/pao1.pro.fa.gz -k 7 -w 2 --merge
+
+```
+
+* Six-frame
+
+```shell
+hnsm sixframe tests/pgr/sakai.fa.gz --len 35 |
+    hnsm distance stdin tests/clust/mg1655.pro.fa.gz -k 7 -w 2 -p 4 |
+    wc -l
+#21124
+
+hnsm range tests/pgr/sakai.fa.gz "NC_002695(+):4468532-4468696|frame=1"
 
 ```
 

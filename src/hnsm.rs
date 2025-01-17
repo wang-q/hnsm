@@ -20,6 +20,7 @@ fn main() -> anyhow::Result<()> {
         .subcommand(cmd::distance::make_subcommand())
         .subcommand(cmd::filter::make_subcommand())
         .subcommand(cmd::gz::make_subcommand())
+        .subcommand(cmd::hv::make_subcommand())
         .subcommand(cmd::interleave::make_subcommand())
         .subcommand(cmd::mask::make_subcommand())
         .subcommand(cmd::masked::make_subcommand())
@@ -51,7 +52,7 @@ Subcommand groups:
     * interleave
 
 * Clustering
-    * DNA/protein: distance
+    * DNA/protein: distance / hv
     * vectors: similarity
     * convert
     * cluster
@@ -91,6 +92,7 @@ Subcommand groups:
         Some(("interleave", sub_matches)) => cmd::interleave::execute(sub_matches),
         // clustering
         Some(("distance", sub_matches)) => cmd::distance::execute(sub_matches),
+        Some(("hv", sub_matches)) => cmd::hv::execute(sub_matches),
         Some(("similarity", sub_matches)) => cmd::similarity::execute(sub_matches),
         Some(("convert", sub_matches)) => cmd::convert::execute(sub_matches),
         Some(("cluster", sub_matches)) => cmd::cluster::execute(sub_matches),
