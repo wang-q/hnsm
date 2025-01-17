@@ -1,6 +1,6 @@
 use itertools::Itertools;
 
-// This code is adapted from https://curiouscoding.nl/posts/fast-minimizers/
+// These codes were adapted from https://curiouscoding.nl/posts/fast-minimizers/
 pub trait Hasher: Clone {
     fn hash(&self, t: &[u8]) -> u64;
     fn hash_kmers(&mut self, k: usize, t: &[u8]) -> Vec<u64> {
@@ -74,4 +74,45 @@ impl<H: Hasher> Minimizer for JumpingMinimizer<H> {
     fn mins(&mut self, text: &[u8]) -> Vec<u64> {
         self.minimizer(text).iter().map(|(min, _)| *min).collect()
     }
+}
+
+pub fn seq_mins(
+    seq: &[u8],
+    opt_hasher: &str,
+    opt_kmer: usize,
+    opt_window: usize,
+) -> anyhow::Result<rapidhash::RapidHashSet<u64>> {
+    let minimizers: Vec<u64> = match opt_hasher {
+        "rapid" => JumpingMinimizer {
+            w: opt_window,
+            k: opt_kmer,
+            hasher: RapidHash,
+        }
+        .mins(&seq[..]),
+        "fx" => JumpingMinimizer {
+            w: opt_window,
+            k: opt_kmer,
+            hasher: FxHash,
+        }
+        .mins(&seq[..]),
+        "murmur" => JumpingMinimizer {
+            w: opt_window,
+            k: opt_kmer,
+            hasher: MurmurHash3,
+        }
+        .mins(&seq[..]),
+        "mod" => {
+            let min_iter = minimizer_iter::MinimizerBuilder::<u64, _>::new_mod()
+                .canonical()
+                .minimizer_size(opt_kmer)
+                .width(opt_window as u16)
+                .iter(&seq[..]);
+
+            min_iter.map(|(min, _, _)| min).collect()
+        }
+        _ => unreachable!(),
+    };
+    let hashset: rapidhash::RapidHashSet<u64> = rapidhash::RapidHashSet::from_iter(minimizers);
+
+    Ok(hashset)
 }
