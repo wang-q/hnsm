@@ -133,3 +133,24 @@ pub fn record_rg(
 
     Ok(record)
 }
+pub fn read_offset(
+    reader: &mut Input,
+    offset: u64,
+    size: usize,
+) -> anyhow::Result<Vec<u8>> {
+    let mut data_buf = vec![0; size];
+
+    match reader {
+        Input::File(rdr) => {
+            rdr.seek(SeekFrom::Start(offset))?;
+            rdr.read_exact(&mut data_buf)?;
+        }
+        Input::Bgzf(rdr) => {
+            rdr.seek(SeekFrom::Start(offset))?;
+            rdr.read_exact(&mut data_buf)?;
+        }
+        Input::Buf(_) => unreachable!(),
+    }
+
+    Ok(data_buf)
+}
