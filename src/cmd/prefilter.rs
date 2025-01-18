@@ -2,12 +2,13 @@ use clap::*;
 use cmd_lib::*;
 use noodles_bgzf as bgzf;
 use noodles_fasta as fasta;
+use rayon::prelude::*;
 use std::io::Write;
 
 // Create clap subcommand arguments
 pub fn make_subcommand() -> Command {
     Command::new("prefilter")
-        .about("Prefilter genome/metagenome assembly by hypervectors")
+        .about("Prefilter genome/metagenome assembly by amino acid minimizers")
         .after_help(
             r###"
 * <infile> can be plain text or bgzf but not stdin or gzip
@@ -36,6 +37,41 @@ pub fn make_subcommand() -> Command {
                 .help("Size of each chunk in bytes"),
         )
         .arg(
+            Arg::new("len")
+                .long("len")
+                .num_args(1)
+                .default_value("15")
+                .value_parser(value_parser!(usize))
+                .help("Minimum length of the amino acid sequence to consider"),
+        )
+        .arg(
+            Arg::new("kmer")
+                .long("kmer")
+                .short('k')
+                .num_args(1)
+                .default_value("7")
+                .value_parser(value_parser!(usize))
+                .help("K-mer size"),
+        )
+        .arg(
+            Arg::new("window")
+                .long("window")
+                .short('w')
+                .num_args(1)
+                .default_value("1")
+                .value_parser(value_parser!(usize))
+                .help("Window size for minimizers"),
+        )
+        .arg(
+            Arg::new("parallel")
+                .long("parallel")
+                .short('p')
+                .num_args(1)
+                .default_value("1")
+                .value_parser(value_parser!(usize))
+                .help("Number of threads for parallel processing"),
+        )
+        .arg(
             Arg::new("outfile")
                 .long("outfile")
                 .short('o')
@@ -54,6 +90,15 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     let match_file = args.get_one::<String>("match").unwrap();
 
     let opt_chunk = *args.get_one::<usize>("chunk").unwrap();
+    let opt_len = *args.get_one::<usize>("len").unwrap();
+    let opt_kmer = *args.get_one::<usize>("kmer").unwrap();
+    let opt_window = *args.get_one::<usize>("window").unwrap();
+
+    // Set the number of threads for rayon
+    let opt_parallel = *args.get_one::<usize>("parallel").unwrap();
+    rayon::ThreadPoolBuilder::new()
+        .num_threads(opt_parallel)
+        .build_global()?;
 
     let is_bgzf = {
         let path = std::path::Path::new(infile);
@@ -68,35 +113,57 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
         hnsm::create_loc(infile, &loc_file, is_bgzf)?;
     }
 
-    let mut reader = if is_bgzf {
-        hnsm::Input::Bgzf(bgzf::indexed_reader::Builder::default().build_from_path(infile)?)
-    } else {
-        hnsm::Input::File(std::fs::File::open(std::path::Path::new(infile))?)
-    };
-
     // Split .loc file into chunks
     let chunks = split_loc_file(&loc_file, opt_chunk)?;
 
     let hnsm = std::env::current_exe()?.display().to_string();
 
-    for (first, offset, size) in chunks.iter() {
-        let chunk = hnsm::read_offset(&mut reader, *offset, *size)?;
+    chunks.par_iter().for_each_init(
+        || {
+            // Init reader for each chunk
+            if is_bgzf {
+                hnsm::Input::Bgzf(
+                    bgzf::indexed_reader::Builder::default()
+                        .build_from_path(infile)
+                        .unwrap(),
+                )
+            } else {
+                hnsm::Input::File(std::fs::File::open(std::path::Path::new(infile)).unwrap())
+            }
+        },
+        |reader, (_, offset, size)| {
+            let chunk = hnsm::read_offset(reader, *offset, *size).unwrap();
 
-        let mut temp_file = tempfile::NamedTempFile::new()?;
-        temp_file.write_all(&chunk)?;
-        let temp_path = temp_file.path().to_str().unwrap().to_string();
+            let mut temp_file = tempfile::NamedTempFile::new().unwrap();
+            temp_file.write_all(&chunk).unwrap();
+            let temp_path = temp_file.path().to_str().unwrap().to_string();
 
-        run_cmd!(
-            ${hnsm} sixframe ${temp_path} --len 15 |
-                ${hnsm} distance stdin ${match_file}
-        )?;
+            run_cmd!(
+                ${hnsm} sixframe ${temp_path} --len ${opt_len} |
+                    ${hnsm} distance stdin ${match_file} -k ${opt_kmer} -w ${opt_window}
+            )
+            .unwrap();
+        },
+    );
 
-        // eprintln!(
-        //     "Processed chunk {}: first sequence = {}, temp file = {:?}",
-        //     i, first, temp_path
-        // );
-        // hnsm::pause();
-    }
+    // for (first, offset, size) in chunks.iter() {
+    //     let chunk = hnsm::read_offset(&mut reader, *offset, *size)?;
+    //
+    //     let mut temp_file = tempfile::NamedTempFile::new()?;
+    //     temp_file.write_all(&chunk)?;
+    //     let temp_path = temp_file.path().to_str().unwrap().to_string();
+    //
+    //     run_cmd!(
+    //         ${hnsm} sixframe ${temp_path} --len ${opt_len} |
+    //             ${hnsm} distance stdin ${match_file} -k 7 -w 2
+    //     )?;
+    //
+    //     // eprintln!(
+    //     //     "Processed chunk {}: first sequence = {}, temp file = {:?}",
+    //     //     i, first, temp_path
+    //     // );
+    //     // hnsm::pause();
+    // }
 
     Ok(())
 }
