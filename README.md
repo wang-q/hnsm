@@ -705,6 +705,12 @@ hnsm range tests/pgr/sakai.fa.gz "NC_002695(+):4468532-4468696|frame=1"
 ```shell
 cargo run --bin hnsm prefilter tests/index/final.contigs.fa tests/clust/IBPA.fa
 
+# SRR6323163 - APH(3')-IIIa
+# 3300030246 - acrB
+hnsm prefilter tests/clust/SRR6323163.fa.gz "tests/clust/APH(3')-IIIa.fa"
+hnsm prefilter tests/clust/SRR6323163.fa.gz "tests/clust/acrB.fa"
+
+hnsm range tests/clust/SRR6323163.fa.gz "k141_4576(-):285-455|frame=2"
 
 ```
 
