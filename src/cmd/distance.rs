@@ -189,12 +189,32 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     let is_list = args.get_flag("list"); // Whether to treat infiles as list files
     let opt_parallel = *args.get_one::<usize>("parallel").unwrap();
 
+    // Create a channel for sending results to the writer thread
+    let (sender, receiver) = crossbeam::channel::bounded::<String>(256);
+
+    // Spawn a writer thread
+    let output = args.get_one::<String>("outfile").unwrap().to_string();
+    let writer_thread = std::thread::spawn(move || {
+        let mut writer = intspan::writer(&output);
+        for result in receiver {
+            writer.write_all(result.as_bytes()).unwrap();
+        }
+    });
+
+    // Set the number of threads for rayon
+    rayon::ThreadPoolBuilder::new()
+        .num_threads(opt_parallel)
+        .build_global()?;
+
     let infiles = args
         .get_many::<String>("infiles")
         .unwrap()
         .map(|s| s.as_str())
         .collect::<Vec<_>>();
 
+    //----------------------------
+    // Ops
+    //----------------------------
     // Load data based on the number of input files and the --list flag
     let (entries1, entries2) = if infiles.len() == 1 {
         // Single file
@@ -221,26 +241,6 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
         let entries2 = load_entries(&paths2, opt_hasher, opt_kmer, opt_window, is_merge)?;
         (entries1, entries2) // Calculate pairwise distances between the two sets
     };
-
-    //----------------------------
-    // Ops
-    //----------------------------
-    // Create a channel for sending results to the writer thread
-    let (sender, receiver) = crossbeam::channel::bounded::<String>(256);
-
-    // Spawn a writer thread
-    let output = args.get_one::<String>("outfile").unwrap().to_string();
-    let writer_thread = std::thread::spawn(move || {
-        let mut writer = intspan::writer(&output);
-        for result in receiver {
-            writer.write_all(result.as_bytes()).unwrap();
-        }
-    });
-
-    // Set the number of threads for rayon
-    rayon::ThreadPoolBuilder::new()
-        .num_threads(opt_parallel)
-        .build_global()?;
 
     // Use rayon to parallelize the outer loop
     entries1.par_iter().for_each(|e1| {

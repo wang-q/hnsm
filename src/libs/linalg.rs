@@ -186,19 +186,15 @@ pub fn pearson_correlation(a: &[f32], b: &[f32]) -> f32 {
     let mean_a = mean(a);
     let mean_b = mean(b);
 
-    let numerator = a.iter().zip(b.iter())
+    let numerator = a
+        .iter()
+        .zip(b.iter())
         .map(|(a, b)| (a - mean_a) * (b - mean_b))
         .sum::<f32>();
 
-    let denom1 = a.iter()
-        .map(|a| (a - mean_a).powi(2))
-        .sum::<f32>()
-        .sqrt();
+    let denom1 = a.iter().map(|a| (a - mean_a).powi(2)).sum::<f32>().sqrt();
 
-    let denom2 = b.iter()
-        .map(|b| (b - mean_b).powi(2))
-        .sum::<f32>()
-        .sqrt();
+    let denom2 = b.iter().map(|b| (b - mean_b).powi(2)).sum::<f32>().sqrt();
 
     numerator / (denom1 * denom2)
 }
