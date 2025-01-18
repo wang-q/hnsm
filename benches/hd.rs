@@ -272,19 +272,28 @@ fn bench_encode_hash_hd(c: &mut Criterion) {
         b.iter(|| encode_hash_hd_small(black_box(&kmer_hash_set_small), hv_d))
     });
 
-    // // Benchmark medium dataset
-    // c.bench_function("encode_hash_hd_rapid_medium", |b| {
-    //     b.iter(|| encode_hash_hd_rapid(black_box(&kmer_hash_set_medium), hv_d))
-    // });
-    // c.bench_function("encode_hash_hd_wy_medium", |b| {
-    //     b.iter(|| encode_hash_hd_wy(black_box(&kmer_hash_set_medium), hv_d))
-    // });
-    // c.bench_function("encode_hash_hd_std_medium", |b| {
-    //     b.iter(|| encode_hash_hd_std(black_box(&kmer_hash_set_medium), hv_d))
-    // });
-    // c.bench_function("encode_hash_hd_small_medium", |b| {
-    //     b.iter(|| encode_hash_hd_small(black_box(&kmer_hash_set_medium), hv_d))
-    // });
+    // Benchmark medium dataset
+    c.bench_function("encode_hash_hd_simd_medium", |b| {
+        b.iter(|| encode_hash_hd_simd(black_box(&kmer_hash_set_medium), hv_d))
+    });
+    c.bench_function("encode_hash_hd_simd2_medium", |b| {
+        b.iter(|| encode_hash_hd_simd2(black_box(&kmer_hash_set_medium), hv_d))
+    });
+    c.bench_function("encode_hash_hd_simd3_medium", |b| {
+        b.iter(|| encode_hash_hd_simd3(black_box(&kmer_hash_set_medium), hv_d))
+    });
+    c.bench_function("encode_hash_hd_rapid_medium", |b| {
+        b.iter(|| encode_hash_hd_rapid(black_box(&kmer_hash_set_medium), hv_d))
+    });
+    c.bench_function("encode_hash_hd_wy_medium", |b| {
+        b.iter(|| encode_hash_hd_wy(black_box(&kmer_hash_set_medium), hv_d))
+    });
+    c.bench_function("encode_hash_hd_std_medium", |b| {
+        b.iter(|| encode_hash_hd_std(black_box(&kmer_hash_set_medium), hv_d))
+    });
+    c.bench_function("encode_hash_hd_small_medium", |b| {
+        b.iter(|| encode_hash_hd_small(black_box(&kmer_hash_set_medium), hv_d))
+    });
 }
 
 // Define benchmark group
