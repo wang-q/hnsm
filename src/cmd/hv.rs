@@ -1,5 +1,4 @@
 use clap::*;
-use hnsm::{hv_cardinality, hv_dot};
 use noodles_fasta as fasta;
 use rayon::prelude::*;
 use std::io::Write;
@@ -307,24 +306,29 @@ fn calc_distances(
     s1: &Vec<i32>,
     s2: &Vec<i32>,
     opt_kmer: usize,
-) -> (usize, usize, usize, usize, f64, f64, f64) {
-    let hv_d = s1.len();
+) -> (usize, usize, usize, usize, f32, f32, f32) {
+    let card1 = hnsm::hv_cardinality(s1);
+    let card2 = hnsm::hv_cardinality(s2);
 
-    let card1 = hv_cardinality(s1, hv_d);
-    let card2 = hv_cardinality(s2, hv_d);
+    let inter = hnsm::hv_dot(s1, s2).min(card1 as f32).min(card2 as f32);
+    let union = card1 as f32 + card2 as f32 - inter;
 
-    let inter = hv_dot(s1, s2) as usize;
-    let union = card1 + card2 - inter;
-
-    let jaccard = inter as f64 / union as f64;
-    let containment = inter as f64 / card1 as f64;
-
+    let jaccard = inter / union;
+    let containment = inter / card1 as f32;
     // https://mash.readthedocs.io/en/latest/distances.html#mash-distance-formulation
     let mash = if jaccard == 0.0 {
         1.0
     } else {
-        ((-1.0 / opt_kmer as f64) * ((2.0 * jaccard) / (1.0 + jaccard)).ln()).abs()
+        ((-1.0 / opt_kmer as f32) * ((2.0 * jaccard) / (1.0 + jaccard)).ln()).abs()
     };
 
-    (card1, card2, inter, union, mash, jaccard, containment)
+    (
+        card1,
+        card2,
+        inter as usize,
+        union as usize,
+        mash,
+        jaccard,
+        containment,
+    )
 }

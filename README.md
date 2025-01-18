@@ -656,13 +656,37 @@ hyperfine --warmup 1 \
 | `p6`    |  4.569 ± 0.110 |   4.492 |   4.831 | 1.25 ± 0.04 |
 | `p8`    |  3.648 ± 0.055 |   3.587 |   3.774 |        1.00 |
 
+* Hypervector
 
 ```shell
-hnsm hv tests/clust/mg1655.pro.fa.gz tests/clust/pao1.pro.fa.gz -k 7 -w 2
+hnsm hv tests/clust/IBPA.fa
+#tests/clust/IBPA.fa     tests/clust/IBPA.fa     776     776     776     776     0.0000  1.0000  1.0000
+hnsm distance tests/clust/IBPA.fa --merge
+#tests/clust/IBPA.fa     tests/clust/IBPA.fa     763     763     763     763     0.0000  1.0000  1.0000
 
-hnsm distance tests/clust/mg1655.pro.fa.gz tests/clust/pao1.pro.fa.gz -k 7 -w 2 --merge
+hnsm hv tests/clust/mg1655.pro.fa.gz
+#tests/clust/mg1655.pro.fa.gz    tests/clust/mg1655.pro.fa.gz    1240734 1240734 1240734 1240734 0.0000  1.0000  1.0000
+hnsm distance tests/clust/mg1655.pro.fa.gz --merge
+#tests/clust/mg1655.pro.fa.gz    tests/clust/mg1655.pro.fa.gz    1267403 1267403 1267403 1267403 0.0000  1.0000  1.0000
+
+hnsm hv tests/clust/mg1655.pro.fa.gz tests/clust/pao1.pro.fa.gz -k 7 -w 1
+#tests/clust/mg1655.pro.fa.gz    tests/clust/pao1.pro.fa.gz      1240734 1733273 81195   2892811 0.4154  0.0281  0.0654
+hnsm distance tests/clust/mg1655.pro.fa.gz tests/clust/pao1.pro.fa.gz -k 7 -w 1 --merge
+#tests/clust/mg1655.pro.fa.gz    tests/clust/pao1.pro.fa.gz      1267403 1770832 60605   2977630 0.4602  0.0204  0.0478
+
+hyperfine --warmup 1 \
+    -n distance \
+    'hnsm distance tests/clust/mg1655.pro.fa.gz tests/clust/pao1.pro.fa.gz -k 7 -w 2 -p 1 --merge > /dev/null' \
+    -n hv \
+    'hnsm hv tests/clust/mg1655.pro.fa.gz tests/clust/pao1.pro.fa.gz -k 7 -w 2 -p 1 > /dev/null' \
+    --export-markdown dis.md.tmp
 
 ```
+
+| Command    |    Mean [ms] | Min [ms] | Max [ms] |    Relative |
+|:-----------|-------------:|---------:|---------:|------------:|
+| `distance` |  161.5 ± 3.3 |    154.6 |    167.4 |        1.00 |
+| `hv`       | 1571.1 ± 4.4 |   1564.7 |   1577.3 | 9.73 ± 0.20 |
 
 * Six-frame
 

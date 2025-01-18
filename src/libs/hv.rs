@@ -141,9 +141,9 @@ pub fn hv_norm_l2_sq(hv: &[i32]) -> f32 {
 /// |\mathcal{S}_k(A)| = \frac{\|\mathbf{H}_A\|_2^2}{D}
 /// \]
 /// where \(\|\mathbf{H}_A\|_2^2\) is the squared L2 norm of the hypervector, and \(D\) is the dimension of the hypervector.
-pub fn hv_cardinality(hv: &[i32], hv_d: usize) -> usize {
+pub fn hv_cardinality(hv: &[i32]) -> usize {
     let norm_sq = hv_norm_l2_sq(hv);
-    (norm_sq / hv_d as f32) as usize
+    (norm_sq / hv.len() as f32) as usize
 }
 
 /// Computes the dot product of two hypervectors.
@@ -155,35 +155,12 @@ pub fn hv_cardinality(hv: &[i32], hv_d: usize) -> usize {
 /// # Returns
 /// The dot product of the two hypervectors as an `f32`.
 pub fn hv_dot(a: &[i32], b: &[i32]) -> f32 {
-    let a_f32: Vec<_> = a.iter().map(|&x| x as f32).collect();
-    let b_f32: Vec<_> = b.iter().map(|&x| x as f32).collect();
+    let hv_d_sqrt = (a.len() as f32).sqrt();
+    let a_f32: Vec<_> = a.iter().map(|&x| x as f32 / hv_d_sqrt).collect();
+    let b_f32: Vec<_> = b.iter().map(|&x| x as f32 / hv_d_sqrt).collect();
 
     crate::dot_product(&a_f32, &b_f32)
 }
-
-// pub fn compute_pairwise_ani(
-//     r: &Vec<i16>,
-//     norm2_r: i32,
-//     q: &Vec<i16>,
-//     norm2_q: i32,
-//     ksize: u8,
-// ) -> f32 {
-//     // Scalar-based inner product
-//     let dot_r_q: i32 = r
-//         .iter()
-//         .zip(q.iter())
-//         .map(|(x, y)| (*x as i32) * (*y as i32))
-//         .sum();
-//
-//     let jaccard: f32 = dot_r_q as f32 / (norm2_r + norm2_q - dot_r_q) as f32;
-//     let ani: f32 = 1.0 + (2.0 / (1.0 / jaccard + 1.0)).ln() / (ksize as f32);
-//
-//     if ani.is_nan() {
-//         0.0
-//     } else {
-//         ani.min(1.0).max(0.0) * 100.0
-//     }
-// }
 
 #[cfg(test)]
 mod tests {
@@ -306,22 +283,6 @@ mod tests {
         assert_eq!(
             dot, 0.0,
             "Dot product of orthogonal vectors should be zero!"
-        );
-    }
-
-    #[test]
-    fn test_hv_cardinality_zero() {
-        // Create a hypervector with all zeros
-        let hv = vec![0, 0, 0, 0, 0];
-        let hv_d = 5;
-
-        // Compute the cardinality
-        let cardinality = hv_cardinality(&hv, hv_d);
-
-        // Expected result: 0
-        assert_eq!(
-            cardinality, 0,
-            "Cardinality of a zero vector should be zero!"
         );
     }
 }

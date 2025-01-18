@@ -105,6 +105,54 @@ pub fn encode_hash_hd_simd2(kmer_hash_set: &HashSet<u64>, hv_d: usize) -> Vec<i3
     hv
 }
 
+pub fn encode_hash_hd_simd3(kmer_hash_set: &HashSet<u64>, hv_d: usize) -> Vec<i32> {
+    let num_seed = kmer_hash_set.len();
+    let mut hv = vec![-(num_seed as i32); hv_d];
+
+    let num_chunk = hv_d / 64;
+    // Convert HashSet to Vec
+    let seed_vec: Vec<u64> = kmer_hash_set.iter().cloned().collect();
+
+    // Loop through all seeds
+    for hash in seed_vec.iter() {
+        let mut rng = RapidRng::seed_from_u64(*hash);
+
+        // SIMD-based HV encoding
+        for i in 0..num_chunk {
+            let rnd_bits = rng.next_u64();
+            let bits_ary: [u8; 8] = rnd_bits.to_be_bytes();
+
+            // Use SIMD to process 8 bits at a time
+            for (bi, j) in (0..64).step_by(8).enumerate() {
+                let bit_mask = u8x8::splat(1);
+                let shift = Simd::from_array([
+                    j as u8,
+                    (j + 1) as u8,
+                    (j + 2) as u8,
+                    (j + 3) as u8,
+                    (j + 4) as u8,
+                    (j + 5) as u8,
+                    (j + 6) as u8,
+                    (j + 7) as u8,
+                ]);
+                let bits = (u8x8::splat(bits_ary[bi]) >> shift) & bit_mask;
+                let bits_i32 = bits.cast::<i32>() << Simd::splat(1);
+
+                // Load the target HV values
+                let mut hv_simd = i32x8::from_slice(&hv[i * 64 + j..i * 64 + j + 8]);
+
+                // Accumulate the bits
+                hv_simd += bits_i32;
+
+                // Store the updated HV values
+                hv_simd.copy_to_slice(&mut hv[i * 64 + j..i * 64 + j + 8]);
+            }
+        }
+    }
+
+    hv
+}
+
 pub fn encode_hash_hd_rapid(kmer_hash_set: &HashSet<u64>, hv_d: usize) -> Vec<i16> {
     let seed_vec = Vec::from_iter(kmer_hash_set.clone());
     let mut hv = vec![-(kmer_hash_set.len() as i16); hv_d];
@@ -207,6 +255,9 @@ fn bench_encode_hash_hd(c: &mut Criterion) {
     });
     c.bench_function("encode_hash_hd_simd2_small", |b| {
         b.iter(|| encode_hash_hd_simd2(black_box(&kmer_hash_set_small), hv_d))
+    });
+    c.bench_function("encode_hash_hd_simd3_small", |b| {
+        b.iter(|| encode_hash_hd_simd3(black_box(&kmer_hash_set_small), hv_d))
     });
     c.bench_function("encode_hash_hd_rapid_small", |b| {
         b.iter(|| encode_hash_hd_rapid(black_box(&kmer_hash_set_small), hv_d))
