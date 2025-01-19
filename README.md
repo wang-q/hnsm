@@ -397,19 +397,19 @@ fasr separate tests/fasr/example.fas -o . --suffix .tmp
 
 spoa tests/fasr/refine.fasta -r 1
 
-cargo run --bin fasr consensus tests/fasr/example.fas
-cargo run --bin fasr consensus tests/fasr/refine.fas
-cargo run --bin fasr consensus tests/fasr/refine.fas --outgroup -p 2
+fasr consensus tests/fasr/example.fas
+fasr consensus tests/fasr/refine.fas
+fasr consensus tests/fasr/refine.fas --outgroup -p 2
 
-cargo run --bin fasr refine tests/fasr/example.fas
-cargo run --bin fasr refine tests/fasr/example.fas --msa none --chop 10
-cargo run --bin fasr refine tests/fasr/refine2.fas --msa clustalw --outgroup
-cargo run --bin fasr refine tests/fasr/example.fas --quick
+fasr refine tests/fasr/example.fas
+fasr refine tests/fasr/example.fas --msa none --chop 10
+fasr refine tests/fasr/refine2.fas --msa clustalw --outgroup
+fasr refine tests/fasr/example.fas --quick
 
-cargo run --bin fasr split tests/fasr/example.fas --simple
-cargo run --bin fasr split tests/fasr/example.fas -o . --chr --suffix .tmp
+fasr split tests/fasr/example.fas --simple
+fasr split tests/fasr/example.fas -o . --chr --suffix .tmp
 
-cargo run --bin fasr slice tests/fasr/slice.json tests/fasr/slice.fas --name S288c
+fasr slice tests/fasr/slice.json tests/fasr/slice.fas --name S288c
 
 cargo run --bin fasr join tests/fasr/S288cvsYJM789.slice.fas --name YJM789
 cargo run --bin fasr join \
