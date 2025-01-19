@@ -175,7 +175,7 @@ Options:
 
 ### FA files
 
-```shell
+```bash
 hnsm size tests/fasta/ufasta.fa
 hnsm count tests/fasta/ufasta.fa.gz
 hnsm masked tests/fasta/ufasta.fa
@@ -218,7 +218,7 @@ However, for bacterial genome or metagenome sequences, loading a complete sequen
 and `hnsm range` will use the LRU cache to store the recently used sequences to reduce disk accesses
 and thus speed up the process. In addition, plain text files use the same indexing format as BGZF.
 
-```shell
+```bash
 # gz
 bgzip -c tests/index/final.contigs.fa > tests/index/final.contigs.fa.gz;
 bgzip -r tests/index/final.contigs.fa.gz
@@ -239,7 +239,7 @@ hnsm range tests/index/final.contigs.fa.gz -r tests/index/sample.rg
 
 ### FQ
 
-```shell
+```bash
 hnsm interleave tests/fasta/ufasta.fa.gz tests/fasta/ufasta.fa
 
 hnsm interleave tests/fasta/ufasta.fa
@@ -256,7 +256,7 @@ hnsm interleave --fq tests/fastq/R1.fq.gz
 
 #### Similarity and dissimilarity (distance) of vectors
 
-```shell
+```bash
 hnsm similarity tests/clust/domain.tsv --mode euclid --bin
 
 hnsm similarity tests/clust/domain.tsv --mode cosine --bin
@@ -327,7 +327,7 @@ K1J4J6_9GAMM        0.372263 0.416058 0.496350 0.518248 0.569343 0.372263 0.3722
 
 #### Matrix conversion
 
-```shell
+```bash
 hnsm convert tests/clust/IBPA.fa.tsv --mode matrix
 
 hnsm convert tests/clust/IBPA.fa.tsv --mode lower
@@ -338,7 +338,7 @@ hnsm convert tests/clust/IBPA.mat --mode pair
 
 #### DBSCAN
 
-```shell
+```bash
 hnsm cluster tests/clust/IBPA.fa.tsv --mode dbscan --eps 0.05 --min_points 2
 
 cat tests/clust/IBPA.fa.tsv |
@@ -349,14 +349,14 @@ cat tests/clust/IBPA.fa.tsv |
 
 #### PCoA
 
-```shell
+```bash
 cargo run --bin hnsm manifold tests/clust/IBPA.fa.tsv --mode pcoa --dim 2
 
 ```
 
 ### Block FA files
 
-```shell
+```bash
 fasr maf2fas tests/fasr/example.maf
 
 fasr axt2fas tests/fasr/RM11_1a.chr.sizes tests/fasr/example.axt --qname RM11_1a
@@ -438,7 +438,7 @@ cargo run --bin fasr pl-p2m tests/fasr/S288cvsRM11_1a.slice.fas tests/fasr/S288c
 
 * genomes
 
-```shell
+```bash
 curl -L https://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/000/005/845/GCF_000005845.2_ASM584v2/GCF_000005845.2_ASM584v2_genomic.fna.gz |
     gzip -dc |
     hnsm filter stdin -s |
@@ -453,7 +453,7 @@ curl -L https://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/000/008/865/GCF_000008865.2
 
 * mash
 
-```shell
+```bash
 hnsm distance tests/pgr/sakai.fa.gz tests/pgr/mg1655.fa.gz --hasher mod -k 21 -w 1
 #NC_002695       NC_000913       0.0221  0.4580  0.5881
 #NC_002127       NC_000913       0.6640  0.0000  0.0006
@@ -489,7 +489,7 @@ echo -e "tests/pgr/sakai.fa.gz\ntests/pgr/mg1655.fa.gz" |
 
 * plot
 
-```shell
+```bash
 FastGA -v -pafx tests/pgr/sakai.fa.gz tests/pgr/mg1655.fa.gz > tmp.paf
 FastGA -v -psl tests/pgr/sakai.fa.gz tests/pgr/mg1655.fa.gz > tmp.psl
 
@@ -528,7 +528,7 @@ wgatools dotplot tmp.lastz.maf > tmp.lastz.html
 
 * repeats
 
-```shell
+```bash
 # TnCentral
 curl -LO https://tncentral.ncc.unesp.br/api/download_blast/nc/tn_in_is
 
@@ -553,7 +553,7 @@ gzip -9 -k repbase.fa
 
 * RepeatMasker
 
-```shell
+```bash
 singularity run ~/bin/repeatmasker_master.sif /app/RepeatMasker/RepeatMasker \
     ./genome.fa -xsmall -species "bacteria"
 
@@ -564,7 +564,7 @@ spanr gff tests/pgr/mg1655.rm.gff -o tests/pgr/mg1655.rm.json
 
 ```
 
-```shell
+```bash
 pgr ir tests/pgr/tncentral.fa.gz tests/pgr/mg1655.fa.gz \
     > tests/pgr/mg1655.ir.json
 
@@ -591,7 +591,7 @@ lastz --self <(gzip -dcf tests/pgr/mg1655.fa.gz)
 
 ### Proteomes
 
-```shell
+```bash
 curl -L https://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/000/005/845/GCF_000005845.2_ASM584v2/GCF_000005845.2_ASM584v2_protein.faa.gz \
     > tests/clust/mg1655.pro.fa.gz
 
@@ -658,7 +658,7 @@ hyperfine --warmup 1 \
 
 * Hypervector
 
-```shell
+```bash
 hnsm hv tests/clust/IBPA.fa
 #tests/clust/IBPA.fa     tests/clust/IBPA.fa     776     776     776     776     0.0000  1.0000  1.0000
 hnsm distance tests/clust/IBPA.fa --merge
@@ -690,7 +690,7 @@ hyperfine --warmup 1 \
 
 * Six-frame
 
-```shell
+```bash
 hnsm sixframe tests/pgr/sakai.fa.gz --len 35 |
     hnsm distance stdin tests/clust/mg1655.pro.fa.gz -k 7 -w 2 -p 4 |
     wc -l
@@ -702,7 +702,7 @@ hnsm range tests/pgr/sakai.fa.gz "NC_002695(+):4468532-4468696|frame=1"
 
 ### Assemblies
 
-```shell
+```bash
 cargo run --bin hnsm prefilter tests/index/final.contigs.fa tests/clust/IBPA.fa
 
 # SRR6323163 - APH(3')-IIIa
