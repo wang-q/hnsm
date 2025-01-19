@@ -209,7 +209,7 @@ mod tests {
             result_serial.capacity() * size_of::<i16>()
         );
 
-        let cardinality = hv_cardinality(&result_serial, hv_d);
+        let cardinality = hv_cardinality(&result_serial);
         println!("HV cardinality: {}", cardinality);
 
         // Compare results
@@ -248,10 +248,9 @@ mod tests {
     fn test_hv_cardinality() {
         // Create a simple hypervector
         let hv = vec![1, 2, 3, 4, 5];
-        let hv_d = 5;
 
         // Compute the cardinality
-        let cardinality = hv_cardinality(&hv, hv_d);
+        let cardinality = hv_cardinality(&hv);
 
         // Expected result: (1^2 + 2^2 + 3^2 + 4^2 + 5^2) / 5 = 55 / 5 = 11
         assert_eq!(cardinality, 11, "Cardinality calculation is incorrect!");
@@ -266,8 +265,8 @@ mod tests {
         // Compute the dot product
         let dot = hv_dot(&a, &b);
 
-        // Expected result: 1*2 + 2*3 + 3*4 + 4*5 + 5*6 = 2 + 6 + 12 + 20 + 30 = 70
-        assert_eq!(dot, 70.0, "Dot product calculation is incorrect!");
+        // Expected result: (1*2 + 2*3 + 3*4 + 4*5 + 5*6) / 5 = 14
+        assert_eq!(dot, 14.0, "Dot product calculation is incorrect!");
     }
 
     #[test]
@@ -279,7 +278,7 @@ mod tests {
         // Compute the dot product
         let dot = hv_dot(&a, &b);
 
-        // Expected result: 1*0 + 0*1 + 0*0 = 0
+        // Expected result: (1*0 + 0*1 + 0*0) / 3 = 0
         assert_eq!(
             dot, 0.0,
             "Dot product of orthogonal vectors should be zero!"

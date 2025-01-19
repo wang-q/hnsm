@@ -41,7 +41,7 @@ provides:
 
 Current release: 0.2.0
 
-```shell
+```bash
 cargo install --path . --force #--offline
 
 # local repo
@@ -712,6 +712,8 @@ hnsm prefilter tests/clust/SRR6323163.fa.gz "tests/clust/acrB.fa"
 
 hnsm range tests/clust/SRR6323163.fa.gz "k141_4576(-):285-455|frame=2"
 
+hnsm prefilter 3300035148.fna.gz "tests/clust/APH(3')-IIIa.fa" -c 1000000 -p 8
+
 ```
 
 ## Author
@@ -724,4 +726,4 @@ MIT.
 
 Copyright by Qiang Wang.
 
-Written by Qiang Wang <wang-q@outlook.com>, 2024.
+Written by Qiang Wang <wang-q@outlook.com>, 2024-
