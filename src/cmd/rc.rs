@@ -15,14 +15,14 @@ By default, reverse complemented sequences will have their names prefixed with "
 flag to keep the original names.
 
 Examples:
-    1. Reverse complement all sequences in a FASTA file:
-       hnsm rc input.fa -o output.fa
+1. Reverse complement all sequences in a FASTA file:
+   hnsm rc input.fa -o output.fa
 
-    2. Reverse complement only sequences listed in list.txt:
-       hnsm rc input.fa list.txt -o output.fa
+2. Reverse complement only sequences listed in list.txt:
+   hnsm rc input.fa list.txt -o output.fa
 
-    3. Reverse complement sequences but keep their original names:
-       hnsm rc input.fa -c -o output.fa
+3. Reverse complement sequences but keep their original names:
+   hnsm rc input.fa -c -o output.fa
 
 "###,
         )

@@ -17,14 +17,14 @@ The output is a list of regions in the format:
     seq_name:position (if start == end)
 
 Examples:
-    1. Identify masked regions (lowercase and N/n):
-       hnsm masked input.fa -o masked_regions.txt
+1. Identify masked regions (lowercase and N/n):
+   hnsm masked input.fa -o masked_regions.txt
 
-    2. Identify only N/n gap regions:
-       hnsm masked input.fa --gap -o gap_regions.txt
+2. Identify only N/n gap regions:
+   hnsm masked input.fa --gap -o gap_regions.txt
 
-    3. Process multiple input files:
-       hnsm masked input1.fa input2.fa -o masked_regions.txt
+3. Process multiple input files:
+   hnsm masked input1.fa input2.fa -o masked_regions.txt
 
 "###,
         )

@@ -11,14 +11,14 @@ This command counts the total number of bases in one or more FA files. It output
 and its length in a tab-separated format.
 
 Examples:
-    1. Count bases in a single FASTA file:
-       hnsm size input.fa
+1. Count bases in a single FASTA file:
+   hnsm size input.fa
 
-    2. Count bases in multiple FASTA files:
-       hnsm size input1.fa input2.fa
+2. Count bases in multiple FASTA files:
+   hnsm size input1.fa input2.fa
 
-    3. Save the output to a file:
-       hnsm size input.fa -o output.tsv
+3. Save the output to a file:
+   hnsm size input.fa -o output.tsv
 
 "###,
         )

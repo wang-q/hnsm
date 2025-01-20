@@ -20,20 +20,20 @@ This command removes duplicate records from one or more FA files based on name, 
      description
 
 Examples:
-    1. Deduplicate by name (default):
-       hnsm dedup input.fa
+1. Deduplicate by name (default):
+   hnsm dedup input.fa
 
-    2. Deduplicate by sequence:
-       hnsm dedup input.fa -s
+2. Deduplicate by sequence:
+   hnsm dedup input.fa -s
 
-    3. Deduplicate by name and description:
-       hnsm dedup input.fa -d
+3. Deduplicate by name and description:
+   hnsm dedup input.fa -d
 
-    4. Compare both strands:
-       hnsm dedup input.fa -b
+4. Compare both strands:
+   hnsm dedup input.fa -b
 
-    5. Save duplicated names to a file:
-       hnsm dedup input.fa -f duplicates.txt
+5. Save duplicated names to a file:
+   hnsm dedup input.fa -f duplicates.txt
 
 "###,
         )

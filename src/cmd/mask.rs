@@ -17,14 +17,14 @@ The runlist JSON file should have the following format:
     }
 
 Examples:
-    1. Soft-mask regions specified in runlist.json:
-       hnsm mask input.fa runlist.json -o masked.fa
+1. Soft-mask regions specified in runlist.json:
+   hnsm mask input.fa runlist.json -o masked.fa
 
-    2. Hard-mask regions (replace with N):
-       hnsm mask input.fa runlist.json --hard -o masked.fa
+2. Hard-mask regions (replace with N):
+   hnsm mask input.fa runlist.json --hard -o masked.fa
 
-    3. Output to stdout:
-       hnsm mask input.fa runlist.json
+3. Output to stdout:
+   hnsm mask input.fa runlist.json
 
 "###,
         )

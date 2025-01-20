@@ -18,32 +18,32 @@ It can filter by sequence length, number of Ns, and more. It also supports forma
     * -b/--block is not implemented here
 
 Examples:
-    1. Filter sequences by minimum size:
-       hnsm filter input.fa --minsize 100
+1. Filter sequences by minimum size:
+   hnsm filter input.fa --minsize 100
 
-    2. Filter sequences by maximum size:
-       hnsm filter input.fa --maxsize 1000
+2. Filter sequences by maximum size:
+   hnsm filter input.fa --maxsize 1000
 
-    3. Filter sequences by maximum number of Ns:
-       hnsm filter input.fa --maxn 10
+3. Filter sequences by maximum number of Ns:
+   hnsm filter input.fa --maxn 10
 
-    4. Remove duplicate sequences:
-       hnsm filter input.fa --uniq
+4. Remove duplicate sequences:
+   hnsm filter input.fa --uniq
 
-    5. Convert sequences to upper case:
-       hnsm filter input.fa --upper
+5. Convert sequences to upper case:
+   hnsm filter input.fa --upper
 
-    6. Convert IUPAC ambiguous codes to 'N':
-       hnsm filter input.fa --iupac
+6. Convert IUPAC ambiguous codes to 'N':
+   hnsm filter input.fa --iupac
 
-    7. Remove dashes from sequences:
-       hnsm filter input.fa --dash
+7. Remove dashes from sequences:
+   hnsm filter input.fa --dash
 
-    8. Simplify sequence names:
-       hnsm filter input.fa --simplify
+8. Simplify sequence names:
+   hnsm filter input.fa --simplify
 
-    9. Set sequence line length:
-       hnsm filter input.fa --line 80
+9. Set sequence line length:
+   hnsm filter input.fa --line 80
 
 "###,
         )

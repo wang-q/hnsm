@@ -10,11 +10,11 @@ pub fn make_subcommand() -> Command {
 This command extracts a single FASTA record from an input file based on the provided sequence name.
 
 Examples:
-    1. Extract a record by name and write to stdout:
-       hnsm one input.fa seq1
+1. Extract a record by name and write to stdout:
+   hnsm one input.fa seq1
 
-    2. Extract a record by name and save to a file:
-       hnsm one input.fa seq1 -o output.fa
+2. Extract a record by name and save to a file:
+   hnsm one input.fa seq1 -o output.fa
 
 "###,
         )

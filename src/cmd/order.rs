@@ -12,11 +12,11 @@ This command extracts FA records from an input file in the order specified by a 
 All sequences are loaded into memory, so this command may consume significant memory for large files.
 
 Examples:
-    1. Extract sequences in the order specified by list.txt:
-       hnsm order input.fa list.txt -o output.fa
+1. Extract sequences in the order specified by list.txt:
+   hnsm order input.fa list.txt -o output.fa
 
-    2. Output to stdout:
-       hnsm order input.fa list.txt
+2. Output to stdout:
+   hnsm order input.fa list.txt
 
 "###,
         )

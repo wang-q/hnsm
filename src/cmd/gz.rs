@@ -9,21 +9,24 @@ pub fn make_subcommand() -> Command {
         .about("Compressing a file using the blocked gzip format (BGZF)")
         .after_help(
             r###"
-This command compresses a file using the blocked gzip format (BGZF). It supports parallel compression
-and can read from stdin or a file, but not gzipped file.
+This command compresses a file using the blocked gzip format (BGZF). It supports parallel
+compression and can read from stdin or a plain file, but not gzipped file.
+
 The output is saved as a .gz file, and an index file (.gzi) is created using the `bgzip -r` command.
 
-* The output is hardcoded as "outfile.gz" and "outfile.gz.gzi", for more flexible output use `bgzip`
+* If no output file is specified with -o, the output will be saved as <infile>.gz and
+  <infile>.gz.gzi.
+* Otherwise, the output will be saved as <outfile>.gz and <outfile>.gz.gzi.
 
 Examples:
-    1. Compress a file with default settings:
-       hnsm gz input.fa
+1. Compress a file with default settings, and the outfile is input.fa.gz:
+   hnsm gz input.fa
 
-    2. Compress a file with 4 threads:
-       hnsm gz input.fa -p 4
+2. Compress a file with 4 threads:
+   hnsm gz input.fa -p 4
 
-    3. Compress from stdin and specify output file:
-       cat input.fa | hnsm gz stdin -o output
+3. Compress from stdin and specify output file:
+   cat input.fa | hnsm gz stdin -o output.fa
 
 "###,
         )
@@ -47,7 +50,7 @@ Examples:
                 .long("outfile")
                 .short('o')
                 .num_args(1)
-                .help("Output filename. Default is infile.gz"),
+                .help("Output filename (default: <infile>.gz)"),
         )
 }
 

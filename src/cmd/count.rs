@@ -11,14 +11,14 @@ This command calculates the base statistics (A, C, G, T, N) for each sequence in
 It outputs a table with the sequence name, length, and counts of each base.
 
 Examples:
-    1. Count base statistics for a single FA file:
-       hnsm count input.fa
+1. Count base statistics for a single FA file:
+   hnsm count input.fa
 
-    2. Count base statistics for multiple FA files:
-       hnsm count input1.fa input2.fa.gz
+2. Count base statistics for multiple FA files:
+   hnsm count input1.fa input2.fa.gz
 
-    3. Save the output to a file:
-       hnsm count input.fa -o output.tsv
+3. Save the output to a file:
+   hnsm count input.fa -o output.tsv
 
 "###,
         )

@@ -12,14 +12,14 @@ This command extracts FASTA records from an input file based on a list of sequen
 It can also invert the selection to output sequences not in the list.
 
 Examples:
-    1. Extract sequences listed in list.txt:
-       hnsm some input.fa list.txt
+1. Extract sequences listed in list.txt:
+   hnsm some input.fa list.txt
 
-    2. Extract sequences NOT listed in list.txt (invert selection):
-       hnsm some input.fa list.txt -i
+2. Extract sequences NOT listed in list.txt (invert selection):
+   hnsm some input.fa list.txt -i
 
-    3. Save the output to a file:
-       hnsm some input.fa list.txt -o output.fa
+3. Save the output to a file:
+   hnsm some input.fa list.txt -o output.fa
 
 "###,
         )
