@@ -2,6 +2,8 @@
 
 ## Unreleased - ReleaseDate
 
+## 0.3.0 - 2025-01-20
+
 * New binary `pgr`
     * `pgr rept`
     * `pgr trf`
