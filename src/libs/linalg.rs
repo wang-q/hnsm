@@ -118,7 +118,7 @@ pub fn norm_l2_sq(a: &[f32]) -> f32 {
     }
 
     let mut sums = f32x8::from_array(sums);
-    a_chunks.into_iter().for_each(|x| {
+    a_chunks.iter().for_each(|x| {
         sums += f32x8::from_array(*x) * f32x8::from_array(*x);
     });
 
@@ -147,7 +147,7 @@ pub fn mean(a: &[f32]) -> f32 {
 
     // Sum the elements in the SIMD chunks
     let mut simd_sum = f32x8::splat(0.0);
-    a_chunks.into_iter().for_each(|chunk| {
+    a_chunks.iter().for_each(|chunk| {
         simd_sum += f32x8::from_array(*chunk);
     });
 

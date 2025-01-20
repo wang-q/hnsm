@@ -303,8 +303,8 @@ fn load_file(
 
 // Calculate Jaccard, Containment, and Mash distance between two sets
 fn calc_distances(
-    s1: &Vec<i32>,
-    s2: &Vec<i32>,
+    s1: &[i32],
+    s2: &[i32],
     opt_kmer: usize,
 ) -> (usize, usize, usize, usize, f32, f32, f32) {
     let card1 = hnsm::hv_cardinality(s1);

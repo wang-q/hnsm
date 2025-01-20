@@ -1,7 +1,5 @@
 use clap::*;
 use cmd_lib::*;
-use noodles_bgzf as bgzf;
-use noodles_fasta as fasta;
 use rayon::prelude::*;
 use std::io::Write;
 
@@ -123,7 +121,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
             // Init reader for each chunk
             if is_bgzf {
                 hnsm::Input::Bgzf(
-                    bgzf::indexed_reader::Builder::default()
+                    noodles_bgzf::indexed_reader::Builder::default()
                         .build_from_path(infile)
                         .unwrap(),
                 )

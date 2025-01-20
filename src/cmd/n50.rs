@@ -103,11 +103,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     let is_count = args.get_flag("count");
     let is_transpose = args.get_flag("transpose");
 
-    let opt_nx: Vec<_> = args
-        .get_many::<usize>("nx")
-        .unwrap()
-        .map(|el| *el)
-        .collect();
+    let opt_nx: Vec<_> = args.get_many::<usize>("nx").unwrap().copied().collect();
 
     let opt_genome = if args.contains_id("genome") {
         *args.get_one::<usize>("genome").unwrap()

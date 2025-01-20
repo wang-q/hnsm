@@ -107,7 +107,7 @@ pub fn hash_hv(kmer_hash_set: &RapidHashSet<u64>, hv_d: usize) -> Vec<i32> {
 }
 
 #[allow(dead_code)]
-fn hv_norm_l2_sq_serial(hv: &Vec<i32>) -> f32 {
+fn hv_norm_l2_sq_serial(hv: &[i32]) -> f32 {
     let norm_sq = hv
         .iter()
         .fold(0., |sum: f32, &num| sum + (num as f32 * num as f32));

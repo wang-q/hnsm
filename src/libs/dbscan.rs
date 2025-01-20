@@ -132,10 +132,7 @@ where
         for (point, cluster) in self.clusters.iter().enumerate() {
             match cluster {
                 Some(cluster_id) => {
-                    cluster_map
-                        .entry(*cluster_id)
-                        .or_insert(Vec::new())
-                        .push(point);
+                    cluster_map.entry(*cluster_id).or_default().push(point);
                 }
                 None => {
                     noise_points.push(point);

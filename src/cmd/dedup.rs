@@ -171,7 +171,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
         let opt_file = args.get_one::<String>("file").unwrap();
         let mut writer = intspan::writer(opt_file);
 
-        for (_, v) in &subject_map {
+        for v in subject_map.values() {
             if v.len() < 2 {
                 continue;
             }

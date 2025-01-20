@@ -180,7 +180,7 @@ fn compare(c1: &str, c2: &str, das_opt: &DasOpt) -> f32 {
     }
 }
 
-fn sim_mat(s: &Vec<String>, t: &Vec<String>, das_opt: &DasOpt) -> Vec<Vec<f32>> {
+fn sim_mat(s: &[String], t: &[String], das_opt: &DasOpt) -> Vec<Vec<f32>> {
     let m = s.len();
     let n = t.len();
     let mut mat = vec![vec![0.0; n + 1]; m + 1];
@@ -207,8 +207,8 @@ fn sim_mat(s: &Vec<String>, t: &Vec<String>, das_opt: &DasOpt) -> Vec<Vec<f32>> 
 
 fn align(
     mat: &[Vec<f32>],
-    s: &Vec<String>,
-    t: &Vec<String>,
+    s: &[String],
+    t: &[String],
     das_opt: &DasOpt,
 ) -> (Vec<String>, Vec<String>) {
     let (mut sa, mut ta) = (Vec::new(), Vec::new());

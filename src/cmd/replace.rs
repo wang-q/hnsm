@@ -14,16 +14,16 @@ If more than two columns are provided, the sequence will be duplicated for each 
 Multiple lines of the same original_name will also duplicate the record.
 
 The TSV file format:
-        original_name   replace_name    more_replace_name
-        original_name   replace_name
-        original_name   another_replace_name
+    original_name   replace_name    more_replace_name
+    original_name   replace_name
+    original_name   another_replace_name
 
 Examples:
-    1. Replace headers using a TSV file:
-       hnsm replace input.fa replace.tsv -o output.fa
+1. Replace headers using a TSV file:
+   hnsm replace input.fa replace.tsv -o output.fa
 
-    2. Only output sequences listed in the TSV file (like `hnsm some`):
-       hnsm replace input.fa replace.tsv -s -o output.fa
+2. Only output sequences listed in the TSV file (like `hnsm some`):
+   hnsm replace input.fa replace.tsv -s -o output.fa
 
 "###,
         )
@@ -113,10 +113,7 @@ fn read_replaces(input: &str) -> HashMap<String, Vec<String>> {
             .collect::<Vec<_>>();
 
         // Use the entry method to check if the key exists
-        replaces
-            .entry(key.clone())
-            .or_insert_with(Vec::new)
-            .append(&mut others);
+        replaces.entry(key.clone()).or_default().append(&mut others);
     }
 
     replaces

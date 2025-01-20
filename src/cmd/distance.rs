@@ -366,7 +366,7 @@ fn calc_distances(
     let total1 = s1.len();
     let total2 = s2.len();
 
-    let inter = s1.intersection(&s2).cloned().count();
+    let inter = s1.intersection(s2).cloned().count();
     let union = total1 + total2 - inter;
 
     let jaccard = inter as f64 / union as f64;

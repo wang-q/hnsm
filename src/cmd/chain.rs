@@ -317,7 +317,7 @@ fn parse_input_file(
 
         mol_pair_map
             .entry(mol_pair_key)
-            .or_insert(Vec::new())
+            .or_default()
             .push(acc_pair_key);
     }
 
@@ -441,7 +441,7 @@ fn print_chains(scores: &mut Vec<Score>, options: &ChainOpt) {
         for entry in high {
             if from_indices[entry.sub] != -1 {
                 let alignment_path = build_alignment_path(&from_indices, entry.sub);
-                print_alignment(&scores, &path_scores, alignment_path, options, ali_ct);
+                print_alignment(scores, &path_scores, alignment_path, options, ali_ct);
                 ali_ct += 1;
             }
         }
@@ -459,7 +459,7 @@ fn print_chains(scores: &mut Vec<Score>, options: &ChainOpt) {
     }
 }
 
-fn build_alignment_path(from_indices: &Vec<i32>, start_index: usize) -> Vec<usize> {
+fn build_alignment_path(from_indices: &[i32], start_index: usize) -> Vec<usize> {
     let mut path = Vec::new();
     let mut current = start_index;
 
@@ -472,8 +472,8 @@ fn build_alignment_path(from_indices: &Vec<i32>, start_index: usize) -> Vec<usiz
 }
 
 fn print_alignment(
-    scores: &Vec<Score>,
-    path_scores: &Vec<f32>,
+    scores: &[Score],
+    path_scores: &[f32],
     path: Vec<usize>,
     options: &ChainOpt,
     alignment_count: usize,

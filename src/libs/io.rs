@@ -37,9 +37,9 @@ impl AsmEntry {
     /// # assert_eq!(*entry.name(), "Es_coli_005008_GCF_013426115_1");
     /// # assert_eq!(*entry.list().get(1).unwrap(), 5f32);
     /// ```
-    pub fn from(name: &String, vector: &[f32]) -> Self {
+    pub fn from(name: &str, vector: &[f32]) -> Self {
         Self {
-            name: name.clone(),
+            name: name.to_owned(),
             list: Vec::from(vector),
         }
     }
@@ -123,7 +123,7 @@ pub fn load_pair_scores(infile: &str) -> (Vec<((usize, usize), f32)>, Vec<String
 
 pub fn populate_matrix(
     pair_scores: &Vec<((usize, usize), f32)>,
-    index_name: &Vec<String>,
+    index_name: &[String],
     same: f32,
     missing: f32,
 ) -> crate::ScoringMatrix<f32> {

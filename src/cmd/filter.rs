@@ -180,7 +180,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
 
             // Apply filters
             if !pass_filters(
-                &seq,
+                seq,
                 opt_minsize,
                 opt_maxsize,
                 opt_maxn,
