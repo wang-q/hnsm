@@ -1,5 +1,4 @@
 use clap::*;
-use noodles_fasta as fasta;
 use std::collections::HashMap;
 
 // Create clap subcommand arguments
@@ -100,7 +99,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     let is_insensitive = args.get_flag("case");
 
     let writer = intspan::writer(args.get_one::<String>("outfile").unwrap());
-    let mut fa_out = fasta::io::writer::Builder::default()
+    let mut fa_out = noodles_fasta::io::writer::Builder::default()
         .set_line_base_count(usize::MAX)
         .build_from_writer(writer);
 
@@ -110,7 +109,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     let mut subject_map: HashMap<u64, Vec<String>> = HashMap::new();
     for infile in args.get_many::<String>("infiles").unwrap() {
         let reader = intspan::reader(infile);
-        let mut fa_in = fasta::io::Reader::new(reader);
+        let mut fa_in = noodles_fasta::io::Reader::new(reader);
 
         for result in fa_in.records() {
             // obtain record or fail with error
@@ -129,7 +128,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
             let subject = if is_seq {
                 if is_both {
                     let fwd = xxhash_rust::xxh3::xxh3_64(&seq[..].to_ascii_uppercase());
-                    let rc: fasta::record::Sequence =
+                    let rc: noodles_fasta::record::Sequence =
                         seq.complement().rev().collect::<Result<_, _>>()?;
                     let rev = xxhash_rust::xxh3::xxh3_64(&rc[..].to_ascii_uppercase());
                     fwd.min(rev)

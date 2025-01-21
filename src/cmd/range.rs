@@ -1,7 +1,4 @@
 use clap::*;
-use noodles_bgzf as bgzf;
-use noodles_core::Position;
-use noodles_fasta as fasta;
 
 // Create clap subcommand arguments
 pub fn make_subcommand() -> Command {
@@ -83,7 +80,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
 
     let mut fa_out = {
         let writer = intspan::writer(args.get_one::<String>("outfile").unwrap());
-        fasta::io::writer::Builder::default()
+        noodles_fasta::io::writer::Builder::default()
             .set_line_base_count(usize::MAX)
             .build_from_writer(writer)
     };
@@ -108,7 +105,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     }
 
     let opt_cache = *args.get_one::<std::num::NonZeroUsize>("cache").unwrap();
-    let mut cache: lru::LruCache<String, fasta::Record> = lru::LruCache::new(opt_cache);
+    let mut cache: lru::LruCache<String, noodles_fasta::Record> = lru::LruCache::new(opt_cache);
 
     //----------------------------
     // Open files
@@ -120,7 +117,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     let loc_of: indexmap::IndexMap<String, (u64, usize)> = hnsm::load_loc(&loc_file)?;
 
     let mut reader = if is_bgzf {
-        hnsm::Input::Bgzf(bgzf::indexed_reader::Builder::default().build_from_path(infile)?)
+        hnsm::Input::Bgzf(noodles_bgzf::indexed_reader::Builder::default().build_from_path(infile)?)
     } else {
         hnsm::Input::File(std::fs::File::open(std::path::Path::new(infile))?)
     };
@@ -141,7 +138,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
             cache.put(seq_id.clone(), record);
         }
 
-        let record: &fasta::Record = cache.get(&seq_id).unwrap();
+        let record: &noodles_fasta::Record = cache.get(&seq_id).unwrap();
 
         // name only
         if *rg.start() == 0 {
@@ -149,17 +146,17 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
             continue;
         }
 
-        let definition = fasta::record::Definition::new(rg.to_string(), None);
+        let definition = noodles_fasta::record::Definition::new(rg.to_string(), None);
 
         // slice here is 1-based
-        let start = Position::new(*rg.start() as usize).unwrap();
-        let end = Position::new(*rg.end() as usize).unwrap();
+        let start = noodles_core::Position::new(*rg.start() as usize).unwrap();
+        let end = noodles_core::Position::new(*rg.end() as usize).unwrap();
 
         let mut slice = record.sequence().slice(start..=end).unwrap();
         if rg.strand() == "-" {
             slice = slice.complement().rev().collect::<Result<_, _>>()?;
         }
-        let record_rg = fasta::Record::new(definition, slice);
+        let record_rg = noodles_fasta::Record::new(definition, slice);
 
         fa_out.write_record(&record_rg)?;
     }

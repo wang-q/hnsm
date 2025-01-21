@@ -1,5 +1,4 @@
 use clap::*;
-use noodles::fasta;
 use std::io::Write;
 
 // Create clap subcommand arguments
@@ -71,7 +70,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     // Args
     //----------------------------
     let reader = intspan::reader(args.get_one::<String>("infile").unwrap());
-    let mut fa_in = fasta::io::Reader::new(reader);
+    let mut fa_in = noodles_fasta::io::Reader::new(reader);
 
     let opt_len = *args.get_one::<usize>("len").unwrap();
     let is_start = args.get_flag("start");

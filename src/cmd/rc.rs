@@ -1,5 +1,4 @@
 use clap::*;
-use noodles_fasta as fasta;
 use std::collections::HashSet;
 
 // Create clap subcommand arguments
@@ -61,12 +60,12 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     // Args
     //----------------------------
     let reader = intspan::reader(args.get_one::<String>("infile").unwrap());
-    let mut fa_in = fasta::io::Reader::new(reader);
+    let mut fa_in = noodles_fasta::io::Reader::new(reader);
 
     let is_consistent = args.get_flag("consistent");
 
     let writer = intspan::writer(args.get_one::<String>("outfile").unwrap());
-    let mut fa_out = fasta::io::writer::Builder::default()
+    let mut fa_out = noodles_fasta::io::writer::Builder::default()
         .set_line_base_count(usize::MAX)
         .build_from_writer(writer);
 
@@ -95,14 +94,14 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
             name = format!("RC_{}", name);
         }
 
-        let definition = fasta::record::Definition::new(&*name, None);
+        let definition = noodles_fasta::record::Definition::new(&*name, None);
 
-        let seq_rc: fasta::record::Sequence = record
+        let seq_rc: noodles_fasta::record::Sequence = record
             .sequence()
             .complement()
             .rev()
             .collect::<Result<_, _>>()?;
-        let record_rc = fasta::Record::new(definition, seq_rc);
+        let record_rc = noodles_fasta::Record::new(definition, seq_rc);
         fa_out.write_record(&record_rc)?;
     }
 

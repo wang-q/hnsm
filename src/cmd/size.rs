@@ -1,5 +1,4 @@
 use clap::*;
-use noodles_fasta as fasta;
 
 // Create clap subcommand arguments
 pub fn make_subcommand() -> Command {
@@ -45,7 +44,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
 
     for infile in args.get_many::<String>("infiles").unwrap() {
         let reader = intspan::reader(infile);
-        let mut fa_in = fasta::io::Reader::new(reader);
+        let mut fa_in = noodles_fasta::io::Reader::new(reader);
 
         for result in fa_in.records() {
             // obtain record or fail with error

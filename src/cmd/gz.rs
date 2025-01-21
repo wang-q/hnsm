@@ -1,7 +1,4 @@
 use clap::*;
-use noodles_bgzf as bgzf;
-use std::io::{self};
-use std::{fs, num, path, process};
 
 // Create clap subcommand arguments
 pub fn make_subcommand() -> Command {
@@ -40,7 +37,7 @@ Examples:
             Arg::new("parallel")
                 .long("parallel")
                 .short('p')
-                .value_parser(value_parser!(num::NonZeroUsize))
+                .value_parser(value_parser!(std::num::NonZeroUsize))
                 .num_args(1)
                 .default_value("1")
                 .help("Number of threads for parallel compression"),
@@ -61,7 +58,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     //----------------------------
     let infile = args.get_one::<String>("infile").unwrap();
 
-    let opt_parallel = *args.get_one::<num::NonZeroUsize>("parallel").unwrap();
+    let opt_parallel = *args.get_one::<std::num::NonZeroUsize>("parallel").unwrap();
 
     let outfile = format!(
         "{}.gz",
@@ -75,27 +72,29 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     //----------------------------
     // Open file
     //----------------------------
-    let mut reader: Box<dyn io::BufRead> = if infile == "stdin" {
-        Box::new(io::BufReader::new(io::stdin()))
+    let mut reader: Box<dyn std::io::BufRead> = if infile == "stdin" {
+        Box::new(std::io::BufReader::new(std::io::stdin()))
     } else {
-        let path = path::Path::new(infile);
-        let file = match fs::File::open(path) {
+        let path = std::path::Path::new(infile);
+        let file = match std::fs::File::open(path) {
             Err(why) => panic!("could not open {}: {}", path.display(), why),
             Ok(file) => file,
         };
 
-        Box::new(io::BufReader::new(file))
+        Box::new(std::io::BufReader::new(file))
     };
 
-    let mut writer = bgzf::MultithreadedWriter::with_worker_count(
+    let mut writer = noodles_bgzf::MultithreadedWriter::with_worker_count(
         opt_parallel,
-        Box::new(io::BufWriter::new(fs::File::create(&outfile).unwrap())),
+        Box::new(std::io::BufWriter::new(
+            std::fs::File::create(&outfile).unwrap(),
+        )),
     );
 
     //----------------------------
     // Output
     //----------------------------
-    io::copy(&mut reader, &mut writer)?;
+    std::io::copy(&mut reader, &mut writer)?;
     writer.finish()?;
 
     let bin = if let Ok(pth) = which::which("bgzip") {
@@ -110,7 +109,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
         ));
     }
 
-    let res = process::Command::new(bin)
+    let res = std::process::Command::new(bin)
         .arg("-r")
         .arg(&outfile)
         .output()?;

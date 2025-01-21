@@ -1,5 +1,4 @@
 use clap::*;
-use noodles_fasta as fasta;
 use std::collections::BTreeSet;
 
 // Create clap subcommand arguments
@@ -154,7 +153,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     let is_simplify = args.get_flag("simplify");
 
     let writer = intspan::writer(args.get_one::<String>("outfile").unwrap());
-    let mut fa_out = fasta::io::writer::Builder::default()
+    let mut fa_out = noodles_fasta::io::writer::Builder::default()
         .set_line_base_count(opt_line)
         .build_from_writer(writer);
 
@@ -164,7 +163,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     let mut set_list: BTreeSet<String> = BTreeSet::new();
     for infile in args.get_many::<String>("infiles").unwrap() {
         let reader = intspan::reader(infile);
-        let mut fa_in = fasta::io::Reader::new(reader);
+        let mut fa_in = noodles_fasta::io::Reader::new(reader);
 
         for result in fa_in.records() {
             // obtain record or fail with error
@@ -212,9 +211,9 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
                 }
             } // end of each nt
 
-            let definition = fasta::record::Definition::new(&*name, None);
-            let seq_out = fasta::record::Sequence::from(seq_out.as_bytes().to_vec());
-            let record_out = fasta::Record::new(definition, seq_out);
+            let definition = noodles_fasta::record::Definition::new(&*name, None);
+            let seq_out = noodles_fasta::record::Sequence::from(seq_out.as_bytes().to_vec());
+            let record_out = noodles_fasta::Record::new(definition, seq_out);
             fa_out.write_record(&record_out)?;
         }
     }
@@ -224,7 +223,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
 
 // Check if a sequence passes all filters
 fn pass_filters(
-    seq: &fasta::record::Sequence,
+    seq: &noodles_fasta::record::Sequence,
     minsize: usize,
     maxsize: usize,
     maxn: usize,

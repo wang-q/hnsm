@@ -1,5 +1,4 @@
 use clap::*;
-use noodles_fasta as fasta;
 use std::collections::HashSet;
 
 // Create clap subcommand arguments
@@ -60,10 +59,10 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     let is_invert = args.get_flag("invert");
 
     let reader = intspan::reader(args.get_one::<String>("infile").unwrap());
-    let mut fa_in = fasta::io::Reader::new(reader);
+    let mut fa_in = noodles_fasta::io::Reader::new(reader);
 
     let writer = intspan::writer(args.get_one::<String>("outfile").unwrap());
-    let mut fa_out = fasta::io::writer::Builder::default()
+    let mut fa_out = noodles_fasta::io::writer::Builder::default()
         .set_line_base_count(usize::MAX)
         .build_from_writer(writer);
 

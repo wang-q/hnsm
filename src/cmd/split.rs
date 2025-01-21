@@ -1,10 +1,6 @@
 use clap::*;
-use noodles_fasta as fasta;
 use std::collections::BTreeMap;
-use std::fs;
-use std::fs::File;
 use std::io::Write;
-use std::path::Path;
 
 // Create clap subcommand arguments
 pub fn make_subcommand() -> Command {
@@ -81,10 +77,10 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
 
     let outdir = args.get_one::<String>("outdir").unwrap();
     if outdir != "stdout" {
-        fs::create_dir_all(outdir)?;
+        std::fs::create_dir_all(outdir)?;
     }
 
-    let mut fh_of: BTreeMap<String, File> = BTreeMap::new();
+    let mut fh_of: BTreeMap<String, std::fs::File> = BTreeMap::new();
 
     //----------------------------
     // Operating
@@ -92,7 +88,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     if mode == "name" {
         for infile in args.get_many::<String>("infiles").unwrap() {
             let reader = intspan::reader(infile);
-            let mut fa_in = fasta::io::Reader::new(reader);
+            let mut fa_in = noodles_fasta::io::Reader::new(reader);
 
             for result in fa_in.records() {
                 // obtain record or fail with error
@@ -133,7 +129,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
 
         'outer: for infile in args.get_many::<String>("infiles").unwrap() {
             let reader = intspan::reader(infile);
-            let mut fa_in = fasta::io::Reader::new(reader);
+            let mut fa_in = noodles_fasta::io::Reader::new(reader);
 
             for result in fa_in.records() {
                 if file_sn > opt_maxpart {
@@ -179,12 +175,12 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
 
 fn gen_fh(
     outdir: &String,
-    fh_of: &mut BTreeMap<String, File>,
+    fh_of: &mut BTreeMap<String, std::fs::File>,
     filename: &String,
 ) -> Result<(), Error> {
     if !fh_of.contains_key(filename) {
-        let path = Path::new(outdir).join(filename.clone() + ".fa");
-        let file = fs::OpenOptions::new()
+        let path = std::path::Path::new(outdir).join(filename.clone() + ".fa");
+        let file = std::fs::OpenOptions::new()
             .create(true)
             .write(true)
             .truncate(true)
