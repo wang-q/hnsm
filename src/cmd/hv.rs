@@ -9,7 +9,7 @@ pub fn make_subcommand() -> Command {
         .about("Estimate distances between DNA/protein files using hypervectors")
         .after_help(
             r###"
-This command calculates pairwise distances between files in FA file(s) using minimizers.
+This command calculates pairwise distances between files in FA file(s) using minimizers and hypervectors.
 
 * The outputs are printed to stdout in the following format:
     <file1> <file2> <total1> <total2> <inter> <union> <mash_distance> <jaccard_index> <containment_index>
@@ -18,8 +18,8 @@ This command calculates pairwise distances between files in FA file(s) using min
 
 * Input Modes:
     * For a single sequence file: Merge all sequences within the file into a single hypervector.
-      Note that comparing this set to itself (self-comparison) is not
-      meaningful, as the distance will always be 0 and the similarity will always be 1.
+      Note that comparing this set to itself (self-comparison) is not meaningful,
+      as the distance will always be 0 and the similarity will always be 1.
     * For two sequence files: Merge all sequences within each file into a single hypervector,
       and calculate distances between the two hypervectors.
     * When --list is set:
@@ -52,7 +52,7 @@ Examples:
                 .num_args(1..=2)
                 .index(1)
                 .required(true)
-                .help("Input FA file(s). [stdin] for standard input"),
+                .help("Input FA/list file(s). [stdin] for standard input"),
         )
         .arg(
             Arg::new("hasher")
@@ -101,12 +101,6 @@ Examples:
                 .help("Convert distance to similarity (1 - distance)"),
         )
         .arg(
-            Arg::new("zero")
-                .long("zero")
-                .action(ArgAction::SetTrue)
-                .help("Also write results with zero Jaccard index"),
-        )
-        .arg(
             Arg::new("list")
                 .long("list")
                 .action(ArgAction::SetTrue)
@@ -148,7 +142,6 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     let opt_dim = *args.get_one::<usize>("dim").unwrap();
 
     let is_sim = args.get_flag("sim");
-    let is_zero = args.get_flag("zero");
     let is_list = args.get_flag("list"); // Whether to treat infiles as list files
     let opt_parallel = *args.get_one::<usize>("parallel").unwrap();
 
@@ -212,10 +205,6 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
             let (total1, total2, inter, union, mash, jaccard, containment) =
                 calc_distances(&e1.set, &e2.set, opt_kmer);
 
-            if !is_zero && jaccard == 0. {
-                continue;
-            }
-
             let out_string = format!(
                 "{}\t{}\t{}\t{}\t{}\t{}\t{:.4}\t{:.4}\t{:.4}\n",
                 e1.name,
@@ -276,7 +265,6 @@ fn load_file(
     let reader = intspan::reader(infile);
     let mut fa_in = fasta::io::Reader::new(reader);
 
-    let mut entries = vec![];
     let mut file_set = rapidhash::RapidHashSet::default();
 
     for result in fa_in.records() {
@@ -291,14 +279,12 @@ fn load_file(
     }
 
     let hv: Vec<i32> = hnsm::hash_hv(&file_set, opt_dim);
-
     let entry = HvEntry {
         name: infile.to_string(),
         set: hv,
     };
-    entries.push(entry);
 
-    Ok(entries)
+    Ok(vec![entry])
 }
 
 // Calculate Jaccard, Containment, and Mash distance between two sets

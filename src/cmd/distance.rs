@@ -93,7 +93,7 @@ Examples:
                 .num_args(1..=2)
                 .index(1)
                 .required(true)
-                .help("Input FA file(s). [stdin] for standard input"),
+                .help("Input FA/list file(s). [stdin] for standard input"),
         )
         .arg(
             Arg::new("hasher")
@@ -183,6 +183,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     let opt_hasher = args.get_one::<String>("hasher").unwrap();
     let opt_kmer = *args.get_one::<usize>("kmer").unwrap();
     let opt_window = *args.get_one::<usize>("window").unwrap();
+
     let is_sim = args.get_flag("sim");
     let is_zero = args.get_flag("zero");
     let is_merge = args.get_flag("merge"); // Whether to merge all sequences within a file
