@@ -3,6 +3,8 @@ use cmd_lib::*;
 use rayon::prelude::*;
 use std::io::Write;
 
+// TODO: -o
+
 // Create clap subcommand arguments
 pub fn make_subcommand() -> Command {
     Command::new("prefilter")
