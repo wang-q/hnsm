@@ -3,15 +3,28 @@ use cmd_lib::*;
 use rayon::prelude::*;
 use std::io::Write;
 
-// TODO: -o
-
 // Create clap subcommand arguments
 pub fn make_subcommand() -> Command {
     Command::new("prefilter")
         .about("Prefilter genome/metagenome assembly by amino acid minimizers")
         .after_help(
             r###"
-* <infile> can be plain text or bgzf but not stdin or gzip
+This command pre-filters genome or metagenome assemblies using amino acid minimizers.
+It processes input files in chunks for efficient memory usage and supports parallel processing.
+
+<infile> can be a plain text file or a BGZF-compressed file (but not stdin or gzip).
+
+The output is sent to stdout and can be redirected to a file.
+
+Examples:
+1. Basic usage:
+   hnsm prefilter input.fa match_file
+
+2. Specify chunk size and minimum sequence length:
+   hnsm prefilter input.fa match_file --chunk 50000 --len 20
+
+3. Use custom k-mer and window sizes:
+   hnsm prefilter input.fa match_file -k 7 -w 2 --parallel 8
 
 "###,
         )
@@ -19,13 +32,13 @@ pub fn make_subcommand() -> Command {
             Arg::new("infile")
                 .required(true)
                 .index(1)
-                .help("Set the input file to use"),
+                .help("Input file containing genome/metagenome assembly"),
         )
         .arg(
             Arg::new("match")
                 .required(true)
                 .index(2)
-                .help("The match file"),
+                .help("Match file containing reference sequences for filtering"),
         )
         .arg(
             Arg::new("chunk")
@@ -70,14 +83,6 @@ pub fn make_subcommand() -> Command {
                 .default_value("1")
                 .value_parser(value_parser!(usize))
                 .help("Number of threads for parallel processing"),
-        )
-        .arg(
-            Arg::new("outfile")
-                .long("outfile")
-                .short('o')
-                .num_args(1)
-                .default_value("stdout")
-                .help("Output filename. [stdout] for screen"),
         )
 }
 
@@ -145,25 +150,6 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
             .unwrap();
         },
     );
-
-    // for (first, offset, size) in chunks.iter() {
-    //     let chunk = hnsm::read_offset(&mut reader, *offset, *size)?;
-    //
-    //     let mut temp_file = tempfile::NamedTempFile::new()?;
-    //     temp_file.write_all(&chunk)?;
-    //     let temp_path = temp_file.path().to_str().unwrap().to_string();
-    //
-    //     run_cmd!(
-    //         ${hnsm} sixframe ${temp_path} --len ${opt_len} |
-    //             ${hnsm} distance stdin ${match_file} -k 7 -w 2
-    //     )?;
-    //
-    //     // eprintln!(
-    //     //     "Processed chunk {}: first sequence = {}, temp file = {:?}",
-    //     //     i, first, temp_path
-    //     // );
-    //     // hnsm::pause();
-    // }
 
     Ok(())
 }
