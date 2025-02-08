@@ -8,9 +8,7 @@ extern crate lazy_static;
 
 pub mod libs;
 
-pub use crate::libs::alignment::*;
 pub use crate::libs::dbscan::Dbscan;
-pub use crate::libs::fas::*;
 pub use crate::libs::hash::*;
 pub use crate::libs::hv::*;
 pub use crate::libs::io::*;

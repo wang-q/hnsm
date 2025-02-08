@@ -63,14 +63,6 @@ cmd_lib = "1.9.4"
 name = "hnsm"
 path = "src/hnsm.rs"
 
-[[bin]]
-name = "fasr"
-path = "src/fasr.rs"
-
-[[bin]]
-name = "pgr"
-path = "src/pgr.rs"
-
 [build-dependencies]
 
 [dev-dependencies]

@@ -1,6 +1,4 @@
-pub mod alignment;
 pub mod dbscan;
-pub mod fas;
 pub mod hash;
 pub mod hv;
 pub mod io;

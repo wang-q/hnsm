@@ -2,20 +2,15 @@
 
 ## Unreleased - ReleaseDate
 
-## 0.3.0 - 2025-01-20
+* Move `pgr` and `fasr` out
 
-* New binary `pgr`
-    * `pgr rept`
-    * `pgr trf`
-    * `pgr ir`
-    * `pgr chain`
+## 0.3.0 - 2025-01-20
 
 * Add `hnsm mask`
 * Add `hnsm sixframe`
 * Add `hnsm hv`
 * Add `hnsm prefilter`
 * Add `--merge`, `--list`, and `--parallel` to `hnsm distance`
-* Finish `fasr xlsx`
 
 * Improve help texts
 * `libs/loc.rs`
@@ -26,29 +21,6 @@
     * Add `seq_mins()`
 
 ## 0.2.0 - 2024-12-20
-
-* New binary `fasr`, ported from `App::Fasops`
-    * `fasr axt2fas`
-    * `fasr check`
-    * `fasr concat`
-    * `fasr consensus`
-    * `fasr cover`
-    * `fasr create`
-    * `fasr filter`
-    * `fasr join`
-    * `fasr link`
-    * `fasr maf2fas`
-    * `fasr name`
-    * `fasr pl-p2m`
-    * `fasr refine`
-    * `fasr replace`
-    * `fasr separate`
-    * `fasr slice`
-    * `fasr split`
-    * `fasr stat`
-    * `fasr subset`
-    * `fasr variation`
-    * `fasr xlsx`
 
 * Add `hnsm convert`
 * Add `hnsm interleave`
