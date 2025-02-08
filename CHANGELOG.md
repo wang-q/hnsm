@@ -2,6 +2,8 @@
 
 ## Unreleased - ReleaseDate
 
+## 0.3.1 - 2025-02-08
+
 * Move `pgr` and `fasr` out
 
 ## 0.3.0 - 2025-01-20

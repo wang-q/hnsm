@@ -37,7 +37,7 @@ provides:
 
 ## Install
 
-Current release: 0.3.0
+Current release: 0.3.1
 
 ```bash
 cargo install --path . --force #--offline
