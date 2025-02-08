@@ -107,4 +107,3 @@ Subcommand groups:
 }
 
 // TODO: Remove fully contained sequences
-// TODO: We lack the canonical k-mers

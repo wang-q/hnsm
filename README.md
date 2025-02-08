@@ -7,9 +7,9 @@
 `hnsm` is a high-performance bioinformatics toolkit for sequence analysis and comparison. It
 provides:
 
-- 🚀 Fast sequence alignment and comparison
-- 🧬 Support for both DNA and protein sequences
+- 🚀 Fast sequence comparison
 - 🧠 Smart matching algorithms for sequence clustering
+- 🧬 Support for both DNA and protein sequences
 - 📊 Comprehensive analysis tools for genomic data
 - ⚡️ Parallel processing for large datasets
 
@@ -85,12 +85,14 @@ Commands:
   distance    Estimate distances between DNA/protein sequences using minimizers
   filter      Filter records in FA file(s)
   gz          Compressing a file using the blocked gzip format (BGZF)
+  hv          Estimate distances between DNA/protein files using hypervectors
   interleave  Interleave two PE files
   mask        Soft/hard-masking regions in FA file(s)
   masked      Identify masked regions in FA file(s
   n50         Count total bases in FA file(s)
   one         Extract one FA record by name
   order       Extract some FA records in the order specified by a list
+  prefilter   Prefilter genome/metagenome assembly by amino acid minimizers
   range       Extract sequences defined by the range(s)
   rc          Reverse complement a FA file
   replace     Replace headers of a FA file based on a TSV mapping
@@ -113,14 +115,14 @@ Subcommand groups:
     * info: size / count / masked / n50
     * records: one / some / order / split
     * transform: replace / rc / filter / dedup / mask / sixframe
-    * indexing: gz / range
-        * `hnsm gz` writes out the BGZF format and `hnsm range` reads it
+    * indexing: gz / range / prefilter
+        * `hnsm gz` writes out the BGZF format
 
 * Fastq files
     * interleave
 
 * Clustering
-    * DNA/protein: distance
+    * DNA/protein: distance / hv
     * vectors: similarity
     * convert
     * cluster

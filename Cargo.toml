@@ -66,7 +66,7 @@ assert_cmd = "2.0.14"
 predicates = "3.1.0"
 approx = "0.5.1"
 criterion = "0.5.1"
-rand = { version = "0.9.0", features = ["small_rng"] }
+rand = { version = "0.8.5", features = ["small_rng"] }
 
 # jaccard
 nohash-hasher = "0.2.0"
