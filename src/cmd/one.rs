@@ -6,13 +6,18 @@ pub fn make_subcommand() -> Command {
         .about("Extract one FA record by name")
         .after_help(
             r###"
-This command extracts a single FASTA record from an input file based on the provided sequence name.
+This command extracts a single FA record from an input file based on the provided sequence name.
+
+Notes:
+* Case-sensitive name matching
+* Stops after finding the first match
+* Supports both plain text and gzipped (.gz) files
 
 Examples:
-1. Extract a record by name and write to stdout:
+1. Extract a record by name:
    hnsm one input.fa seq1
 
-2. Extract a record by name and save to a file:
+2. Save to a file:
    hnsm one input.fa seq1 -o output.fa
 
 "###,
@@ -55,13 +60,12 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     let name = args.get_one::<String>("name").unwrap();
 
     //----------------------------
-    // Ops
+    // Process
     //----------------------------
     for result in fa_in.records() {
-        // obtain record or fail with error
         let record = result?;
+        let this_name = String::from_utf8(record.name().into())?;
 
-        let this_name = String::from_utf8(record.name().into()).unwrap();
         if this_name == *name {
             fa_out.write_record(&record)?;
             break;

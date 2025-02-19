@@ -8,11 +8,33 @@ pub fn make_subcommand() -> Command {
         .about("Split FA file(s) into several files")
         .after_help(
             r#"
-Modes
+Split FASTA files into multiple smaller files based on different modes:
 
-* name  - using sequence names as file names
-* about - about `count` bytes each by record
-    * -c, -e, -m
+1. name: Create separate files for each sequence
+   * Uses sequence names as filenames (sanitized)
+   * Special characters ()/: are replaced with _
+
+2. about: Split by approximate size
+   * -c SIZE: Split into files of about SIZE bytes each
+   * -e: Ensure even number of sequences per file
+   * -m NUM: Maximum number of output files (default: 999)
+
+Notes:
+* Supports both plain text and gzipped (.gz) files
+* Output files are named as xxx.fa
+* For 'name' mode, filenames are sanitized
+* For 'about' mode, files are zero-padded numbered
+
+Examples:
+1. Split by sequence names:
+   hnsm split name input.fa -o output_dir
+
+2. Split into ~1MB files:
+   hnsm split about input.fa -c 1000000 -o output_dir
+
+3. Split with even sequences:
+   hnsm split about input.fa -c 1000000 -e -o output_dir
+
 
 "#,
         )

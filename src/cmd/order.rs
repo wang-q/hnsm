@@ -8,14 +8,21 @@ pub fn make_subcommand() -> Command {
         .after_help(
             r###"
 This command extracts FA records from an input file in the order specified by a list of sequence names.
-All sequences are loaded into memory, so this command may consume significant memory for large files.
+
+Notes:
+* Case-sensitive name matching
+* One sequence name per line in the list file
+* Empty lines and lines starting with '#' are ignored
+* All sequences are loaded into memory
+* Supports both plain text and gzipped (.gz) files
+* Missing sequences in the input file are silently skipped
 
 Examples:
-1. Extract sequences in the order specified by list.txt:
-   hnsm order input.fa list.txt -o output.fa
-
-2. Output to stdout:
+1. Extract sequences in order specified by list.txt:
    hnsm order input.fa list.txt
+
+2. Process gzipped files:
+   hnsm order input.fa.gz list.txt -o output.fa.gz
 
 "###,
         )
@@ -54,27 +61,28 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
         .set_line_base_count(usize::MAX)
         .build_from_writer(writer);
 
-    let vec_list = intspan::read_first_column(args.get_one::<String>("list.txt").unwrap());
+    let list: indexmap::IndexSet<_> =
+        intspan::read_first_column(args.get_one::<String>("list.txt").unwrap())
+            .into_iter()
+            .collect();
 
     //----------------------------
-    // Ops
+    // Process
     //----------------------------
     // Load records into a BTreeMap for efficient lookup
     let mut record_of = BTreeMap::new();
 
     for result in fa_in.records() {
-        // obtain record or fail with error
         let record = result?;
+        let name = String::from_utf8(record.name().into())?;
 
-        let name = String::from_utf8(record.name().into()).unwrap();
-        if vec_list.contains(&name) {
+        if list.contains(&name) {
             record_of.insert(name, record);
         }
     }
 
-    for el in vec_list.iter() {
-        if record_of.contains_key(el) {
-            let record = record_of.get(el).unwrap();
+    for name in list.iter() {
+        if let Some(record) = record_of.get(name) {
             fa_out.write_record(record)?;
         }
     }

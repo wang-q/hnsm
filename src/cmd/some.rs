@@ -8,17 +8,22 @@ pub fn make_subcommand() -> Command {
         .after_help(
             r###"
 This command extracts FASTA records from an input file based on a list of sequence names.
-It can also invert the selection to output sequences not in the list.
+
+Notes:
+* Case-sensitive name matching
+* One sequence name per line in the list file
+* Empty lines and lines starting with '#' are ignored
+* Supports both plain text and gzipped (.gz) files
 
 Examples:
 1. Extract sequences listed in list.txt:
    hnsm some input.fa list.txt
 
-2. Extract sequences NOT listed in list.txt (invert selection):
+2. Extract sequences NOT in list.txt:
    hnsm some input.fa list.txt -i
 
-3. Save the output to a file:
-   hnsm some input.fa list.txt -o output.fa
+3. Process gzipped files:
+   hnsm some input.fa.gz list.txt -o output.fa.gz
 
 "###,
         )
@@ -67,18 +72,20 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
         .build_from_writer(writer);
 
     //----------------------------
-    // Ops
+    // Load list
     //----------------------------
     let set_list: HashSet<String> =
         intspan::read_first_column(args.get_one::<String>("list.txt").unwrap())
             .into_iter()
             .collect();
 
+    //----------------------------
+    // Process
+    //----------------------------
     for result in fa_in.records() {
-        // obtain record or fail with error
         let record = result?;
-
         let name = String::from_utf8(record.name().into())?;
+
         if set_list.contains(&name) != is_invert {
             fa_out.write_record(&record)?;
         }
