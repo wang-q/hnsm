@@ -7,7 +7,17 @@ pub fn make_subcommand() -> Command {
         .after_help(
             r###"
 This command calculates the base statistics (A, C, G, T, N) for each sequence in one or more FA files.
-It outputs a table with the sequence name, length, and counts of each base.
+It outputs a tab-separated table with sequence statistics.
+
+Output format:
+    #seq    len    A    C    G    T    N
+    ...sequence records...
+    total   sum    sumA sumC sumG sumT sumN
+
+Notes:
+* Non-standard bases are counted as N
+* Case-insensitive (both upper and lower case are counted)
+* Supports both plain text and gzipped (.gz) files
 
 Examples:
 1. Count base statistics for a single FA file:
@@ -46,28 +56,26 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     let mut writer = intspan::writer(args.get_one::<String>("outfile").unwrap());
 
     //----------------------------
-    // Ops
+    // Init
     //----------------------------
-    // Initialize counters
     let mut total_len = 0usize;
     let mut total_base_cnt = [0usize; 5]; // A, C, G, T, N
 
     // Write the header
     writer.write_fmt(format_args!("#seq\tlen\tA\tC\tG\tT\tN\n"))?;
 
-    // Process each input file
+    //----------------------------
+    // Process
+    //----------------------------
     for infile in args.get_many::<String>("infiles").unwrap() {
         let reader = intspan::reader(infile);
         let mut fa_in = noodles_fasta::io::Reader::new(reader);
 
-        // Process each record
         for result in fa_in.records() {
-            // obtain record or fail with error
             let record = result?;
             let name = String::from_utf8(record.name().into())?;
             let seq = record.sequence();
 
-            // Count bases in the sequence
             let (len, base_cnt) = count_bases(seq.get(..).unwrap());
 
             writer.write_fmt(format_args!(
@@ -95,9 +103,11 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
         }
     }
 
+    //----------------------------
+    // Output total
+    //----------------------------
     writer.write_fmt(format_args!(
-        "{}\t{}\t{}\t{}\t{}\t{}\t{}\n",
-        "total",
+        "total\t{}\t{}\t{}\t{}\t{}\t{}\n",
         total_len,
         total_base_cnt[hnsm::Nt::A as usize],
         total_base_cnt[hnsm::Nt::C as usize],

@@ -3,13 +3,36 @@ use clap::*;
 // Create clap subcommand arguments
 pub fn make_subcommand() -> Command {
     Command::new("n50")
-        .about("Count total bases in FA file(s)")
+        .about("Calculate N50 and other assembly statistics")
         .after_help(
             r#"
-* N50 is the default output value, set a single `-N 0` to skip this
-* To calculate both N50 and N90, enter `-N 50 -N 90`
-* Turn on other options to compute more statitics
-* E-size is defined as the expected contig length at which a random position locates
+This command calculates various assembly statistics from FA files.
+
+Statistics:
+* N50/N90: Length where contigs of this length or longer include 50%/90% of the total
+* S: Sum of all sequence lengths
+* A: Average sequence length
+* E: E-size, the expected contig length at which a random base occurs
+* C: Count of sequences
+
+Notes:
+* N50 is calculated by default, use `-N 0` to skip
+* Multiple N-statistics: `-N 50 -N 90`
+* Use --genome to calculate statistics based on estimated genome size
+* Supports both plain text and gzipped (.gz) files
+
+Examples:
+1. Basic N50 calculation:
+   hnsm n50 input.fa
+
+2. Calculate N50, N90 and other statistics:
+   hnsm n50 input.fa -N 50 -N 90 -S -A -E -C
+
+3. Calculate based on genome size:
+   hnsm n50 input.fa -g 3000000
+
+4. Transpose output for better readability:
+   hnsm n50 input.fa -N 50 -N 90 -S -t
 
 "#,
         )
@@ -103,21 +126,19 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     let is_transpose = args.get_flag("transpose");
 
     let opt_nx: Vec<_> = args.get_many::<usize>("nx").unwrap().copied().collect();
-
-    let opt_genome = if args.contains_id("genome") {
-        *args.get_one::<usize>("genome").unwrap()
-    } else {
-        usize::MAX
-    };
-
+    let opt_genome = args
+        .get_one::<usize>("genome")
+        .copied()
+        .unwrap_or(usize::MAX);
     let mut writer = intspan::writer(args.get_one::<String>("outfile").unwrap());
 
     //----------------------------
-    // Operating
+    // Process
     //----------------------------
     let mut lens = vec![];
     let mut record_cnt = 0;
     let mut total_size = 0;
+
     for infile in args.get_many::<String>("infiles").unwrap() {
         let reader = intspan::reader(infile);
         let mut fa_in = noodles_fasta::io::Reader::new(reader);

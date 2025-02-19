@@ -4,7 +4,7 @@ use std::io::Write;
 // Create clap subcommand arguments
 pub fn make_subcommand() -> Command {
     Command::new("masked")
-        .about("Identify masked regions in FA file(s")
+        .about("Identify masked regions in FA file(s)")
         .after_help(
             r###"
 This command identifies masked regions in one or more FA files. Masked regions can be:
@@ -12,8 +12,13 @@ This command identifies masked regions in one or more FA files. Masked regions c
 - Regions of N/n
 
 The output is a list of regions in the format:
-    seq_name:start-end
-    seq_name:position (if start == end)
+    seq_name:start-end        # For regions spanning multiple positions
+    seq_name:position        # For single positions
+
+Notes:
+* Coordinates are 1-based, inclusive
+* Supports both plain text and gzipped (.gz) files
+* Adjacent masked positions are merged into a single region
 
 Examples:
 1. Identify masked regions (lowercase and N/n):
@@ -57,7 +62,6 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     // Args
     //----------------------------
     let is_gap = args.get_flag("gap");
-
     let mut writer = intspan::writer(args.get_one::<String>("outfile").unwrap());
 
     //----------------------------
@@ -68,28 +72,25 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
         let mut fa_in = noodles_fasta::io::Reader::new(reader);
 
         for result in fa_in.records() {
-            // obtain record or fail with error
             let record = result?;
-
-            let name = String::from_utf8(record.name().into()).unwrap();
+            let name = String::from_utf8(record.name().into())?;
             let seq = record.sequence();
 
             let mut begin = usize::MAX;
             let mut end = usize::MAX;
 
-            for (i, el) in seq.get(..).unwrap().iter().enumerate() {
+            for (i, &el) in seq.get(..).unwrap().iter().enumerate() {
                 let is_masked = if is_gap {
-                    hnsm::is_n(*el)
+                    hnsm::is_n(el)
                 } else {
-                    hnsm::is_n(*el) || hnsm::is_lower(*el)
+                    hnsm::is_n(el) || hnsm::is_lower(el)
                 };
+
                 if is_masked {
                     if begin == usize::MAX {
                         begin = i;
-                        end = i;
-                    } else {
-                        end = i;
                     }
+                    end = i;
                 } else if begin != usize::MAX {
                     writer.write_all(out_line(&name, begin, end).as_ref())?;
 

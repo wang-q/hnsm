@@ -47,14 +47,10 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
         let mut fa_in = noodles_fasta::io::Reader::new(reader);
 
         for result in fa_in.records() {
-            // obtain record or fail with error
             let record = result?;
+            let name = String::from_utf8(record.name().into())?;
 
-            writer.write_fmt(format_args!(
-                "{}\t{}\n",
-                String::from_utf8(record.name().into()).unwrap(),
-                record.sequence().len()
-            ))?;
+            writer.write_fmt(format_args!("{}\t{}\n", name, record.sequence().len()))?;
         }
     }
 
