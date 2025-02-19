@@ -4,26 +4,39 @@ use std::io::Write;
 // Create clap subcommand arguments
 pub fn make_subcommand() -> Command {
     Command::new("sixframe")
-        .about("Six-Frame Translation")
+        .about("Translate DNA sequences in six frames")
         .after_help(
             r###"
-This command performs six-frame translation on DNA sequences in a FA file.
-It translates each sequence into all six possible reading frames (three forward and three reverse)
-and identifies open reading frames (ORFs) in the translated protein sequences.
+This command performs six-frame translation of DNA sequences and identifies ORFs.
 
-The output includes the ORF sequences along with their positions and frames.
+Translation frames:
+* Forward strand: +1, +2, +3 (starting at positions 0, 1, 2)
+* Reverse strand: -1, -2, -3 (complement sequence, then start at 0, 1, 2)
+
+Output format:
+>sequence_name(strand):start-end|frame=N
+MXXXXXX*
+
+Filters:
+* --len N: Minimum ORF length (amino acids)
+* --start: Must start with Methionine (M)
+* --end: Must end with stop codon (*)
+
+Notes:
+* Coordinates are 1-based
+* Non-standard bases are translated as X
+* Supports both plain text and gzipped (.gz) files
+* Stop codons are included in the output
 
 Examples:
-1. Perform six-frame translation on a FA file and output to stdout:
-   hnsm sixframe input.fa
+1. Basic translation:
+   hnsm sixframe input.fa -o orfs.fa
 
-2. Perform six-frame translation and save the results to a file:
-   hnsm sixframe input.fa -o output.fa
+2. Filter long ORFs:
+   hnsm sixframe input.fa --len 100 -o orfs.fa
 
-3. Combine filters (e.g., ORFs starting with M, ending with *, and at least 50 amino acids):
-   hnsm sixframe input.fa --len 50 --start --end
-
-For more information on six-frame translation, visit: https://web.expasy.org/translate/
+3. Complete proteins only:
+   hnsm sixframe input.fa --start --end -o orfs.fa
 
 "###,
         )

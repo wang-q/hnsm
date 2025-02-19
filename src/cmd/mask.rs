@@ -3,27 +3,38 @@ use clap::*;
 // Create clap subcommand arguments
 pub fn make_subcommand() -> Command {
     Command::new("mask")
-        .about("Soft/hard-masking regions in FA file(s)")
+        .about("Mask regions in FA file(s)")
         .after_help(
             r###"
-This command masks regions in a FA file based on a runlist JSON file. The runlist specifies
-regions to be masked, and the masking can be either soft (lowercase) or hard (replace with N).
+This command masks specified regions in FASTA sequences.
 
-The runlist JSON file should have the following format:
-    {
-        "seq_name": "start1-end1,start2-end2,...",
-        ...
-    }
+Masking modes:
+* Soft-masking (default): Convert to lowercase
+* Hard-masking (--hard): Replace with N's
+
+Input format (runlist.json):
+{
+    "seq1": "1-100,200-300",    # Mask positions 1-100 and 200-300
+    "seq2": "50-150",           # Mask positions 50-150
+    "seq3": "1-50,90-100,..."   # Multiple regions allowed
+}
+
+Notes:
+* 1-based coordinates
+* Inclusive ranges
+* Sequences not in runlist remain unchanged
+* Supports both plain text and gzipped (.gz) files
+* Invalid ranges are silently ignored
 
 Examples:
-1. Soft-mask regions specified in runlist.json:
-   hnsm mask input.fa runlist.json -o masked.fa
+1. Soft-mask regions:
+   hnsm mask input.fa regions.json -o output.fa
 
-2. Hard-mask regions (replace with N):
-   hnsm mask input.fa runlist.json --hard -o masked.fa
+2. Hard-mask regions:
+   hnsm mask input.fa regions.json --hard -o output.fa
 
-3. Output to stdout:
-   hnsm mask input.fa runlist.json
+3. Process gzipped files:
+   hnsm mask input.fa.gz regions.json -o output.fa.gz
 
 "###,
         )
@@ -76,12 +87,10 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
         .build_from_writer(writer);
 
     //----------------------------
-    // Ops
+    // Process
     //----------------------------
     for result in fa_in.records() {
-        // obtain record or fail with error
         let record = result?;
-
         let name = String::from_utf8(record.name().into())?;
         let seq = record.sequence();
 
@@ -98,12 +107,11 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
             let offset = (lower - 1) as usize;
             let length = (upper - lower + 1) as usize;
 
-            let mut str = seq_out[offset..offset + length].to_string();
-            if is_hard {
-                str = "N".repeat(length); // Hard-mask with N
+            let str = if is_hard {
+                "N".repeat(length)
             } else {
-                str = str.to_lowercase(); // Soft-mask with lowercase
-            }
+                seq_out[offset..offset + length].to_lowercase()
+            };
             seq_out.replace_range(offset..offset + length, &str);
         }
 

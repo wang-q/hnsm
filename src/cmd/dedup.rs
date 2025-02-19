@@ -7,10 +7,25 @@ pub fn make_subcommand() -> Command {
         .about("Deduplicate records in FA file(s)")
         .after_help(
             r###"
-This command removes duplicate records from one or more FA files based on name, description, or sequence.
+This command removes duplicate records from FA files.
 
-* The default behavior is the same as `hnsm filter -u`
-* By default, only the forward strand is compared, setting `-b` compares both strands
+Deduplication modes:
+* By name (default): Compare sequence names only
+* By description (-d): Compare full headers (name + description)
+* By sequence (-s): Compare sequence contents
+
+Comparison options:
+* -b: Compare both strands (forward and reverse complement)
+* -c: Case-insensitive comparison
+
+Output options:
+* -f FILE: Save duplicated entries mapping to FILE
+* Format: original_name    duplicate_name
+
+Notes:
+* First occurrence is kept, others removed
+* Supports both plain text and gzipped (.gz) files
+* -b implies case-insensitive comparison for sequences
 
  sequence name
  | |
@@ -19,20 +34,17 @@ This command removes duplicate records from one or more FA files based on name, 
      description
 
 Examples:
-1. Deduplicate by name (default):
-   hnsm dedup input.fa
+1. Basic deduplication by name:
+   hnsm dedup input.fa -o output.fa
 
-2. Deduplicate by sequence:
-   hnsm dedup input.fa -s
+2. By sequence content:
+   hnsm dedup input.fa -s -o output.fa
 
-3. Deduplicate by name and description:
-   hnsm dedup input.fa -d
+3. Compare both strands:
+   hnsm dedup input.fa -s -b -o output.fa
 
-4. Compare both strands:
-   hnsm dedup input.fa -b
-
-5. Save duplicated names to a file:
-   hnsm dedup input.fa -f duplicates.txt
+4. Save duplicates mapping:
+   hnsm dedup input.fa -f dups.tsv -o output.fa
 
 "###,
         )
@@ -104,9 +116,10 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
         .build_from_writer(writer);
 
     //----------------------------
-    // Ops
+    // Process
     //----------------------------
     let mut subject_map: HashMap<u64, Vec<String>> = HashMap::new();
+
     for infile in args.get_many::<String>("infiles").unwrap() {
         let reader = intspan::reader(infile);
         let mut fa_in = noodles_fasta::io::Reader::new(reader);

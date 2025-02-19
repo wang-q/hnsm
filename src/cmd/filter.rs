@@ -4,45 +4,40 @@ use std::collections::BTreeSet;
 // Create clap subcommand arguments
 pub fn make_subcommand() -> Command {
     Command::new("filter")
-        .about("Filter records in FA file(s)")
+        .about("Filter and format sequences in FA file(s)")
         .after_help(
             r###"
-This command filters records in one or more FASTA files based on various criteria.
-It can filter by sequence length, number of Ns, and more. It also supports formatting options.
+This command filters and formats sequences in FA files.
 
+Filters:
+* --minsize N: Keep sequences >= N bp
+* --maxsize N: Keep sequences <= N bp
+* --maxn N: Keep sequences with < N ambiguous bases
+* --uniq: Remove duplicate sequence IDs
+
+Formatters:
+* --upper: Convert sequences to uppercase
+* --iupac: Convert ambiguous codes to 'N'
+* --dash: Remove dashes from sequences
+* --simplify: Simplify sequence names (truncate at first space/./,/-)
+* --line N: Set sequence line length
+
+Notes:
+* Multiple filters can be combined
+* Supports both plain text and gzipped (.gz) files
+* For duplicate IDs, keeps the first occurrence
 * Not all faFilter options have been implemented
   Wildcards for names can be easily implemented with `hnsm some`
-* This subcommand is also a formatter
-    * -l is used to set the number of bases per line
-    * -b/--block is not implemented here
 
 Examples:
-1. Filter sequences by minimum size:
-   hnsm filter input.fa --minsize 100
+1. Filter by size:
+   hnsm filter input.fa --minsize 100 --maxsize 1000
 
-2. Filter sequences by maximum size:
-   hnsm filter input.fa --maxsize 1000
+2. Format sequences:
+   hnsm filter input.fa --upper --iupac --line 80
 
-3. Filter sequences by maximum number of Ns:
-   hnsm filter input.fa --maxn 10
-
-4. Remove duplicate sequences:
-   hnsm filter input.fa --uniq
-
-5. Convert sequences to upper case:
-   hnsm filter input.fa --upper
-
-6. Convert IUPAC ambiguous codes to 'N':
-   hnsm filter input.fa --iupac
-
-7. Remove dashes from sequences:
-   hnsm filter input.fa --dash
-
-8. Simplify sequence names:
-   hnsm filter input.fa --simplify
-
-9. Set sequence line length:
-   hnsm filter input.fa --line 80
+3. Process multiple files:
+   hnsm filter *.fa --uniq --simplify -o output.fa
 
 "###,
         )
@@ -158,7 +153,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
         .build_from_writer(writer);
 
     //----------------------------
-    // Ops
+    // Process
     //----------------------------
     let mut set_list: BTreeSet<String> = BTreeSet::new();
     for infile in args.get_many::<String>("infiles").unwrap() {

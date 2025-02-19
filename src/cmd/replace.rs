@@ -13,9 +13,9 @@ If more than two columns are provided, the sequence will be duplicated for each 
 Multiple lines of the same original_name will also duplicate the record.
 
 The TSV file format:
-    original_name   replace_name    more_replace_name
-    original_name   replace_name
-    original_name   another_replace_name
+    seq1    replace_name    more_replace_name
+    seq2    replace_name
+    seq2    another_replace_name
 
 Examples:
 1. Replace headers using a TSV file:
@@ -72,25 +72,20 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
         .build_from_writer(writer);
 
     //----------------------------
-    // Ops
+    // Process
     //----------------------------
     for result in fa_in.records() {
-        // obtain record or fail with error
         let record = result?;
         let name = String::from_utf8(record.name().into())?;
 
-        if replace_of.contains_key(&name) {
-            for el in replace_of.get(&name).unwrap() {
+        if let Some(new_names) = replace_of.get(&name) {
+            for el in new_names {
                 let definition = noodles_fasta::record::Definition::new(&**el, None);
                 let record_replace =
                     noodles_fasta::Record::new(definition, record.sequence().clone());
-                // output the replaced record
                 fa_out.write_record(&record_replace)?;
             }
-        } else if is_some {
-            continue;
-        } else {
-            // output the original record
+        } else if !is_some {
             fa_out.write_record(&record)?;
         }
     }

@@ -4,23 +4,31 @@ use std::collections::HashSet;
 // Create clap subcommand arguments
 pub fn make_subcommand() -> Command {
     Command::new("rc")
-        .about("Reverse complement a FA file")
+        .about("Reverse complement sequences in FA file(s)")
         .after_help(
             r###"
-This command reverse complements sequences in a FA file. If a list of sequence names is provided,
-only the sequences in the list will be reverse complemented. Otherwise, all sequences will be processed.
+This command reverse complements DNA sequences in FA files.
 
-By default, reverse complemented sequences will have their names prefixed with "RC_". Use the --consistent
-flag to keep the original names.
+Features:
+* Process all sequences or only selected ones
+* Optionally prefix names with 'RC_'
+* Handles IUPAC ambiguous codes correctly
+* Preserves case (upper/lower) of bases
+
+Notes:
+* Case-sensitive name matching when using list
+* Empty lines and lines starting with '#' are ignored in list
+* Supports both plain text and gzipped (.gz) files
+* Non-IUPAC characters are preserved as-is
 
 Examples:
-1. Reverse complement all sequences in a FASTA file:
+1. Reverse complement all sequences:
    hnsm rc input.fa -o output.fa
 
-2. Reverse complement only sequences listed in list.txt:
+2. Only process listed sequences:
    hnsm rc input.fa list.txt -o output.fa
 
-3. Reverse complement sequences but keep their original names:
+3. Keep original names (no 'RC_' prefix):
    hnsm rc input.fa -c -o output.fa
 
 "###,
@@ -69,9 +77,6 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
         .set_line_base_count(usize::MAX)
         .build_from_writer(writer);
 
-    //----------------------------
-    // Ops
-    //----------------------------
     let set_list: HashSet<String> = if args.contains_id("list.txt") {
         intspan::read_first_column(args.get_one::<String>("list.txt").unwrap())
             .into_iter()
@@ -80,22 +85,25 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
         HashSet::new()
     };
 
+    //----------------------------
+    // Process
+    //----------------------------
     for result in fa_in.records() {
-        // obtain record or fail with error
         let record = result?;
-        let mut name = String::from_utf8(record.name().into()).unwrap();
+        let name = String::from_utf8(record.name().into())?;
 
         if args.contains_id("list.txt") && !set_list.contains(&name) {
             fa_out.write_record(&record)?;
             continue;
         }
 
-        if !is_consistent {
-            name = format!("RC_{}", name);
-        }
+        let new_name = if is_consistent {
+            name
+        } else {
+            format!("RC_{}", name)
+        };
 
-        let definition = noodles_fasta::record::Definition::new(&*name, None);
-
+        let definition = noodles_fasta::record::Definition::new(&*new_name, None);
         let seq_rc: noodles_fasta::record::Sequence = record
             .sequence()
             .complement()
