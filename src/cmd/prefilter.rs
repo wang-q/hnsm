@@ -9,22 +9,38 @@ pub fn make_subcommand() -> Command {
         .about("Prefilter genome/metagenome assembly by amino acid minimizers")
         .after_help(
             r###"
-This command pre-filters genome or metagenome assemblies using amino acid minimizers.
+This command filters sequences using amino acid minimizers.
 It processes input files in chunks for efficient memory usage and supports parallel processing.
 
-<infile> can be a plain text file or a BGZF-compressed file (but not stdin or gzip).
+Process:
+1. Six-frame translation of input sequences
+2. Extract amino acid minimizers
+3. Compare with reference sequences
+4. The output is sent to stdout and can be redirected to a file.
 
-The output is sent to stdout and can be redirected to a file.
+Parameters:
+* --chunk N: Process N bytes at a time (memory control)
+* --len N: Minimum protein length
+* --kmer/-k N: K-mer size for minimizers
+* --window/-w N: Window size for minimizers
+* --parallel/-p N: Number of threads
+
+Notes:
+* Supports BGZF compressed files (.gz)
+* Automatic index creation (.loc)
+* Cannot read from stdin or gzip
+* Memory usage scales with chunk size
+* Larger window size reduces sensitivity
 
 Examples:
 1. Basic usage:
-   hnsm prefilter input.fa match_file
+   hnsm prefilter input.fa refs.fa
 
 2. Specify chunk size and minimum sequence length:
-   hnsm prefilter input.fa match_file --chunk 50000 --len 20
+   hnsm prefilter input.fa refs.fa --chunk 50000 --len 20
 
 3. Use custom k-mer and window sizes:
-   hnsm prefilter input.fa match_file -k 7 -w 2 --parallel 8
+   hnsm prefilter input.fa refs.fa -k 7 -w 2 --parallel 8
 
 "###,
         )

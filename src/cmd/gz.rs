@@ -3,26 +3,35 @@ use clap::*;
 // Create clap subcommand arguments
 pub fn make_subcommand() -> Command {
     Command::new("gz")
-        .about("Compressing a file using the blocked gzip format (BGZF)")
+        .about("Compressing a file using the BGZF format")
         .after_help(
             r###"
-This command compresses a file using the blocked gzip format (BGZF). It supports parallel
-compression and can read from stdin or a plain file, but not gzipped file.
+This command compresses a file using BGZF (Blocked Gzip Format).
 
-The output is saved as a .gz file, and an index file (.gzi) is created using the `bgzip -r` command.
+Features:
+* Parallel compression with multiple threads
+* Creates index file (.gzi) for random access
+* Supports stdin as input
+* Preserves original file
 
-* If no output file is specified with -o, the output will be saved as <infile>.gz and
-  <infile>.gz.gzi.
-* Otherwise, the output will be saved as <outfile>.gz and <outfile>.gz.gzi.
+Output files:
+* <infile>.gz: Compressed file
+* <infile>.gz.gzi: Index file
+
+Notes:
+* Cannot compress already gzipped files
+* Requires bgzip in PATH for indexing
+* Default thread count is 1
+* Index creation is automatic
 
 Examples:
 1. Compress a file with default settings, and the outfile is input.fa.gz:
    hnsm gz input.fa
 
-2. Compress a file with 4 threads:
+2. Multi-threaded compression:
    hnsm gz input.fa -p 4
 
-3. Compress from stdin and specify output file:
+3. From stdin with custom output:
    cat input.fa | hnsm gz stdin -o output.fa
 
 "###,
@@ -60,17 +69,14 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
 
     let opt_parallel = *args.get_one::<std::num::NonZeroUsize>("parallel").unwrap();
 
-    let outfile = format!(
-        "{}.gz",
-        if args.contains_id("outfile") {
-            args.get_one::<String>("outfile").unwrap()
-        } else {
-            infile
-        }
-    );
+    let outfile = if args.contains_id("outfile") {
+        format!("{}.gz", args.get_one::<String>("outfile").unwrap())
+    } else {
+        format!("{}.gz", infile)
+    };
 
     //----------------------------
-    // Open file
+    // Input
     //----------------------------
     let mut reader: Box<dyn std::io::BufRead> = if infile == "stdin" {
         Box::new(std::io::BufReader::new(std::io::stdin()))

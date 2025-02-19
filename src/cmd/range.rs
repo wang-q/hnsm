@@ -3,19 +3,19 @@ use clap::*;
 // Create clap subcommand arguments
 pub fn make_subcommand() -> Command {
     Command::new("range")
-        .about("Extract sequences defined by the range(s)")
+        .about("Extract sequence regions by coordinates")
         .after_help(
             r###"
-* <infile> can be plain text or bgzf but not stdin or gzip
+This command extracts sequence regions from FA files using genomic coordinates.
 
-* Range Format:
-  - General format: <seq_name>(<strand>):<start>-<end>
-    - <seq_name>: Required. The name of the sequence (e.g., chromosome or contig).
-    - <strand>: Optional. Indicates the strand:
-      - (+) for the positive strand (default if omitted).
-      - (-) for the negative strand.
-    - <start> and <end>: Required. The start and end positions of the range (1-based coordinates).
-  - Examples:
+Range format:
+    seq_name(strand):start-end
+
+* seq_name: Required, sequence identifier
+* strand: Optional, + (default) or -
+* start-end: Required, 1-based coordinates
+
+Examples:
     Mito
     I:1-100
     I(+):90-150
@@ -23,12 +23,31 @@ pub fn make_subcommand() -> Command {
     II:21294-22075
     II:23537-24097
 
-* Notes on Coordinates:
-  - All coordinates (<start> and <end>) are based on the positive strand, regardless of the specified strand.
+Input methods:
+* Command line: hnsm range input.fa "chr1:1-1000"
+* Range file: hnsm range input.fa -r ranges.txt
 
-* Performance Tips:
-  - The default capacity of the LRU cache is 1, meaning only the most recent record is cached.
-  - Sorting the range file (<rgfile>) will significantly speed up the extraction process.
+Features:
+* Supports BGZF compressed files (.gz)
+* Automatic index creation (.loc)
+* LRU caching for better performance
+* Reverse complement for negative strand
+
+Notes:
+* Cannot read from stdin or gzip
+* All coordinates (<start> and <end>) are based on the positive strand, regardless of the specified strand.
+* Sort range file for better performance
+* Cache size affects memory usage
+
+Examples:
+1. Single range:
+   hnsm range input.fa "chr1:1-1000"
+
+2. Multiple ranges:
+   hnsm range input.fa "chr1:1-1000" "chr2(-):2000-3000"
+
+3. From range file with larger cache:
+   hnsm range input.fa -r ranges.txt -c 10
 
 "###,
         )
