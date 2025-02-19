@@ -4,13 +4,37 @@ use std::io::Write;
 // Create clap subcommand arguments
 pub fn make_subcommand() -> Command {
     Command::new("interleave")
-        .about("Interleave two PE files")
+        .about("Interleave paired-end sequences")
         .after_help(
             r###"
-* The number of input files can be one or two.
-  When the number is one, output an `N` for the second sequence.
-* When using the `--fq` option, all arbitrary quality values will be set to ! (ASCII 33)
-* Multiple reads of the input file are required, so reading from stdin is not supported
+This command interleaves paired-end sequences from one or two files.
+
+Input modes:
+* Two files: Interleave R1 and R2 files
+* One file: Generate dummy R2 sequences (N's)
+
+Features:
+* Supports both FA and FQ formats
+* Automatic format detection
+* Custom read name prefix
+* Custom starting index
+
+Notes:
+* Cannot read from stdin
+* For FQ output, quality scores are:
+  - Preserved from input FQ
+  - Set to '!' (ASCII 33) for input FA
+* Paired files must have same number of reads
+
+Examples:
+1. Interleave two FQ files:
+   hnsm interleave R1.fq R2.fq -o out.fq
+
+2. Generate dummy pairs:
+   hnsm interleave R1.fa --prefix sample --start 1
+
+3. Convert to FQ:
+   hnsm interleave R1.fa R2.fa --fq -o out.fq
 
 "###,
         )

@@ -6,7 +6,7 @@ use std::io::Write;
 // Create clap subcommand arguments
 pub fn make_subcommand() -> Command {
     Command::new("distance")
-        .about("Estimate distances between DNA/protein sequences using minimizers")
+        .about("Estimate sequence distances using minimizers")
         .after_help(
             r###"
 This command calculates pairwise distances between sequences in FA file(s) using minimizers.

@@ -1,5 +1,19 @@
-//! Implementation of the [DBSCAN](https://en.wikipedia.org/wiki/DBSCAN)
-//! clustering algorithm.
+//! Implementation of the [DBSCAN](https://en.wikipedia.org/wiki/DBSCAN) clustering algorithm.
+//!
+//! Key features:
+//! * Density-based clustering
+//! * Automatic noise detection
+//! * No predefined cluster count
+//! * Handles arbitrary cluster shapes
+//!
+//! Parameters:
+//! * eps: Neighborhood radius
+//! * min_points: Core point threshold
+//!
+//! Output formats:
+//! * Cluster labels: Some(id) or None (noise)
+//! * Cluster groups: Vec<Vec<point_indices>>
+//! * Representative pairs: Vec<(center, member)>
 // Adopt from https://blog.petrzemek.net/2017/01/01/implementing-dbscan-from-distance-matrix-in-rust/
 use crate::ScoringMatrix;
 use std::collections::{HashMap, VecDeque};
