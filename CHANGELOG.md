@@ -2,6 +2,14 @@
 
 ## Unreleased - ReleaseDate
 
+* Improve documentation for all commands
+* Update dependencies
+    * rapidhash 1.4.0
+    * rand 0.9.0
+* Improve CI/CD
+    * Use cargo-zigbuild for Linux builds
+    * Update Rust toolchain to nightly-2025-01-16
+
 ## 0.3.1 - 2025-02-08
 
 * Move `pgr` and `fasr` out
