@@ -9,12 +9,13 @@ use rand::Rng;
 use std::collections::{BTreeSet, HashSet};
 
 fn generate_random_set(len: usize, size: usize) -> Vec<Vec<u64>> {
-    let mut rng = rand::thread_rng();
-    let side = rand::distributions::Uniform::new(0, u16::MAX as u64);
+    let mut rng = rand::rng();
 
     let mut vec = Vec::new();
     for _ in 0..size {
-        let set: Vec<u64> = (0..len).map(|_| rng.sample(side)).collect();
+        let set: Vec<u64> = (0..len)
+            .map(|_| rng.random_range(0..u16::MAX as u64))
+            .collect();
         vec.push(set)
     }
 
@@ -32,10 +33,9 @@ fn btree_inter(c: &mut Criterion) {
 
     c.bench_function("btree_inter", |b| {
         b.iter(|| {
-            let mut rng = rand::thread_rng();
-            let side = rand::distributions::Uniform::new(0, SIZE);
-            let set1 = vec.get(rng.sample(side)).unwrap();
-            let set2 = vec.get(rng.sample(side)).unwrap();
+            let mut rng = rand::rng();
+            let set1 = vec.get(rng.random_range(0..SIZE)).unwrap();
+            let set2 = vec.get(rng.random_range(0..SIZE)).unwrap();
             let inter = set1.intersection(set2).cloned().count();
             black_box(inter);
         })
@@ -50,10 +50,9 @@ fn btree_union(c: &mut Criterion) {
 
     c.bench_function("btree_union", |b| {
         b.iter(|| {
-            let mut rng = rand::thread_rng();
-            let side = rand::distributions::Uniform::new(0, SIZE);
-            let set1 = vec.get(rng.sample(side)).unwrap();
-            let set2 = vec.get(rng.sample(side)).unwrap();
+            let mut rng = rand::rng();
+            let set1 = vec.get(rng.random_range(0..SIZE)).unwrap();
+            let set2 = vec.get(rng.random_range(0..SIZE)).unwrap();
             let union = set1.union(set2).cloned().count();
             black_box(union);
         })
@@ -68,10 +67,9 @@ fn hashset_inter(c: &mut Criterion) {
 
     c.bench_function("hashset_inter", |b| {
         b.iter(|| {
-            let mut rng = rand::thread_rng();
-            let side = rand::distributions::Uniform::new(0, SIZE);
-            let set1 = vec.get(rng.sample(side)).unwrap();
-            let set2 = vec.get(rng.sample(side)).unwrap();
+            let mut rng = rand::rng();
+            let set1 = vec.get(rng.random_range(0..SIZE)).unwrap();
+            let set2 = vec.get(rng.random_range(0..SIZE)).unwrap();
             let inter = set1.intersection(set2).count();
             black_box(inter);
         })
@@ -86,10 +84,9 @@ fn hashset_union(c: &mut Criterion) {
 
     c.bench_function("hashset_union", |b| {
         b.iter(|| {
-            let mut rng = rand::thread_rng();
-            let side = rand::distributions::Uniform::new(0, SIZE);
-            let set1 = vec.get(rng.sample(side)).unwrap();
-            let set2 = vec.get(rng.sample(side)).unwrap();
+            let mut rng = rand::rng();
+            let set1 = vec.get(rng.random_range(0..SIZE)).unwrap();
+            let set2 = vec.get(rng.random_range(0..SIZE)).unwrap();
             let union = set1.union(set2).count();
             black_box(union);
         })
@@ -104,10 +101,9 @@ fn btree_access(c: &mut Criterion) {
 
     c.bench_function("btree_access", |b| {
         b.iter(|| {
-            let mut rng = rand::thread_rng();
-            let side = rand::distributions::Uniform::new(0, SIZE);
-            let set1 = vec.get(rng.sample(side)).unwrap();
-            let set2 = vec.get(rng.sample(side)).unwrap();
+            let mut rng = rand::rng();
+            let set1 = vec.get(rng.random_range(0..SIZE)).unwrap();
+            let set2 = vec.get(rng.random_range(0..SIZE)).unwrap();
             let sum = set1.len() + set2.len();
 
             black_box(sum);
@@ -123,10 +119,9 @@ fn btree_jaccard(c: &mut Criterion) {
 
     c.bench_function("btree_jaccard", |b| {
         b.iter(|| {
-            let mut rng = rand::thread_rng();
-            let side = rand::distributions::Uniform::new(0, SIZE);
-            let set1 = vec.get(rng.sample(side)).unwrap();
-            let set2 = vec.get(rng.sample(side)).unwrap();
+            let mut rng = rand::rng();
+            let set1 = vec.get(rng.random_range(0..SIZE)).unwrap();
+            let set2 = vec.get(rng.random_range(0..SIZE)).unwrap();
 
             let inter = set1.intersection(set2).cloned().count();
             let union = set1.len() + set2.len() - inter;
@@ -145,10 +140,9 @@ fn hashset_jaccard(c: &mut Criterion) {
 
     c.bench_function("hashset_jaccard", |b| {
         b.iter(|| {
-            let mut rng = rand::thread_rng();
-            let side = rand::distributions::Uniform::new(0, SIZE);
-            let set1 = vec.get(rng.sample(side)).unwrap();
-            let set2 = vec.get(rng.sample(side)).unwrap();
+            let mut rng = rand::rng();
+            let set1 = vec.get(rng.random_range(0..SIZE)).unwrap();
+            let set2 = vec.get(rng.random_range(0..SIZE)).unwrap();
 
             let inter = set1.intersection(set2).count();
             let union = set1.len() + set2.len() - inter;
@@ -167,10 +161,9 @@ fn tinyset_jaccard(c: &mut Criterion) {
 
     c.bench_function("tinyset_jaccard", |b| {
         b.iter(|| {
-            let mut rng = rand::thread_rng();
-            let side = rand::distributions::Uniform::new(0, SIZE);
-            let set1 = vec.get(rng.sample(side)).unwrap();
-            let set2 = vec.get(rng.sample(side)).unwrap();
+            let mut rng = rand::rng();
+            let set1 = vec.get(rng.random_range(0..SIZE)).unwrap();
+            let set2 = vec.get(rng.random_range(0..SIZE)).unwrap();
 
             let inter = set1.iter().filter(|&x| set2.contains(x)).count();
             let union = set1.len() + set2.len() - inter;
@@ -189,10 +182,9 @@ fn nohash_jaccard(c: &mut Criterion) {
 
     c.bench_function("nohash_jaccard", |b| {
         b.iter(|| {
-            let mut rng = rand::thread_rng();
-            let side = rand::distributions::Uniform::new(0, SIZE);
-            let set1 = vec.get(rng.sample(side)).unwrap();
-            let set2 = vec.get(rng.sample(side)).unwrap();
+            let mut rng = rand::rng();
+            let set1 = vec.get(rng.random_range(0..SIZE)).unwrap();
+            let set2 = vec.get(rng.random_range(0..SIZE)).unwrap();
 
             let inter = set1.intersection(set2).count();
             let union = set1.len() + set2.len() - inter;
@@ -211,10 +203,9 @@ fn rapidhash_jaccard(c: &mut Criterion) {
 
     c.bench_function("rapidhash_jaccard", |b| {
         b.iter(|| {
-            let mut rng = rand::thread_rng();
-            let side = rand::distributions::Uniform::new(0, SIZE);
-            let set1 = vec.get(rng.sample(side)).unwrap();
-            let set2 = vec.get(rng.sample(side)).unwrap();
+            let mut rng = rand::rng();
+            let set1 = vec.get(rng.random_range(0..SIZE)).unwrap();
+            let set2 = vec.get(rng.random_range(0..SIZE)).unwrap();
 
             let inter = set1.intersection(set2).count();
             let union = set1.len() + set2.len() - inter;
@@ -233,10 +224,9 @@ fn rapidinlinehash_jaccard(c: &mut Criterion) {
 
     c.bench_function("rapidinlinehash_jaccard", |b| {
         b.iter(|| {
-            let mut rng = rand::thread_rng();
-            let side = rand::distributions::Uniform::new(0, SIZE);
-            let set1 = vec.get(rng.sample(side)).unwrap();
-            let set2 = vec.get(rng.sample(side)).unwrap();
+            let mut rng = rand::rng();
+            let set1 = vec.get(rng.random_range(0..SIZE)).unwrap();
+            let set2 = vec.get(rng.random_range(0..SIZE)).unwrap();
 
             let inter = set1.intersection(set2).count();
             let union = set1.len() + set2.len() - inter;

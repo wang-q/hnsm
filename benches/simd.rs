@@ -10,7 +10,9 @@ use rand::Rng;
 // Generate a random vector of f32 values
 fn rand_vec(len: usize) -> Vec<f32> {
     let mut rng = rand::rng();
-    (0..len).map(|_| rng.random_range(0.0..10.0) as f32).collect()
+    (0..len)
+        .map(|_| rng.random_range(0.0..10.0) as f32)
+        .collect()
 }
 
 // Calculate the L2 norm using map and sum
