@@ -2,6 +2,8 @@
 
 ## Unreleased - ReleaseDate
 
+## 0.3.2 - 2025-04-02
+
 * Improve documentation for all commands
 * Update dependencies
     * rapidhash 1.4.0
