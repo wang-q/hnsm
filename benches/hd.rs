@@ -10,7 +10,6 @@ use rand::rngs::StdRng;
 use rand::{Rng, RngCore, SeedableRng};
 use rapidhash::RapidRng;
 use std::collections::HashSet;
-use wyhash::WyRng;
 
 pub fn encode_hash_hd_simd(kmer_hash_set: &HashSet<u64>, hv_d: usize) -> Vec<i16> {
     let num_seed = kmer_hash_set.len();
@@ -172,25 +171,6 @@ pub fn encode_hash_hd_rapid(kmer_hash_set: &HashSet<u64>, hv_d: usize) -> Vec<i1
     hv
 }
 
-pub fn encode_hash_hd_wy(kmer_hash_set: &HashSet<u64>, hv_d: usize) -> Vec<i16> {
-    let seed_vec = Vec::from_iter(kmer_hash_set.clone());
-    let mut hv = vec![-(kmer_hash_set.len() as i16); hv_d];
-
-    for hash in seed_vec {
-        let mut rng = WyRng::seed_from_u64(hash);
-
-        for i in 0..(hv_d / 64) {
-            let rnd_bits = rng.next_u64();
-
-            for j in 0..64 {
-                hv[i * 64 + j] += (((rnd_bits >> j) & 1) << 1) as i16;
-            }
-        }
-    }
-
-    hv
-}
-
 pub fn encode_hash_hd_std(kmer_hash_set: &HashSet<u64>, hv_d: usize) -> Vec<i16> {
     let seed_vec = Vec::from_iter(kmer_hash_set.clone());
     let mut hv = vec![-(kmer_hash_set.len() as i16); hv_d];
@@ -235,7 +215,7 @@ fn generate_kmer_hash_set(size: usize) -> HashSet<u64> {
     let mut kmer_hash_set = HashSet::with_capacity(size);
 
     for _ in 0..size {
-        kmer_hash_set.insert(rng.gen::<u64>());
+        kmer_hash_set.insert(rng.random::<u64>());
     }
 
     kmer_hash_set
@@ -262,9 +242,6 @@ fn bench_encode_hash_hd(c: &mut Criterion) {
     c.bench_function("encode_hash_hd_rapid_small", |b| {
         b.iter(|| encode_hash_hd_rapid(black_box(&kmer_hash_set_small), hv_d))
     });
-    c.bench_function("encode_hash_hd_wy_small", |b| {
-        b.iter(|| encode_hash_hd_wy(black_box(&kmer_hash_set_small), hv_d))
-    });
     c.bench_function("encode_hash_hd_std_small", |b| {
         b.iter(|| encode_hash_hd_std(black_box(&kmer_hash_set_small), hv_d))
     });
@@ -284,9 +261,6 @@ fn bench_encode_hash_hd(c: &mut Criterion) {
     });
     c.bench_function("encode_hash_hd_rapid_medium", |b| {
         b.iter(|| encode_hash_hd_rapid(black_box(&kmer_hash_set_medium), hv_d))
-    });
-    c.bench_function("encode_hash_hd_wy_medium", |b| {
-        b.iter(|| encode_hash_hd_wy(black_box(&kmer_hash_set_medium), hv_d))
     });
     c.bench_function("encode_hash_hd_std_medium", |b| {
         b.iter(|| encode_hash_hd_std(black_box(&kmer_hash_set_medium), hv_d))

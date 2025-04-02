@@ -5,15 +5,12 @@
 use std::simd::prelude::*;
 
 use criterion::{black_box, criterion_group, criterion_main, Criterion};
-use rand::distributions::Uniform;
-use rand::{thread_rng, Rng};
+use rand::Rng;
 
 // Generate a random vector of f32 values
 fn rand_vec(len: usize) -> Vec<f32> {
-    let mut rng = thread_rng();
-    let side = Uniform::new(0.0, 10.0);
-
-    (0..len).map(|_| rng.sample(side) as f32).collect()
+    let mut rng = rand::rng();
+    (0..len).map(|_| rng.random_range(0.0..10.0) as f32).collect()
 }
 
 // Calculate the L2 norm using map and sum
