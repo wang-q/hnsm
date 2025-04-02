@@ -13,19 +13,20 @@ jobs:
   linux-gnu:
     runs-on: ubuntu-latest
     steps:
-      - name: Show GLIBC
-        run: ldd --version
-      - name: Checkout sources
-        uses: actions/checkout@v4
-      - name: Setup Rust Toolchain for GitHub CI
-        uses: actions-rust-lang/setup-rust-toolchain@v1
+      - uses: hecrj/setup-rust-action@v1
         with:
-          rustflags: ""
-
+          rust-version: nightly
+          targets: x86_64-unknown-linux-gnu
+      - uses: goto-bus-stop/setup-zig@v2
+      - name: Install cargo-zigbuild
+        run: cargo install cargo-zigbuild
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       - name: Build
-        run: cargo build --verbose --release
+        run: cargo zigbuild --verbose --release --target x86_64-unknown-linux-gnu.2.17
       - name: Create tarball
-        run: tar cvfz hnsm.tar.gz target/release/hnsm
+        run: tar cvfz hnsm.tar.gz target/x86_64-unknown-linux-gnu/release/hnsm
         shell: bash
       - name: Upload binaries to releases
         uses: svenstaro/upload-release-action@v2
@@ -37,13 +38,10 @@ jobs:
   macos:
     runs-on: macOS-latest
     steps:
-      - name: Checkout sources
-        uses: actions/checkout@v4
-      - name: Setup Rust Toolchain for GitHub CI
-        uses: actions-rust-lang/setup-rust-toolchain@v1
+      - uses: hecrj/setup-rust-action@v1
         with:
-          rustflags: ""
-
+          rust-version: nightly
+      - uses: actions/checkout@v1
       - name: Build
         env:
           MACOSX_DEPLOYMENT_TARGET: 10.12
@@ -61,13 +59,10 @@ jobs:
   windows:
     runs-on: windows-latest
     steps:
-      - name: Checkout sources
-        uses: actions/checkout@v4
-      - name: Setup Rust Toolchain for GitHub CI
-        uses: actions-rust-lang/setup-rust-toolchain@v1
+      - uses: hecrj/setup-rust-action@v1
         with:
-          rustflags: ""
-
+          rust-version: nightly
+      - uses: actions/checkout@v1
       - name: Enable static CRT linkage
         run: |
           mkdir .cargo
