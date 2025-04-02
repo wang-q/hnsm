@@ -1,7 +1,9 @@
 # hnsm - **H**omogeneous **N**ucleic acids/amino acids **S**mart **M**atching
 
+[![Publish](https://github.com/wang-q/hnsm/actions/workflows/publish.yml/badge.svg)](https://github.com/wang-q/hnsm/actions)
 [![Build](https://github.com/wang-q/hnsm/actions/workflows/build.yml/badge.svg)](https://github.com/wang-q/hnsm/actions)
 [![codecov](https://codecov.io/gh/wang-q/hnsm/branch/master/graph/badge.svg?token=8toyNHCsVU)](https://codecov.io/gh/wang-q/hnsm)
+[![Lines of code](https://www.aschey.tech/tokei/github/wang-q/hnsm)](https://github.com//wang-q/hnsm)
 [![license](https://img.shields.io/github/license/wang-q/hnsm)](https://github.com//wang-q/hnsm)
 
 `hnsm` is a high-performance bioinformatics toolkit for sequence analysis and comparison. It
