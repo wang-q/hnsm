@@ -41,13 +41,12 @@ fn command_distance() -> anyhow::Result<()> {
 }
 
 #[test]
-fn command_cluster_dbscan() -> anyhow::Result<()> {
+fn command_clust_dbscan() -> anyhow::Result<()> {
     let mut cmd = Command::cargo_bin("hnsm")?;
     let output = cmd
-        .arg("cluster")
-        .arg("tests/clust/IBPA.fa.tsv")
-        .arg("--mode")
+        .arg("clust")
         .arg("dbscan")
+        .arg("tests/clust/IBPA.fa.tsv")
         .arg("--eps")
         .arg("0.05")
         .arg("--min_points")

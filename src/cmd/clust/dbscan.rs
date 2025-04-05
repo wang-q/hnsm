@@ -4,13 +4,11 @@ use std::io::Write;
 
 // Create clap subcommand arguments
 pub fn make_subcommand() -> Command {
-    Command::new("cluster")
-        .about("Clustering based on pairwise distances")
+    Command::new("dbscan")
+        .about("DBSCAN clustering based on pairwise distances")
         .after_help(
             r###"
-Clustering modes:
-    * dbscan: Density-based spatial clustering of applications with noise (DBSCAN).
-    * cc: Connected components clustering. Ignores scores and writes all connected components.
+Density-based spatial clustering of applications with noise (DBSCAN).
 
 Output formats:
     * cluster: Each line contains points of one cluster.
@@ -23,17 +21,6 @@ Output formats:
                 .required(true)
                 .index(1)
                 .help("Input file containing pairwise distances in .tsv format"),
-        )
-        .arg(
-            Arg::new("mode")
-                .long("mode")
-                .action(ArgAction::Set)
-                .value_parser([
-                    builder::PossibleValue::new("dbscan"),
-                    builder::PossibleValue::new("cc"),
-                ])
-                .default_value("matrix")
-                .help("Clustering method to use"),
         )
         .arg(
             Arg::new("format")
@@ -94,12 +81,10 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     // Args
     //----------------------------
     let infile = args.get_one::<String>("infile").unwrap();
-    let opt_mode = args.get_one::<String>("mode").unwrap();
-    let opt_format = args.get_one::<String>("format").unwrap();
 
+    let opt_format = args.get_one::<String>("format").unwrap();
     let opt_same = *args.get_one::<f32>("same").unwrap();
     let opt_missing = *args.get_one::<f32>("missing").unwrap();
-
     let opt_eps = *args.get_one::<f32>("eps").unwrap();
     let opt_min_points = *args.get_one::<usize>("min_points").unwrap();
 
@@ -108,68 +93,29 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     //----------------------------
     // Ops
     //----------------------------
-    match opt_mode.as_str() {
-        "dbscan" => {
-            // Load matrix from pairwise distances
-            let (matrix, names) =
-                hnsm::ScoringMatrix::from_pair_scores(infile, opt_same, opt_missing);
 
-            let mut dbscan = hnsm::Dbscan::new(opt_eps, opt_min_points);
-            let _ = dbscan.perform_clustering(&matrix);
-            match opt_format.as_str() {
-                "cluster" => {
-                    let clusters = dbscan.results_cluster();
-                    for c in clusters {
-                        writer.write_fmt(format_args!(
-                            "{}\n",
-                            c.iter()
-                                .map(|&num| names[num].clone())
-                                .collect::<Vec<_>>()
-                                .join("\t")
-                        ))?;
-                    }
-                }
-                "pair" => {
-                    let rep_points = dbscan.results_pair(&matrix);
-                    for (rep, point) in rep_points {
-                        writer.write_fmt(format_args!("{}\t{}\n", names[rep], names[point]))?;
-                    }
-                }
-                _ => unreachable!(),
-            }
-        }
-        "cc" => {
-            let mut names = indexmap::IndexMap::new();
-            let mut current_index = 0usize;
+    // Load matrix from pairwise distances
+    let (matrix, names) = hnsm::ScoringMatrix::from_pair_scores(infile, opt_same, opt_missing);
 
-            let mut graph = petgraph::graphmap::UnGraphMap::<_, ()>::new();
-
-            let reader = intspan::reader(infile);
-            for line in reader.lines().map_while(Result::ok) {
-                let fields: Vec<&str> = line.split('\t').collect();
-                if fields.len() >= 2 {
-                    if !names.contains_key(fields[0]) {
-                        names.insert(fields[0].to_string(), current_index);
-                        current_index += 1;
-                    }
-                    if !names.contains_key(fields[1]) {
-                        names.insert(fields[1].to_string(), current_index);
-                        current_index += 1;
-                    }
-                }
-
-                graph.add_edge(names[fields[0]], names[fields[1]], ());
-            }
-
-            let scc = petgraph::algo::tarjan_scc(&graph);
-            for cc in &scc {
+    let mut dbscan = hnsm::Dbscan::new(opt_eps, opt_min_points);
+    let _ = dbscan.perform_clustering(&matrix);
+    match opt_format.as_str() {
+        "cluster" => {
+            let clusters = dbscan.results_cluster();
+            for c in clusters {
                 writer.write_fmt(format_args!(
                     "{}\n",
-                    cc.iter()
-                        .map(|&idx| names.get_index(idx).unwrap().0.as_str())
+                    c.iter()
+                        .map(|&num| names[num].clone())
                         .collect::<Vec<_>>()
                         .join("\t")
                 ))?;
+            }
+        }
+        "pair" => {
+            let rep_points = dbscan.results_pair(&matrix);
+            for (rep, point) in rep_points {
+                writer.write_fmt(format_args!("{}\t{}\n", names[rep], names[point]))?;
             }
         }
         _ => unreachable!(),

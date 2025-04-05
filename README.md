@@ -304,11 +304,11 @@ hnsm mat pair tests/clust/IBPA.mat
 #### DBSCAN
 
 ```bash
-hnsm cluster tests/clust/IBPA.fa.tsv --mode dbscan --eps 0.05 --min_points 2
+hnsm clust dbscan tests/clust/IBPA.fa.tsv --eps 0.05 --min_points 2
 
 cat tests/clust/IBPA.fa.tsv |
     tsv-filter --le 3:0.05 |
-    hnsm cluster stdin --mode cc
+    hnsm clust cc stdin
 
 ```
 

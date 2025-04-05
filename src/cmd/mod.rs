@@ -1,7 +1,7 @@
 //! Subcommand modules for the `hnsm` binary.
 
 pub mod chain;
-pub mod cluster;
+pub mod clust;
 pub mod count;
 pub mod das;
 pub mod dedup;

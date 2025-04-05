@@ -127,9 +127,7 @@ where
 // Add a separate implementation for f32 specifically for from_pair_scores
 impl ScoringMatrix<f32> {
     pub fn from_pair_scores(infile: &str, same: f32, missing: f32) -> (Self, Vec<String>) {
-        let mut names = indexmap::IndexMap::new();
-        let mut index_name = vec![];
-        let mut current_index = 0usize;
+        let mut names = indexmap::IndexSet::new();
         let mut matrix = Self::with_defaults(same, missing);
 
         let reader = intspan::reader(infile);
@@ -140,23 +138,19 @@ impl ScoringMatrix<f32> {
                 let n2 = fields[1].to_string();
                 let score = fields[2].parse().unwrap();
 
-                if !names.contains_key(&n1) {
-                    names.insert(n1.clone(), current_index);
-                    current_index += 1;
-                    index_name.push(n1.clone());
-                }
-                if !names.contains_key(&n2) {
-                    names.insert(n2.clone(), current_index);
-                    current_index += 1;
-                    index_name.push(n2.clone());
-                }
+                names.insert(n1.clone());
+                names.insert(n2.clone());
 
-                matrix.set(names[&n1], names[&n2], score);
+                matrix.set(
+                    names.get_index_of(&n1).unwrap(),
+                    names.get_index_of(&n2).unwrap(),
+                    score,
+                );
             }
         }
 
         matrix.set_size(names.len());
-        (matrix, index_name)
+        (matrix, names.into_iter().collect())
     }
 }
 

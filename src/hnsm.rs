@@ -34,12 +34,13 @@ fn main() -> anyhow::Result<()> {
         .subcommand(cmd::prefilter::make_subcommand())
         // fastq
         .subcommand(cmd::interleave::make_subcommand())
-        // clustering
+        // distance
         .subcommand(cmd::distance::make_subcommand())
         .subcommand(cmd::hv::make_subcommand())
         .subcommand(cmd::similarity::make_subcommand())
-        .subcommand(cmd::cluster::make_subcommand())
         .subcommand(cmd::manifold::make_subcommand())
+        // clustering
+        .subcommand(cmd::clust::make_subcommand())
         // matrix
         .subcommand(cmd::mat::make_subcommand())
         // Synteny
@@ -59,12 +60,14 @@ Subcommand groups:
 * Fastq files
     * interleave
 
-* Clustering
+* Distance
     * DNA/protein: distance / hv
     * vectors: similarity
-    * convert
-    * cluster
     * manifold
+* Clustering
+    * clust cc / clust dbscan
+* Matrix
+    * mat pair / mat phylip
 
 * Synteny
     * das
@@ -76,7 +79,7 @@ Subcommand groups:
     // Check which subcommand the user ran...
     match app.get_matches().subcommand() {
         Some(("chain", sub_matches)) => cmd::chain::execute(sub_matches),
-        Some(("cluster", sub_matches)) => cmd::cluster::execute(sub_matches),
+        Some(("clust", sub_matches)) => cmd::clust::execute(sub_matches),
         Some(("count", sub_matches)) => cmd::count::execute(sub_matches),
         Some(("das", sub_matches)) => cmd::das::execute(sub_matches),
         Some(("dedup", sub_matches)) => cmd::dedup::execute(sub_matches),
