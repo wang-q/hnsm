@@ -308,7 +308,10 @@ hnsm clust dbscan tests/clust/IBPA.fa.tsv --eps 0.05 --min_points 2
 
 cat tests/clust/IBPA.fa.tsv |
     tsv-filter --le 3:0.05 |
-    hnsm clust cc stdin
+    tsv-select -f 1-2 \
+    > tests/clust/IBPA.fa.05.tsv
+
+hnsm clust cc tests/clust/IBPA.fa.05.tsv
 
 ```
 

@@ -58,7 +58,20 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
         );
     }
 
-    let scc = petgraph::algo::tarjan_scc(&graph);
+    let mut scc = petgraph::algo::tarjan_scc(&graph);
+
+    // First sort members within each component alphabetically
+    for cc in &mut scc {
+        cc.sort_by_key(|&idx| names.get_index(idx).unwrap().as_str());
+    }
+
+    // Then sort components by first member alphabetically
+    scc.sort_by_key(|cc| names.get_index(cc[0]).unwrap().as_str());
+
+    // Finally sort by size (descending) while maintaining alphabetical order for same size
+    scc.sort_by_key(|cc| std::cmp::Reverse(cc.len()));
+
+    // Output each component
     for cc in &scc {
         writer.write_fmt(format_args!(
             "{}\n",

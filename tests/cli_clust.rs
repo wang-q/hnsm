@@ -59,3 +59,19 @@ fn command_clust_dbscan() -> anyhow::Result<()> {
 
     Ok(())
 }
+
+#[test]
+fn command_clust_cc() -> anyhow::Result<()> {
+    let mut cmd = Command::cargo_bin("hnsm")?;
+    let output = cmd
+        .arg("clust")
+        .arg("cc")
+        .arg("tests/clust/IBPA.fa.05.tsv")
+        .output()?;
+    let stdout = String::from_utf8(output.stdout)?;
+
+    assert_eq!(stdout.lines().count(), 7);
+    assert!(stdout.contains("A0A192CFC5_ECO25\tIBPA_ECOLI\tIBPA_ESCF3\nIBPA_ECOLI_GA_LV"));
+
+    Ok(())
+}
