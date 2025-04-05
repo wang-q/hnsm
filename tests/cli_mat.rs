@@ -20,14 +20,12 @@ fn command_mat_pair() -> anyhow::Result<()> {
 }
 
 #[test]
-fn command_mat_phylip_full() -> anyhow::Result<()> {
+fn command_mat_phylip() -> anyhow::Result<()> {
     let mut cmd = Command::cargo_bin("hnsm")?;
     let output = cmd
         .arg("mat")
         .arg("phylip")
         .arg("tests/clust/IBPA.fa.tsv")
-        .arg("--mode")
-        .arg("full")
         .output()?;
     let stdout = String::from_utf8(output.stdout)?;
 
@@ -38,12 +36,29 @@ fn command_mat_phylip_full() -> anyhow::Result<()> {
 }
 
 #[test]
-fn command_mat_phylip_lower() -> anyhow::Result<()> {
+fn command_mat_format_full() -> anyhow::Result<()> {
     let mut cmd = Command::cargo_bin("hnsm")?;
     let output = cmd
         .arg("mat")
-        .arg("phylip")
-        .arg("tests/clust/IBPA.fa.tsv")
+        .arg("format")
+        .arg("tests/clust/IBPA.mat")
+        .output()?;
+    let stdout = String::from_utf8(output.stdout)?;
+
+    assert_eq!(stdout.lines().count(), 11);
+    assert!(stdout.contains("IBPA_ECOLI\t0\t0.058394\t0.160584"));
+    assert!(stdout.contains("IBPA_ECOLI_GA\t0.058394\t0\t0.10219"));
+
+    Ok(())
+}
+
+#[test]
+fn command_mat_format_lower() -> anyhow::Result<()> {
+    let mut cmd = Command::cargo_bin("hnsm")?;
+    let output = cmd
+        .arg("mat")
+        .arg("format")
+        .arg("tests/clust/IBPA.mat")
         .arg("--mode")
         .arg("lower")
         .output()?;
@@ -51,18 +66,18 @@ fn command_mat_phylip_lower() -> anyhow::Result<()> {
 
     assert_eq!(stdout.lines().count(), 11);
     assert!(stdout.contains("IBPA_ECOLI\n"));
-    assert!(stdout.contains("IBPA_ECOLI_GA\t0.0669\n"));
+    assert!(stdout.contains("IBPA_ECOLI_GA\t0.058394\n"));
 
     Ok(())
 }
 
 #[test]
-fn command_mat_phylip_strict() -> anyhow::Result<()> {
+fn command_mat_format_strict() -> anyhow::Result<()> {
     let mut cmd = Command::cargo_bin("hnsm")?;
     let output = cmd
         .arg("mat")
-        .arg("phylip")
-        .arg("tests/clust/IBPA.fa.tsv")
+        .arg("format")
+        .arg("tests/clust/IBPA.mat")
         .arg("--mode")
         .arg("strict")
         .output()?;

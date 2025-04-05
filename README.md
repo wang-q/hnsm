@@ -294,9 +294,11 @@ K1J4J6_9GAMM        0.372263 0.416058 0.496350 0.518248 0.569343 0.372263 0.3722
 ```bash
 hnsm mat matrix tests/clust/IBPA.fa.tsv
 
-hnsm mat matrix --mode lower tests/clust/IBPA.fa.tsv
+hnsm mat matrix tests/clust/IBPA.fa.tsv
 
 hnsm mat pair tests/clust/IBPA.mat
+
+cargo run --bin hnsm mat format tests/clust/IBPA.mat
 
 cargo run --bin hnsm mat subset tests/clust/IBPA.mat tests/clust/IBPA.list
 
