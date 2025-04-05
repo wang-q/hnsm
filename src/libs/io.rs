@@ -1,6 +1,5 @@
-use std::collections::HashMap;
 use std::fs::File;
-use std::io::{BufRead, Read, Write};
+use std::io::{Read, Write};
 
 //----------------------------
 // AsmEntry
@@ -87,52 +86,6 @@ impl std::fmt::Display for AsmEntry {
         )?;
         Ok(())
     }
-}
-
-pub fn load_pair_scores(infile: &str) -> (Vec<((usize, usize), f32)>, Vec<String>) {
-    let mut pair_scores = Vec::new();
-    // Create a mapping from string identifiers to indices
-    let mut index_map = HashMap::new();
-    let mut index_name = vec![];
-    let mut current_index = 0usize;
-
-    let reader = intspan::reader(infile);
-    for line in reader.lines().map_while(Result::ok) {
-        let fields: Vec<&str> = line.split('\t').collect();
-        if fields.len() >= 3 {
-            let n1 = fields[0].to_string();
-            let n2 = fields[1].to_string();
-            let score: f32 = fields[2].parse::<f32>().unwrap();
-
-            if !index_map.contains_key(&n1) {
-                index_map.insert(n1.clone(), current_index);
-                current_index += 1;
-                index_name.push(n1.clone());
-            }
-            if !index_map.contains_key(&n2) {
-                index_map.insert(n2.clone(), current_index);
-                current_index += 1;
-                index_name.push(n2.clone());
-            }
-
-            pair_scores.push(((index_map[&n1], index_map[&n2]), score));
-        }
-    }
-    (pair_scores, index_name)
-}
-
-pub fn populate_matrix(
-    pair_scores: &Vec<((usize, usize), f32)>,
-    index_name: &[String],
-    same: f32,
-    missing: f32,
-) -> crate::ScoringMatrix<f32> {
-    let size = index_name.len();
-    let mut matrix: crate::ScoringMatrix<f32> = crate::ScoringMatrix::new(size, same, missing);
-    for ((i, j), score) in pair_scores {
-        matrix.set(*i, *j, *score);
-    }
-    matrix
 }
 
 //----------------------------

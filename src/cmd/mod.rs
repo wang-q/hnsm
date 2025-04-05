@@ -2,7 +2,6 @@
 
 pub mod chain;
 pub mod cluster;
-pub mod convert;
 pub mod count;
 pub mod das;
 pub mod dedup;
@@ -14,6 +13,7 @@ pub mod interleave;
 pub mod manifold;
 pub mod mask;
 pub mod masked;
+pub mod mat;
 pub mod n50;
 pub mod one;
 pub mod order;

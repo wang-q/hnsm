@@ -1,4 +1,5 @@
 use clap::*;
+use std::io::BufRead;
 use std::io::Write;
 
 // Create clap subcommand arguments
@@ -107,12 +108,11 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     //----------------------------
     // Ops
     //----------------------------
-    // Reading pair scores from a TSV file
-    let (pair_scores, index_name) = hnsm::load_pair_scores(infile);
-
     match opt_mode.as_str() {
         "dbscan" => {
-            let matrix = hnsm::populate_matrix(&pair_scores, &index_name, opt_same, opt_missing);
+            // Load matrix from pairwise distances
+            let (matrix, names) =
+                hnsm::ScoringMatrix::from_pair_scores(infile, opt_same, opt_missing);
 
             let mut dbscan = hnsm::Dbscan::new(opt_eps, opt_min_points);
             let _ = dbscan.perform_clustering(&matrix);
@@ -123,7 +123,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
                         writer.write_fmt(format_args!(
                             "{}\n",
                             c.iter()
-                                .map(|&num| index_name.get(num).unwrap().to_string())
+                                .map(|&num| names[num].clone())
                                 .collect::<Vec<_>>()
                                 .join("\t")
                         ))?;
@@ -132,25 +132,44 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
                 "pair" => {
                     let rep_points = dbscan.results_pair(&matrix);
                     for (rep, point) in rep_points {
-                        writer.write_fmt(format_args!(
-                            "{}\t{}\n",
-                            index_name.get(rep).unwrap(),
-                            index_name.get(point).unwrap()
-                        ))?;
+                        writer.write_fmt(format_args!("{}\t{}\n", names[rep], names[point]))?;
                     }
                 }
                 _ => unreachable!(),
             }
         }
         "cc" => {
-            let mut graph = petgraph::prelude::UnGraphMap::new();
-            // graph will borrow strings in index_name
-            for ((i, j), _) in &pair_scores {
-                graph.add_edge(index_name[*i].as_str(), index_name[*j].as_str(), ());
+            let mut names = indexmap::IndexMap::new();
+            let mut current_index = 0usize;
+
+            let mut graph = petgraph::graphmap::UnGraphMap::<_, ()>::new();
+
+            let reader = intspan::reader(infile);
+            for line in reader.lines().map_while(Result::ok) {
+                let fields: Vec<&str> = line.split('\t').collect();
+                if fields.len() >= 2 {
+                    if !names.contains_key(fields[0]) {
+                        names.insert(fields[0].to_string(), current_index);
+                        current_index += 1;
+                    }
+                    if !names.contains_key(fields[1]) {
+                        names.insert(fields[1].to_string(), current_index);
+                        current_index += 1;
+                    }
+                }
+
+                graph.add_edge(names[fields[0]], names[fields[1]], ());
             }
+
             let scc = petgraph::algo::tarjan_scc(&graph);
             for cc in &scc {
-                writer.write_fmt(format_args!("{}\n", cc.join("\t")))?;
+                writer.write_fmt(format_args!(
+                    "{}\n",
+                    cc.iter()
+                        .map(|&idx| names.get_index(idx).unwrap().0.as_str())
+                        .collect::<Vec<_>>()
+                        .join("\t")
+                ))?;
             }
         }
         _ => unreachable!(),

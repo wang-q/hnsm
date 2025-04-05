@@ -1,35 +1,57 @@
 use clap::*;
-use std::io::{BufRead, Write};
+use std::io::Write;
 
 // Create clap subcommand arguments
 pub fn make_subcommand() -> Command {
-    Command::new("convert")
-        .about("Conversion between pairwise distances and a distance matrix")
+    Command::new("phylip")
+        .about("Convert pairwise distances to a phylip distance matrix")
         .after_help(
             r###"
 Conversion modes:
-    * matrix: Convert pairwise distances to a full distance matrix.
-    * lower: Convert pairwise distances to a lower-triangular matrix.
-    * pair: Convert a (lower-triangular) relaxed PHYLIP distance matrix to pairwise distances.
+    * full:  a full distance matrix
+    * lower: a lower-triangular matrix
+    * strict: a strict phylip distance matrix
 
+Input format:
+    * Tab-separated values (TSV)
+    * Three columns: name1, name2, distance
+
+Output format:
+    * PHYLIP distance matrix format
+    * First line contains the number of sequences
+    * Each subsequent line contains a sequence name and distances
+    * In strict mode:
+        - Names are limited to 10 characters
+        - Names are left-aligned and padded with spaces
+        - Distances are space-separated with 6 decimal places
+
+Examples:
+    1. Create a full matrix:
+       hnsm mat phylip input.tsv -o output.phy
+
+    2. Create a lower-triangular matrix:
+       hnsm mat phylip input.tsv --mode lower -o output.phy
+
+    3. Create a strict PHYLIP matrix:
+       hnsm mat phylip input.tsv --mode strict -o output.phy
 "###,
         )
         .arg(
             Arg::new("infile")
                 .required(true)
                 .index(1)
-                .help("Input file containing pairwise distances or a PHYLIP distance matrix"),
+                .help("Input file containing pairwise distances"),
         )
         .arg(
             Arg::new("mode")
                 .long("mode")
                 .action(ArgAction::Set)
                 .value_parser([
-                    builder::PossibleValue::new("matrix"),
+                    builder::PossibleValue::new("full"),
                     builder::PossibleValue::new("lower"),
-                    builder::PossibleValue::new("pair"),
+                    builder::PossibleValue::new("strict"),
                 ])
-                .default_value("matrix")
+                .default_value("full")
                 .help("Conversion mode"),
         )
         .arg(
@@ -74,73 +96,41 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     //----------------------------
     // Ops
     //----------------------------
-    if opt_mode.as_str() == "pair" {
-        // Process PHYLIP matrix to pairwise distances
-        let reader = intspan::reader(infile);
-        let mut lines = reader.lines();
-        let mut names = Vec::new();
-
-        // Attempt to read the first line as the number of sequences
-        if let Some(Ok(line)) = lines.next() {
-            if line.trim().parse::<usize>().is_err() {
-                // If the first line is not a number, treat it as a data line
-                process_phylip_line(&line, &mut names, &mut writer)?;
-            }
-        }
-
-        for line in lines.map_while(Result::ok) {
-            process_phylip_line(&line, &mut names, &mut writer)?;
-        }
-
-        return Ok(());
-    }
-
-    // Convert pairwise distances to a matrix
-    let (pair_scores, index_name) = hnsm::load_pair_scores(infile);
-    let matrix = hnsm::populate_matrix(&pair_scores, &index_name, opt_same, opt_missing);
+    // Load matrix from pairwise distances
+    let matrix = hnsm::NamedMatrix::from_pair_scores(infile, opt_same, opt_missing);
+    let names = matrix.get_names();
     let size = matrix.size();
 
+    // Write sequence count
+    writer.write_fmt(format_args!("{:>4}\n", size))?;
+
     for i in 0..size {
-        writer.write_fmt(format_args!("{}", index_name.get(i).unwrap()))?;
         match opt_mode.as_str() {
-            "matrix" => {
+            "full" => {
+                writer.write_fmt(format_args!("{}", names[i]))?;
                 for j in 0..size {
                     writer.write_fmt(format_args!("\t{}", matrix.get(i, j)))?;
                 }
             }
             "lower" => {
+                writer.write_fmt(format_args!("{}", names[i]))?;
                 for j in 0..i {
                     writer.write_fmt(format_args!("\t{}", matrix.get(i, j)))?;
+                }
+            }
+            "strict" => {
+                // Strict mode: names limited to 10 chars, left-aligned with space padding
+                writer.write_fmt(format_args!(
+                    "{:<10}",
+                    names[i].chars().take(10).collect::<String>()
+                ))?;
+                for j in 0..size {
+                    writer.write_fmt(format_args!(" {:.6}", matrix.get(i, j)))?;
                 }
             }
             _ => unreachable!(),
         }
         writer.write_fmt(format_args!("\n"))?;
-    }
-
-    Ok(())
-}
-
-// Process a single line of the PHYLIP matrix and output pairwise distances
-fn process_phylip_line(
-    line: &str,
-    names: &mut Vec<String>,
-    writer: &mut Box<dyn Write>,
-) -> anyhow::Result<()> {
-    let parts: Vec<&str> = line.trim().split_whitespace().collect();
-    if !parts.is_empty() {
-        let name = parts[0].to_string();
-        names.push(name.clone());
-
-        // Read lower-triangle distances
-        let distances: Vec<f32> = parts[1..=names.len()]
-            .iter()
-            .map(|&s| s.parse().unwrap())
-            .collect();
-
-        for (i, &distance) in distances.iter().enumerate() {
-            writer.write_fmt(format_args!("{}\t{}\t{}\n", names[i], name, distance))?;
-        }
     }
 
     Ok(())

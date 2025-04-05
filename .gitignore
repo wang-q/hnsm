@@ -111,3 +111,4 @@ Cargo.lock
 PL-*/
 /tmp/
 tmp.*
+/doc/src/

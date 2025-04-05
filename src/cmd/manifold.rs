@@ -84,8 +84,8 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     // Ops
     //----------------------------
     // Read pair scores from a TSV file
-    let (pair_scores, index_name) = hnsm::load_pair_scores(infile);
-    let matrix = hnsm::populate_matrix(&pair_scores, &index_name, opt_same, opt_missing);
+    // Load matrix from pairwise distances
+    let (matrix, names) = hnsm::ScoringMatrix::from_pair_scores(infile, opt_same, opt_missing);
     let size = matrix.size();
 
     match opt_mode.as_str() {
@@ -104,7 +104,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
             let xs: Vec<_> = coords_matrix.column(0).iter().copied().collect();
             let ys: Vec<_> = coords_matrix.column(1).iter().copied().collect();
 
-            for ((x, y), n) in std::iter::zip(xs, ys).zip(index_name) {
+            for ((x, y), n) in std::iter::zip(xs, ys).zip(names) {
                 writer.write_fmt(format_args!("{}\t{}\t{}\n", n, x, y))?;
             }
         }
