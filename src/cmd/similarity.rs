@@ -1,5 +1,4 @@
 use clap::*;
-use hnsm::libs::linalg;
 use rayon::prelude::*;
 use std::io::BufRead;
 
@@ -189,9 +188,9 @@ fn load_file(infile: &str, is_bin: bool) -> Vec<hnsm::AsmEntry> {
 
 fn calc(l1: &[f32], l2: &[f32], mode: &str, is_sim: bool, is_dis: bool) -> f32 {
     let mut score = match mode {
-        "euclid" => linalg::euclidean_distance(l1, l2),
-        "cosine" => cosine_similarity(l1, l2),
-        "jaccard" => weighted_jaccard_similarity(l1, l2),
+        "euclid" => hnsm::euclidean_distance(l1, l2),
+        "cosine" => hnsm::cosine_similarity(l1, l2),
+        "jaccard" => hnsm::weighted_jaccard_similarity(l1, l2),
         _ => unreachable!(),
     };
 
@@ -203,28 +202,6 @@ fn calc(l1: &[f32], l2: &[f32], mode: &str, is_sim: bool, is_dis: bool) -> f32 {
     }
 
     score
-}
-
-fn cosine_similarity(a: &[f32], b: &[f32]) -> f32 {
-    let dot_product = linalg::dot_product(a, b);
-    let denominator = linalg::norm_l2(a) * linalg::norm_l2(b);
-
-    if denominator == 0.0 {
-        0.0
-    } else {
-        dot_product / denominator
-    }
-}
-
-fn weighted_jaccard_similarity(a: &[f32], b: &[f32]) -> f32 {
-    let numerator = linalg::jaccard_intersection(a, b);
-    let denominator = linalg::jaccard_union(a, b);
-
-    if denominator == 0.0 {
-        0.0
-    } else {
-        numerator / denominator
-    }
 }
 
 // Schölkopf, B. (2000). The kernel trick for distances. In Neural Information Processing Systems, pages 301-307.

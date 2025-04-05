@@ -125,6 +125,36 @@ pub fn norm_l2_sq(a: &[f32]) -> f32 {
     sums.reduce_sum()
 }
 
+/// Computes the sum of all elements in a vector `a`.
+///
+/// # Arguments
+/// * `a` - The vector.
+///
+/// # Returns
+/// The sum of all elements in `a`.
+///
+/// # Examples
+/// ```
+/// let a = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0];
+/// let sum_value = hnsm::sum(&a);
+/// assert_eq!(sum_value, 55.0);
+/// ```
+pub fn sum(a: &[f32]) -> f32 {
+    let (a_extra, a_chunks): (&[f32], &[[f32; LANES]]) = a.as_rchunks();
+
+    let mut sums = [0.0; LANES];
+    for (x, d) in std::iter::zip(a_extra, &mut sums) {
+        *d = *x;
+    }
+
+    let mut sums = f32x8::from_array(sums);
+    a_chunks.iter().for_each(|x| {
+        sums += f32x8::from_array(*x);
+    });
+
+    sums.reduce_sum()
+}
+
 /// Computes the mean (average) of a vector `a`.
 ///
 /// # Arguments
@@ -140,63 +170,7 @@ pub fn norm_l2_sq(a: &[f32]) -> f32 {
 /// assert_eq!(mean_value, 5.5);
 /// ```
 pub fn mean(a: &[f32]) -> f32 {
-    let (a_extra, a_chunks): (&[f32], &[[f32; LANES]]) = a.as_rchunks();
-
-    // Sum the extra elements (elements that don't fit into a full SIMD chunk)
-    let mut sum = a_extra.iter().sum::<f32>();
-
-    // Sum the elements in the SIMD chunks
-    let mut simd_sum = f32x8::splat(0.0);
-    a_chunks.iter().for_each(|chunk| {
-        simd_sum += f32x8::from_array(*chunk);
-    });
-
-    // Reduce the SIMD sum to a scalar value and add it to the total sum
-    sum += simd_sum.reduce_sum();
-
-    sum / a.len() as f32
-}
-
-/// Computes the Pearson correlation coefficient between two vectors `a` and `b`.
-///
-/// # Arguments
-/// * `a` - The first vector.
-/// * `b` - The second vector.
-///
-/// # Returns
-/// The Pearson correlation coefficient between `a` and `b`.
-/// If either vector is empty or their lengths do not match, returns `NaN`.
-///
-/// # Examples
-/// ```
-/// let a = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0];
-/// let b = [10.0, 9.0, 8.0, 7.0, 6.0, 5.0, 4.0, 3.0, 2.0, 1.0];
-/// let correlation = hnsm::pearson_correlation(&a, &b);
-/// assert_eq!(format!("{:.4}", correlation), "-1.0000".to_string()); // Perfect negative correlation
-///
-/// let empty: [f32; 0] = [];
-/// assert!(hnsm::pearson_correlation(&empty, &empty).is_nan()); // Check handling of empty vectors
-/// ```
-pub fn pearson_correlation(a: &[f32], b: &[f32]) -> f32 {
-    if a.len() != b.len() || a.is_empty() {
-        return f32::NAN; // Return NaN if lengths do not match or vectors are empty
-    }
-
-    // Compute means of a and b
-    let mean_a = mean(a);
-    let mean_b = mean(b);
-
-    let numerator = a
-        .iter()
-        .zip(b.iter())
-        .map(|(a, b)| (a - mean_a) * (b - mean_b))
-        .sum::<f32>();
-
-    let denom1 = a.iter().map(|a| (a - mean_a).powi(2)).sum::<f32>().sqrt();
-
-    let denom2 = b.iter().map(|b| (b - mean_b).powi(2)).sum::<f32>().sqrt();
-
-    numerator / (denom1 * denom2)
+    sum(a) / a.len() as f32
 }
 
 /// Computes the Jaccard intersection of two vectors `a` and `b`.
@@ -265,4 +239,83 @@ pub fn jaccard_union(a: &[f32], b: &[f32]) -> f32 {
     });
 
     sums.reduce_sum()
+}
+
+/// Computes the Pearson correlation coefficient between two vectors `a` and `b`.
+///
+/// Two equivalent formulas:
+///
+/// 1. Using deviations from mean (implemented here for better numerical stability):
+/// `$r = \frac{\sum(x - \bar{x})(y - \bar{y})}{\sqrt{\sum(x - \bar{x})^2\sum(y - \bar{y})^2}}$`
+///
+/// 2. Direct computation:
+/// `$r = \frac{n\sum xy - \sum x\sum y}{\sqrt{(n\sum x^2 - (\sum x)^2)(n\sum y^2 - (\sum y)^2)}}$`
+///
+/// where `$\bar{x}$` and `$\bar{y}$` are the means of vectors `$x$` and `$y$` respectively,
+/// and `$n$` is the length of the vectors.
+///
+/// Note: Formula 1 is used in this implementation because it:
+/// * Reduces the risk of numerical overflow by centering the data
+/// * Provides better numerical stability for large values
+///
+/// # Arguments
+/// * `a` - The first vector.
+/// * `b` - The second vector.
+///
+/// # Returns
+/// The Pearson correlation coefficient between `a` and `b`.
+/// If either vector is empty or their lengths do not match, returns `NaN`.
+///
+/// # Examples
+/// ```
+/// let a = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0];
+/// let b = [10.0, 9.0, 8.0, 7.0, 6.0, 5.0, 4.0, 3.0, 2.0, 1.0];
+/// let correlation = hnsm::pearson_correlation(&a, &b);
+/// assert_eq!(format!("{:.4}", correlation), "-1.0000".to_string()); // Perfect negative correlation
+///
+/// let empty: [f32; 0] = [];
+/// assert!(hnsm::pearson_correlation(&empty, &empty).is_nan()); // Check handling of empty vectors
+/// ```
+pub fn pearson_correlation(a: &[f32], b: &[f32]) -> f32 {
+    if a.len() != b.len() || a.is_empty() {
+        return f32::NAN; // Return NaN if lengths do not match or vectors are empty
+    }
+
+    // Compute means of a and b
+    let mean_a = mean(a);
+    let mean_b = mean(b);
+
+    let numerator = a
+        .iter()
+        .zip(b.iter())
+        .map(|(a, b)| (a - mean_a) * (b - mean_b))
+        .sum::<f32>();
+
+    let denom1 = a.iter().map(|a| (a - mean_a).powi(2)).sum::<f32>().sqrt();
+
+    let denom2 = b.iter().map(|b| (b - mean_b).powi(2)).sum::<f32>().sqrt();
+
+    numerator / (denom1 * denom2)
+}
+
+pub fn cosine_similarity(a: &[f32], b: &[f32]) -> f32 {
+    let dot_product = dot_product(a, b);
+    let denominator = norm_l2(a) * norm_l2(b);
+
+    if denominator == 0.0 {
+        0.0
+    } else {
+        dot_product / denominator
+    }
+}
+
+pub fn weighted_jaccard_similarity(a: &[f32], b: &[f32]) -> f32 {
+    let numerator = jaccard_intersection(a, b);
+    let denominator = jaccard_union(a, b);
+
+    if denominator == 0.0 {
+        0.0
+    } else {
+        numerator / denominator
+    }
 }

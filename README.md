@@ -274,7 +274,7 @@ K1J4J6_9GAMM    0.3675  0.5974  1       1       1       0.3675  0.3686  0.6134  
 ```
 
 ```console
-$ clustalo -i tests/clust/IBPA.fa --auto --full --distmat-out=tests/clust/IBPA.mat
+$ clustalo -i tests/clust/IBPA.fa --auto --full --distmat-out=tests/clust/IBPA.phy
 10
 IBPA_ECOLI          0.000000 0.058394 0.160584 0.197080 0.277372 0.000000 0.000000 0.583942 0.540146 0.372263
 IBPA_ECOLI_GA       0.058394 0.000000 0.102190 0.138686 0.218978 0.058394 0.058394 0.627737 0.576642 0.416058
@@ -289,18 +289,21 @@ K1J4J6_9GAMM        0.372263 0.416058 0.496350 0.518248 0.569343 0.372263 0.3722
 
 ```
 
-#### Matrix conversion
+#### Matrix commands
 
 ```bash
-hnsm mat matrix tests/clust/IBPA.fa.tsv
+hnsm mat phylip tests/clust/IBPA.fa.tsv
 
-hnsm mat matrix tests/clust/IBPA.fa.tsv
+hnsm mat pair tests/clust/IBPA.phy
 
-hnsm mat pair tests/clust/IBPA.mat
+cargo run --bin hnsm mat format tests/clust/IBPA.phy
 
-cargo run --bin hnsm mat format tests/clust/IBPA.mat
+cargo run --bin hnsm mat subset tests/clust/IBPA.phy tests/clust/IBPA.list
 
-cargo run --bin hnsm mat subset tests/clust/IBPA.mat tests/clust/IBPA.list
+hnsm distance tests/clust/IBPA.fa -k 7 -w 1 |
+    hnsm mat phylip stdin -o tests/clust/IBPA.71.phy
+
+cargo run --bin hnsm mat compare tests/clust/IBPA.phy tests/clust/IBPA.71.phy --method all
 
 ```
 
