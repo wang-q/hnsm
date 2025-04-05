@@ -72,38 +72,39 @@ cargo build
 
 ### `hnsm help`
 
-```text
+```console
+$ hnsm help
 Homogeneous Nucleic acids/amino acids Smart Matching
 
 Usage: hnsm [COMMAND]
 
 Commands:
-  chain       Chains of syntenic genes
-  cluster     Clustering based on pairwise distances
-  convert     Conversion between pairwise distances and a distance matrix
-  count       Count base statistics in FA file(s)
-  das         Domain architecture similarity
-  dedup       Deduplicate records in FA file(s)
-  distance    Estimate distances between DNA/protein sequences using minimizers
-  filter      Filter records in FA file(s)
-  gz          Compressing a file using the blocked gzip format (BGZF)
-  hv          Estimate distances between DNA/protein files using hypervectors
-  interleave  Interleave two PE files
-  mask        Soft/hard-masking regions in FA file(s)
-  masked      Identify masked regions in FA file(s
-  n50         Count total bases in FA file(s)
-  one         Extract one FA record by name
-  order       Extract some FA records in the order specified by a list
-  prefilter   Prefilter genome/metagenome assembly by amino acid minimizers
-  range       Extract sequences defined by the range(s)
-  rc          Reverse complement a FA file
-  replace     Replace headers of a FA file based on a TSV mapping
-  manifold    Manifold learning based on pairwise distances
-  similarity  Calculate similarity between vectors
-  sixframe    Six-Frame Translation
   size        Count total bases in FA file(s)
+  count       Count base statistics in FA file(s)
+  masked      Identify masked regions in FA file(s)
+  n50         Calculate N50 and other assembly statistics
+  one         Extract one FA record by name
   some        Extract some FA records based on a list of names
+  order       Extract some FA records in the order specified by a list
   split       Split FA file(s) into several files
+  replace     Replace headers of a FA file based on a TSV mapping
+  rc          Reverse complement sequences in FA file(s)
+  filter      Filter and format sequences in FA file(s)
+  dedup       Deduplicate records in FA file(s)
+  mask        Mask regions in FA file(s)
+  sixframe    Translate DNA sequences in six frames
+  gz          Compressing a file using the BGZF format
+  range       Extract sequence regions by coordinates
+  prefilter   Prefilter genome/metagenome assembly by amino acid minimizers
+  interleave  Interleave paired-end sequences
+  distance    Estimate sequence distances using minimizers
+  hv          Estimate distances between DNA/protein files using hypervectors
+  similarity  Calculate similarity between vectors
+  manifold    Manifold learning based on pairwise distances
+  clust       Clustering commands
+  mat         Matrix commands
+  das         Domain architecture similarity
+  chain       Chains of syntenic genes
   help        Print this message or the help of the given subcommand(s)
 
 Options:
@@ -118,17 +119,14 @@ Subcommand groups:
     * records: one / some / order / split
     * transform: replace / rc / filter / dedup / mask / sixframe
     * indexing: gz / range / prefilter
-        * `hnsm gz` writes out the BGZF format
+* Fastq files: interleave
 
-* Fastq files
-    * interleave
-
-* Clustering
+* Distance
     * DNA/protein: distance / hv
     * vectors: similarity
-    * convert
-    * cluster
     * manifold
+* Clustering: clust cc / clust dbscan
+* Matrix: mat pair / mat phylip
 
 * Synteny
     * das
@@ -258,9 +256,10 @@ hyperfine --warmup 1 \
 
 #### Pairwise distances by Minimizer
 
-```text
+```console
 $ hnsm distance tests/clust/IBPA.fa -k 7 -w 1 |
-    hnsm mat matrix stdin
+    hnsm mat phylip stdin
+  10
 IBPA_ECOLI      0       0.0669  0.2014  0.2106  0.4405  0       0.0011  0.7124  0.5454  0.3675
 IBPA_ECOLI_GA   0.0669  0       0.114   0.1464  0.2917  0.0669  0.068   1       0.7023  0.5974
 IBPA_ECOLI_GA_LV        0.2014  0.114   0       0.0344  0.132   0.2014  0.2024  1       0.7023  1
@@ -274,7 +273,7 @@ K1J4J6_9GAMM    0.3675  0.5974  1       1       1       0.3675  0.3686  0.6134  
 
 ```
 
-```text
+```console
 $ clustalo -i tests/clust/IBPA.fa --auto --full --distmat-out=tests/clust/IBPA.mat
 10
 IBPA_ECOLI          0.000000 0.058394 0.160584 0.197080 0.277372 0.000000 0.000000 0.583942 0.540146 0.372263

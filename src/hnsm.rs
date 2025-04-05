@@ -55,19 +55,14 @@ Subcommand groups:
     * records: one / some / order / split
     * transform: replace / rc / filter / dedup / mask / sixframe
     * indexing: gz / range / prefilter
-        * `hnsm gz` writes out the BGZF format
-
-* Fastq files
-    * interleave
+* Fastq files: interleave
 
 * Distance
     * DNA/protein: distance / hv
     * vectors: similarity
     * manifold
-* Clustering
-    * clust cc / clust dbscan
-* Matrix
-    * mat pair / mat phylip
+* Clustering: clust cc / clust dbscan
+* Matrix: mat pair / mat phylip
 
 * Synteny
     * das
