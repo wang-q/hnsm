@@ -298,6 +298,8 @@ hnsm mat matrix --mode lower tests/clust/IBPA.fa.tsv
 
 hnsm mat pair tests/clust/IBPA.mat
 
+cargo run --bin hnsm mat subset tests/clust/IBPA.mat tests/clust/IBPA.list
+
 ```
 
 #### DBSCAN

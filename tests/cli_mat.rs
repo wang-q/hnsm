@@ -1,5 +1,6 @@
 use assert_cmd::prelude::*;
 use std::process::Command;
+use std::io::Write;
 
 #[test]
 fn command_mat_pair() -> anyhow::Result<()> {
@@ -70,13 +71,34 @@ fn command_mat_phylip_strict() -> anyhow::Result<()> {
     assert_eq!(stdout.lines().count(), 11);
 
     let lines: Vec<&str> = stdout.lines().collect();
-    assert_eq!(lines[0].trim(), "10"); // 序列数量行
+    assert_eq!(lines[0].trim(), "10"); // Number of sequences line
 
-    // 检查第一个序列的格式
+    // Check format of the first sequence
     let first_seq = lines[1];
     assert!(first_seq.starts_with("IBPA_ECOLI"));
-    assert_eq!(first_seq.chars().take(10).count(), 10); // 名称长度限制
-    assert!(first_seq.contains(" 0.000000")); // 格式化的距离值
+    assert_eq!(first_seq.chars().take(10).count(), 10); // Name length limit
+    assert!(first_seq.contains(" 0.000000")); // Formatted distance value
+
+    Ok(())
+}
+
+
+#[test]
+fn command_mat_subset() -> anyhow::Result<()> {
+    let mut cmd = Command::cargo_bin("hnsm")?;
+    let output = cmd
+        .arg("mat")
+        .arg("subset")
+        .arg("tests/clust/IBPA.mat")
+        .arg("tests/clust/IBPA.list")
+        .output()?;
+    let stdout = String::from_utf8(output.stdout)?;
+
+    // Verify output
+    let lines: Vec<&str> = stdout.lines().collect();
+    assert_eq!(lines[0].trim(), "3"); // Number of sequences
+    assert!(lines[1].starts_with("IBPA_ECOLI_GA\t0\t0.10219\t0.058394"));
+    assert!(lines[3].starts_with("IBPA_ESCF3\t0.058394"));
 
     Ok(())
 }
