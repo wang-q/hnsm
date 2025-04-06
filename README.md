@@ -289,33 +289,6 @@ K1J4J6_9GAMM        0.372263 0.416058 0.496350 0.518248 0.569343 0.372263 0.3722
 
 ```
 
-#### Matrix commands
-
-```bash
-hnsm mat phylip tests/clust/IBPA.fa.tsv
-
-hnsm mat pair tests/clust/IBPA.phy
-
-cargo run --bin hnsm mat format tests/clust/IBPA.phy
-
-cargo run --bin hnsm mat subset tests/clust/IBPA.phy tests/clust/IBPA.list
-
-hnsm distance tests/clust/IBPA.fa -k 7 -w 1 |
-    hnsm mat phylip stdin -o tests/clust/IBPA.71.phy
-
-cargo run --bin hnsm mat compare tests/clust/IBPA.phy tests/clust/IBPA.71.phy --method all
-# Sequences in matrices: 10 and 10
-# Common sequences: 10
-# Method  Score
-# pearson 0.935803
-# spearman        0.919631
-# mae     0.113433
-# cosine  0.978731
-# jaccard 0.759106
-# euclid  1.229844
-
-```
-
 #### Clustering
 
 ```bash
