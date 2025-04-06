@@ -62,7 +62,7 @@ Subcommand groups:
     * vectors: similarity
     * manifold
 * Clustering: clust cc / clust dbscan
-* Matrix: mat pair / mat phylip
+* Matrix: mat pair / mat phylip / mat format / mat subset / mat compare
 
 * Synteny
     * das

@@ -215,7 +215,7 @@ hnsm interleave --fq tests/fastq/R1.fq.gz
 
 ```
 
-### Clustering
+### Distances and Clustering
 
 #### Similarity and dissimilarity (distance) of vectors
 
@@ -316,7 +316,7 @@ cargo run --bin hnsm mat compare tests/clust/IBPA.phy tests/clust/IBPA.71.phy --
 
 ```
 
-#### DBSCAN
+#### Clustering
 
 ```bash
 hnsm clust dbscan tests/clust/IBPA.fa.tsv --eps 0.05 --min_points 2

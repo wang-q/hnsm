@@ -41,6 +41,51 @@ fn command_distance() -> anyhow::Result<()> {
 }
 
 #[test]
+fn command_distance_genome() -> anyhow::Result<()> {
+    let mut cmd = Command::cargo_bin("hnsm")?;
+    let output = cmd
+        .arg("distance")
+        .arg("tests/genome/sakai.fa.gz")
+        .arg("tests/genome/mg1655.fa.gz")
+        .arg("-k")
+        .arg("21")
+        .arg("-w")
+        .arg("5")
+        .arg("--hasher")
+        .arg("mod")
+        .output()?;
+    let stdout = String::from_utf8(output.stdout)?;
+
+    assert_eq!(stdout.lines().count(), 2);
+    assert!(stdout.contains("NC_002695\tNC_000913\t0."));
+    assert!(stdout.contains("NC_002128\tNC_000913\t0."));
+
+    Ok(())
+}
+
+#[test]
+fn command_distance_merge() -> anyhow::Result<()> {
+    let mut cmd = Command::cargo_bin("hnsm")?;
+    let output = cmd
+        .arg("distance")
+        .arg("tests/clust/IBPA.fa")
+        .arg("-k")
+        .arg("7")
+        .arg("-w")
+        .arg("1")
+        .arg("--merge")
+        .arg("--hasher")
+        .arg("murmur")
+       .output()?;
+    let stdout = String::from_utf8(output.stdout)?;
+
+    assert_eq!(stdout.lines().count(), 1);
+    assert!(stdout.contains("tests/clust/IBPA.fa\ttests/clust/IBPA.fa\t763"));
+
+    Ok(())
+}
+
+#[test]
 fn command_clust_dbscan() -> anyhow::Result<()> {
     let mut cmd = Command::cargo_bin("hnsm")?;
     let output = cmd
