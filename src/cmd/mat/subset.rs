@@ -1,5 +1,5 @@
 use clap::*;
-use std::io::{BufRead, Write};
+use std::io::Write;
 
 pub fn make_subcommand() -> Command {
     Command::new("subset")

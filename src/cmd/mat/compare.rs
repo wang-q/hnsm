@@ -80,16 +80,20 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     // Get common sequence names
     let names1 = matrix1.get_names();
     let names2 = matrix2.get_names();
-    let common_names: Vec<_> = names1.iter()
-        .filter(|name| names2.contains(name))
-        .collect();
+    let common_names: Vec<_> = names1.iter().filter(|name| names2.contains(name)).collect();
 
     // Report sequence counts
-    eprintln!("Sequences in matrices: {} and {}", names1.len(), names2.len());
+    eprintln!(
+        "Sequences in matrices: {} and {}",
+        names1.len(),
+        names2.len()
+    );
     eprintln!("Common sequences: {}", common_names.len());
 
     if common_names.is_empty() {
-        return Err(anyhow::anyhow!("No common sequence names found between matrices"));
+        return Err(anyhow::anyhow!(
+            "No common sequence names found between matrices"
+        ));
     }
 
     // Extract values for comparison

@@ -1,6 +1,6 @@
 use assert_cmd::prelude::*;
-use std::process::Command;
 use std::io::Write;
+use std::process::Command;
 
 #[test]
 fn command_mat_pair() -> anyhow::Result<()> {
@@ -96,7 +96,6 @@ fn command_mat_format_strict() -> anyhow::Result<()> {
 
     Ok(())
 }
-
 
 #[test]
 fn command_mat_subset() -> anyhow::Result<()> {

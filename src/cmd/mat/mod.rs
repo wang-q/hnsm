@@ -11,7 +11,7 @@ pub fn make_subcommand() -> Command {
     Command::new("mat")
         .about("Matrix commands")
         .subcommand_required(true)
-        .subcommand(compare::make_subcommand())    // 新增
+        .subcommand(compare::make_subcommand())
         .subcommand(format::make_subcommand())
         .subcommand(pair::make_subcommand())
         .subcommand(phylip::make_subcommand())
@@ -21,7 +21,7 @@ pub fn make_subcommand() -> Command {
 /// Execute pkg command
 pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     match args.subcommand() {
-        Some(("compare", sub_args)) => compare::execute(sub_args),    // 新增
+        Some(("compare", sub_args)) => compare::execute(sub_args),
         Some(("format", sub_args)) => format::execute(sub_args),
         Some(("pair", sub_args)) => pair::execute(sub_args),
         Some(("phylip", sub_args)) => phylip::execute(sub_args),

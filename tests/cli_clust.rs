@@ -78,8 +78,12 @@ fn command_clust_dbscan_pair() -> anyhow::Result<()> {
 
     // Each line contains a representative-member pair
     assert!(stdout.lines().count() > 0);
-    assert!(stdout.contains("IBPA_ECOLI\tIBPA_ECOLI\n") || stdout.contains("IBPA_ESCF3\tIBPA_ESCF3\n"));
-    assert!(stdout.contains("IBPA_ECOLI\tIBPA_ESCF3\n") || stdout.contains("IBPA_ESCF3\tIBPA_ECOLI\n"));
+    assert!(
+        stdout.contains("IBPA_ECOLI\tIBPA_ECOLI\n") || stdout.contains("IBPA_ESCF3\tIBPA_ESCF3\n")
+    );
+    assert!(
+        stdout.contains("IBPA_ECOLI\tIBPA_ESCF3\n") || stdout.contains("IBPA_ESCF3\tIBPA_ECOLI\n")
+    );
 
     Ok(())
 }
