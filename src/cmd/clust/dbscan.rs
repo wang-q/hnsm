@@ -1,5 +1,4 @@
 use clap::*;
-use std::io::BufRead;
 use std::io::Write;
 
 // Create clap subcommand arguments

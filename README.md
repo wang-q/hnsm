@@ -320,6 +320,7 @@ cargo run --bin hnsm mat compare tests/clust/IBPA.phy tests/clust/IBPA.71.phy --
 
 ```bash
 hnsm clust dbscan tests/clust/IBPA.fa.tsv --eps 0.05 --min_points 2
+hnsm clust dbscan tests/clust/IBPA.fa.tsv --eps 0.05 --min_points 2 --format pair
 
 cat tests/clust/IBPA.fa.tsv |
     tsv-filter --le 3:0.05 |
