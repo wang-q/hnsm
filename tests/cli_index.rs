@@ -69,3 +69,49 @@ fn command_range_r() -> anyhow::Result<()> {
 
     Ok(())
 }
+
+#[test]
+fn command_range_update() -> anyhow::Result<()> {
+    let tempdir = TempDir::new()?;
+    let tempdir_str = tempdir.path().to_str().unwrap();
+
+    // Copy test file to temp directory
+    std::fs::copy(
+        "tests/index/final.contigs.fa",
+        format!("{}/test.fa", tempdir_str),
+    )?;
+
+    // First run, create index
+    let mut cmd = Command::cargo_bin("hnsm")?;
+    cmd.arg("range")
+        .arg(format!("{}/test.fa", tempdir_str))
+        .arg("k81_130:11-20")
+        .output()?;
+
+    // Get index file's modification time
+    let loc_file = format!("{}/test.fa.loc", tempdir_str);
+    let first_modified = std::fs::metadata(&loc_file)?.modified()?;
+
+    // Wait for a second to ensure different timestamps
+    std::thread::sleep(std::time::Duration::from_secs(1));
+
+    // Force update index with --update
+    let mut cmd = Command::cargo_bin("hnsm")?;
+    let output = cmd
+        .arg("range")
+        .arg(format!("{}/test.fa", tempdir_str))
+        .arg("k81_130:11-20")
+        .arg("--update")
+        .output()?;
+    let stdout = String::from_utf8(output.stdout)?;
+
+    // Verify output content
+    assert!(stdout.contains(">k81_130:11-20\nGGTGAATCAA\n"));
+
+    // Verify index file was updated
+    let second_modified = std::fs::metadata(&loc_file)?.modified()?;
+    assert!(second_modified > first_modified);
+
+    tempdir.close()?;
+    Ok(())
+}

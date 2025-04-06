@@ -49,6 +49,9 @@ Examples:
 3. From range file with larger cache:
    hnsm range input.fa -r ranges.txt -c 10
 
+4. Force update the index file:
+   hnsm range input.fa "chr1:1-1000" --update
+
 "###,
         )
         .arg(
@@ -87,6 +90,13 @@ Examples:
                 .num_args(1)
                 .default_value("stdout")
                 .help("Output filename. [stdout] for screen"),
+        )
+        .arg(
+            Arg::new("update")
+                .long("update")
+                .short('u')
+                .action(ArgAction::SetTrue)
+                .help("Force update the .loc index file"),
         )
 }
 
@@ -130,7 +140,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     // Open files
     //----------------------------
     let loc_file = format!("{}.loc", infile);
-    if !std::path::Path::new(&loc_file).is_file() {
+    if !std::path::Path::new(&loc_file).is_file() || args.get_flag("update") {
         hnsm::create_loc(infile, &loc_file, is_bgzf)?;
     }
     let loc_of: indexmap::IndexMap<String, (u64, usize)> = hnsm::load_loc(&loc_file)?;
