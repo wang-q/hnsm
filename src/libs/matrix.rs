@@ -181,6 +181,25 @@ impl ScoringMatrix<f32> {
 //     matrix
 // }
 
+/// A named matrix for storing pairwise distances/scores with sequence names
+///
+/// # Examples
+///
+/// ```
+/// # use hnsm::NamedMatrix;
+/// let names = vec!["seq1".to_string(), "seq2".to_string(), "seq3".to_string()];
+/// let mut matrix = NamedMatrix::new(names);
+///
+/// // Set some values
+/// matrix.set(0, 1, 0.5);
+/// matrix.set(0, 2, 0.7);
+/// matrix.set(1, 2, 0.3);
+///
+/// // Get values
+/// assert_eq!(matrix.size(), 3);
+/// assert_eq!(matrix.get(0, 1), 0.5);
+/// assert_eq!(matrix.get(1, 0), 0.5);  // Symmetric matrix
+/// ```
 #[derive(Debug)]
 pub struct NamedMatrix {
     size: usize,
@@ -225,12 +244,34 @@ impl NamedMatrix {
         self.names.keys().collect()
     }
 
+    /// Get matrix value by sequence names
+    ///
+    /// ```
+    /// # use hnsm::NamedMatrix;
+    /// let names = vec!["seq1".to_string(), "seq2".to_string()];
+    /// let mut matrix = NamedMatrix::new(names);
+    /// matrix.set(0, 1, 0.5);
+    ///
+    /// assert_eq!(matrix.get_by_name("seq1", "seq2"), Some(0.5));
+    /// assert_eq!(matrix.get_by_name("seq1", "seq3"), None);  // Non-existent name
+    /// ```
     pub fn get_by_name(&self, name1: &str, name2: &str) -> Option<f32> {
         let i = self.names.get(name1)?;
         let j = self.names.get(name2)?;
         Some(self.get(*i, *j))
     }
 
+    /// Set matrix value by sequence names
+    ///
+    /// ```
+    /// # use hnsm::NamedMatrix;
+    /// let names = vec!["seq1".to_string(), "seq2".to_string()];
+    /// let mut matrix = NamedMatrix::new(names);
+    ///
+    /// assert!(matrix.set_by_name("seq1", "seq2", 0.5).is_ok());
+    /// assert_eq!(matrix.get_by_name("seq1", "seq2"), Some(0.5));
+    /// assert!(matrix.set_by_name("seq1", "seq3", 0.5).is_err());  // Non-existent name
+    /// ```
     pub fn set_by_name(&mut self, name1: &str, name2: &str, value: f32) -> Result<(), String> {
         match (self.names.get(name1), self.names.get(name2)) {
             (Some(&i), Some(&j)) => {
