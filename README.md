@@ -304,6 +304,15 @@ hnsm distance tests/clust/IBPA.fa -k 7 -w 1 |
     hnsm mat phylip stdin -o tests/clust/IBPA.71.phy
 
 cargo run --bin hnsm mat compare tests/clust/IBPA.phy tests/clust/IBPA.71.phy --method all
+# Sequences in matrices: 10 and 10
+# Common sequences: 10
+# Method  Score
+# pearson 0.935803
+# spearman        0.919631
+# mae     0.113433
+# cosine  0.978731
+# jaccard 0.759106
+# euclid  1.229844
 
 ```
 
