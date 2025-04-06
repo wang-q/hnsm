@@ -41,8 +41,6 @@ fn main() -> anyhow::Result<()> {
         .subcommand(cmd::manifold::make_subcommand())
         // clustering
         .subcommand(cmd::clust::make_subcommand())
-        // matrix
-        .subcommand(cmd::mat::make_subcommand())
         // Synteny
         .subcommand(cmd::das::make_subcommand())
         .subcommand(cmd::chain::make_subcommand())
@@ -62,7 +60,6 @@ Subcommand groups:
     * vectors: similarity
     * manifold
 * Clustering: clust cc / clust dbscan
-* Matrix: mat pair / mat phylip / mat format / mat subset / mat compare
 
 * Synteny
     * das
@@ -90,7 +87,6 @@ Subcommand groups:
         Some(("manifold", sub_matches)) => cmd::manifold::execute(sub_matches),
         Some(("mask", sub_matches)) => cmd::mask::execute(sub_matches),
         Some(("masked", sub_matches)) => cmd::masked::execute(sub_matches),
-        Some(("mat", sub_matches)) => cmd::mat::execute(sub_matches),
         Some(("similarity", sub_matches)) => cmd::similarity::execute(sub_matches),
         Some(("sixframe", sub_matches)) => cmd::sixframe::execute(sub_matches),
         Some(("size", sub_matches)) => cmd::size::execute(sub_matches),

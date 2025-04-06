@@ -94,7 +94,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     //----------------------------
 
     // Load matrix from pairwise distances
-    let (matrix, names) = hnsm::ScoringMatrix::from_pair_scores(infile, opt_same, opt_missing);
+    let (matrix, names) = intspan::ScoringMatrix::from_pair_scores(infile, opt_same, opt_missing);
 
     let mut dbscan = hnsm::Dbscan::new(opt_eps, opt_min_points);
     let _ = dbscan.perform_clustering(&matrix);

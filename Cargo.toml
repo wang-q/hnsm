@@ -24,7 +24,7 @@ flate2 = "1.0.35"
 crossbeam = "0.8.4"
 rayon = "1.10.0"
 
-intspan = "0.8.4"
+intspan = "0.8.7"
 noodles = { version = "0.91.0", features = ["core", "fasta", "fastq", "bgzf"] }
 noodles-core = "0.16.0"
 noodles-fasta = "0.49.0"

@@ -85,7 +85,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     //----------------------------
     // Read pair scores from a TSV file
     // Load matrix from pairwise distances
-    let (matrix, names) = hnsm::ScoringMatrix::from_pair_scores(infile, opt_same, opt_missing);
+    let (matrix, names) = intspan::ScoringMatrix::from_pair_scores(infile, opt_same, opt_missing);
     let size = matrix.size();
 
     match opt_mode.as_str() {
