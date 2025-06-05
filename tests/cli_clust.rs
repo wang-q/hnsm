@@ -76,7 +76,7 @@ fn command_distance_merge() -> anyhow::Result<()> {
         .arg("--merge")
         .arg("--hasher")
         .arg("murmur")
-       .output()?;
+        .output()?;
     let stdout = String::from_utf8(output.stdout)?;
 
     assert_eq!(stdout.lines().count(), 1);

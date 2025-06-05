@@ -84,7 +84,10 @@ where
     /// In the above example, points `0` and `1` form a single cluster, points
     /// `2` and `3` form a different cluster, and point `4` does not belong any
     /// cluster (it is a noise point).
-    pub fn perform_clustering(&mut self, matrix: &intspan::ScoringMatrix<T>) -> &Vec<Option<usize>> {
+    pub fn perform_clustering(
+        &mut self,
+        matrix: &intspan::ScoringMatrix<T>,
+    ) -> &Vec<Option<usize>> {
         self.clusters = vec![None; matrix.size()];
         self.visited = vec![false; matrix.size()];
         self.current_cluster = 0;
