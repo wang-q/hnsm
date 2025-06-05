@@ -2,6 +2,9 @@
 
 ## Unreleased - ReleaseDate
 
+* Enhance `hnsm fq2fa` command
+  * Add support for processing multiple input files
+
 ## 0.3.3 - 2025-06-05
 
 * Add `hnsm fq2fa` command for converting FASTQ to FASTA format
