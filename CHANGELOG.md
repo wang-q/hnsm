@@ -2,6 +2,8 @@
 
 ## Unreleased - ReleaseDate
 
+## 0.3.3 - 2025-06-05
+
 * Add `hnsm fq2fa` command for converting FASTQ to FASTA format
 * Refactor clustering commands
     * Merge `cc` and `dbscan` modes into a unified `clust` command
