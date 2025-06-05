@@ -24,11 +24,10 @@ provides:
     * [FA files](#fa-files)
     * [Index](#index)
     * [FQ](#fq)
-    * [Clustering](#clustering)
+    * [Distances and Clustering](#distances-and-clustering)
       * [Similarity and dissimilarity (distance) of vectors](#similarity-and-dissimilarity-distance-of-vectors)
       * [Pairwise distances by Minimizer](#pairwise-distances-by-minimizer)
-      * [Matrix conversion](#matrix-conversion)
-      * [DBSCAN](#dbscan)
+      * [Clustering](#clustering)
       * [PCoA](#pcoa)
     * [Genomes](#genomes)
     * [Proteomes](#proteomes)
@@ -212,6 +211,8 @@ hnsm interleave --fq tests/fasta/ufasta.fa
 hnsm interleave --fq tests/fastq/R1.fq.gz tests/fastq/R2.fq.gz
 
 hnsm interleave --fq tests/fastq/R1.fq.gz
+
+cargo run --bin hnsm fq2fa tests/fastq/R1.fq.gz
 
 ```
 

@@ -34,6 +34,7 @@ fn main() -> anyhow::Result<()> {
         .subcommand(cmd::prefilter::make_subcommand())
         // fastq
         .subcommand(cmd::interleave::make_subcommand())
+        .subcommand(cmd::fq2fa::make_subcommand())
         // distance
         .subcommand(cmd::distance::make_subcommand())
         .subcommand(cmd::hv::make_subcommand())
@@ -94,6 +95,7 @@ Subcommand groups:
         Some(("range", sub_matches)) => cmd::range::execute(sub_matches),
         Some(("prefilter", sub_matches)) => cmd::prefilter::execute(sub_matches),
         Some(("interleave", sub_matches)) => cmd::interleave::execute(sub_matches),
+        Some(("fq2fa", sub_matches)) => cmd::fq2fa::execute(sub_matches),
         Some(("hv", sub_matches)) => cmd::hv::execute(sub_matches),
         _ => unreachable!(),
     }?;
