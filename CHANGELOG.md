@@ -2,6 +2,8 @@
 
 ## Unreleased - ReleaseDate
 
+## 0.3.4 - 2025-06-05
+
 * Enhance `hnsm fq2fa` command
   * Add support for processing multiple input files
 
