@@ -2,6 +2,16 @@
 
 ## Unreleased - ReleaseDate
 
+* Add `hnsm fq2fa` command for converting FASTQ to FASTA format
+* Refactor clustering commands
+    * Merge `cc` and `dbscan` modes into a unified `clust` command
+    * Improve component sorting in connected components clustering
+    * Support multiple output formats
+* Move matrix-related functionality to `intspan` crate
+* Update dependencies
+    * intspan 0.8.4
+    * noodles-bgzf 0.36.0
+
 ## 0.3.2 - 2025-04-02
 
 * Improve documentation for all commands
