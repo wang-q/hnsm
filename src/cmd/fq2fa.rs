@@ -12,20 +12,25 @@ Features:
 * Automatic format detection
 * Preserves sequence names
 * Supports compressed input/output
+* Processes multiple input files
 
 Examples:
 1. Convert a FASTQ file to FASTA:
    hnsm fq2fa input.fq -o output.fa
 
-2. Convert and write to stdout:
+2. Convert multiple FASTQ files to a single FASTA:
+   hnsm fq2fa input1.fq input2.fq -o output.fa
+
+3. Convert and write to stdout:
    hnsm fq2fa input.fq
 "###,
         )
         .arg(
-            Arg::new("infile")
+            Arg::new("infiles")
                 .required(true)
+                .num_args(1..)
                 .index(1)
-                .help("Input FASTQ file"),
+                .help("Input FASTQ file(s)"),
         )
         .arg(
             Arg::new("outfile")
@@ -46,24 +51,25 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     let mut fa_out = noodles_fasta::io::writer::Builder::default()
         .set_line_base_count(usize::MAX)
         .build_from_writer(writer);
-    let infile = args.get_one::<String>("infile").unwrap();
 
     //----------------------------
     // Ops
     //----------------------------
-    let reader = intspan::reader(infile);
-    let mut seq_in = noodles_fastq::io::Reader::new(reader);
+    for infile in args.get_many::<String>("infiles").unwrap() {
+        let reader = intspan::reader(infile);
+        let mut seq_in = noodles_fastq::io::Reader::new(reader);
 
-    for result in seq_in.records() {
-        // obtain record or fail with error
-        let record = result?;
+        for result in seq_in.records() {
+            // obtain record or fail with error
+            let record = result?;
 
-        // Output FASTA format
-        let name = String::from_utf8(record.name().to_vec())?;
-        let definition = noodles_fasta::record::Definition::new(name, None);
-        let sequence = noodles_fasta::record::Sequence::from(record.sequence().to_vec());
-        let record_out = noodles_fasta::Record::new(definition, sequence);
-        fa_out.write_record(&record_out)?;
+            // Output FASTA format
+            let name = String::from_utf8(record.name().to_vec())?;
+            let definition = noodles_fasta::record::Definition::new(name, None);
+            let sequence = noodles_fasta::record::Sequence::from(record.sequence().to_vec());
+            let record_out = noodles_fasta::Record::new(definition, sequence);
+            fa_out.write_record(&record_out)?;
+        }
     }
 
     Ok(())
