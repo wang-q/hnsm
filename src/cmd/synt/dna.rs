@@ -63,6 +63,12 @@ pub fn make_subcommand() -> Command {
                 .value_parser(value_parser!(u32)),
         )
         .arg(
+            Arg::new("soft_mask")
+                .long("soft-mask")
+                .action(clap::ArgAction::SetTrue)
+                .help("Ignore soft-masked repeats (lowercase bases)"),
+        )
+        .arg(
             Arg::new("outfile")
                 .short('o')
                 .long("outfile")
@@ -87,6 +93,7 @@ pub fn execute(matches: &ArgMatches) -> anyhow::Result<()> {
     let k = *matches.get_one::<usize>("kmer").unwrap();
     let min_weight = *matches.get_one::<usize>("min_weight").unwrap();
     let max_freq = *matches.get_one::<u32>("max_freq").unwrap();
+    let soft_mask = matches.get_flag("soft_mask");
     let outfile = matches.get_one::<String>("outfile").unwrap();
     let verbose = matches.get_flag("verbose");
 
@@ -134,7 +141,15 @@ pub fn execute(matches: &ArgMatches) -> anyhow::Result<()> {
             .init();
     }
 
-    let finder = SyntenyFinder::new(k, rounds, min_weight, max_freq, block_size, chain_gap);
+    let finder = SyntenyFinder::new(
+        k,
+        rounds,
+        min_weight,
+        max_freq,
+        block_size,
+        chain_gap,
+        soft_mask,
+    );
 
     // Pre-scan to build seq_names map
     // We could do this inside provider but we need names for output.

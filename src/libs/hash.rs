@@ -189,27 +189,38 @@ where
 /// * `seq_id` - ID of the sequence
 /// * `k` - K-mer size
 /// * `w` - Window size
+/// * `soft_mask` - If true, ignore k-mers containing lowercase bases
 /// * `filter` - A predicate that returns true if a hash should be KEPT.
-pub fn seq_sketch<F>(seq: &[u8], seq_id: u32, k: usize, w: usize, filter: F) -> Vec<MinimizerInfo>
+pub fn seq_sketch<F>(
+    seq: &[u8],
+    seq_id: u32,
+    k: usize,
+    w: usize,
+    soft_mask: bool,
+    filter: F,
+) -> Vec<MinimizerInfo>
 where
     F: Fn(u64) -> bool,
 {
     // Use minimizer_iter with our custom FilterBuildHasher
-    let build_hasher = FilterBuildHasher { filter: &filter };
+    let build_hasher = FilterBuildHasher {
+        filter: &filter,
+    };
 
-    // minimizer_iter::MinimizerBuilder
-    let min_iter = MinimizerBuilder::<u64, _>::new()
+    let builder = MinimizerBuilder::<u64, _>::new()
         .minimizer_size(k)
         .width(w as u16)
         .canonical() // Ensure canonical minimizers (min of fwd/rev)
-        .hasher(build_hasher)
-        .iter(seq);
+        .hasher(build_hasher);
 
-    min_iter
+    // If soft_mask is enabled, we filter out minimizers that overlap with lowercase regions.
+    // We check the original sequence at the minimizer's position.
+    // Note: This effectively drops windows where the minimizer falls in a masked region.
+    // It avoids allocation and complex iterator mapping.
+    
+    builder.iter(seq)
         .map(|(hash, pos, is_rc)| {
-            // is_rc is bool: true if the minimizer is from the reverse complement
             let strand = !is_rc;
-
             MinimizerInfo {
                 hash,
                 seq_id,
@@ -217,7 +228,20 @@ where
                 strand,
             }
         })
-        .filter(|m| m.hash != u64::MAX) // Filter out masked (invalid) minimizers
+        .filter(|m| {
+            if m.hash == u64::MAX { return false; } // Should be filtered by FilterHasher if used, but explicit check is fine.
+            
+            if soft_mask {
+                let start = m.pos as usize;
+                let end = start + k;
+                if end > seq.len() { return false; } // Should not happen
+                
+                // Check if any byte in seq[start..end] is lowercase
+                !seq[start..end].iter().any(|&b| b.is_ascii_lowercase())
+            } else {
+                true
+            }
+        })
         .collect()
 }
 
@@ -230,13 +254,42 @@ mod tests {
         let seq = b"ACGTACGT";
         let k = 3;
         let w = 3; // minimizer_iter requires odd window size?
-        let mins = seq_sketch(seq, 1, k, w, |_| true);
+        let mins = seq_sketch(seq, 1, k, w, false, |_| true);
 
         assert!(!mins.is_empty());
         for m in &mins {
             assert_eq!(m.seq_id, 1);
             assert!(m.pos < seq.len() as u32);
         }
+    }
+
+    #[test]
+    fn test_seq_sketch_soft_mask() {
+        // "acgt" is lowercase. If soft_mask is true, it should be ignored.
+        let seq = b"ACGTacgtACGT";
+        let k = 4;
+        let w = 1; // Small window to test individual k-mers
+        
+        // Without soft mask: "acgt" (lowercase) is a valid k-mer (different hash from ACGT)
+        let mins_no_mask = seq_sketch(seq, 1, k, w, false, |_| true);
+        // ACGT (0), CGTa (1), GTac (2), Tacg (3), acgt (4), cgtA (5), gtAC (6), tACG (7), ACGT (8)
+        // We expect some minimizers.
+        assert!(mins_no_mask.len() >= 2); 
+
+        // With soft mask: "acgt" and any k-mer containing lowercase should be ignored.
+        // k-mers containing lowercase:
+        // CGTa, GTac, Tacg, acgt, cgtA, gtAC, tACG
+        // Only ACGT (0) and ACGT (8) are purely uppercase.
+        let mins_mask = seq_sketch(seq, 1, k, w, true, |_| true);
+        
+        // Should only find the two uppercase blocks
+        // ACGT at 0
+        // ACGT at 8
+        // Note: minimizer_iter with w=1 returns all valid k-mers.
+        // But if we return u64::MAX, they are filtered out.
+        assert_eq!(mins_mask.len(), 2);
+        assert_eq!(mins_mask[0].pos, 0);
+        assert_eq!(mins_mask[1].pos, 8);
     }
 
     #[test]
@@ -247,7 +300,7 @@ mod tests {
         let seq = b"ACGT";
         let k = 4;
         let w = 1;
-        let mins = seq_sketch(seq, 1, k, w, |_| true);
+        let mins = seq_sketch(seq, 1, k, w, false, |_| true);
         assert_eq!(mins.len(), 1);
     }
 }

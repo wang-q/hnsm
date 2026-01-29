@@ -13,6 +13,7 @@ pub struct SyntenyFinder {
     pub max_freq: u32,
     pub block_size: usize,
     pub chain_gap: u32,
+    pub soft_mask: bool,
 }
 
 impl SyntenyFinder {
@@ -23,6 +24,7 @@ impl SyntenyFinder {
         max_freq: u32,
         block_size: usize,
         chain_gap: u32,
+        soft_mask: bool,
     ) -> Self {
         Self {
             k,
@@ -31,6 +33,7 @@ impl SyntenyFinder {
             max_freq,
             block_size,
             chain_gap,
+            soft_mask,
         }
     }
 
@@ -76,7 +79,7 @@ impl SyntenyFinder {
                 };
 
                 // Use a permissive filter for counting
-                for m in seq_sketch(seq, global_seq_id, self.k, w, |_| true) {
+                for m in seq_sketch(seq, global_seq_id, self.k, w, self.soft_mask, |_| true) {
                     if !is_covered(m.pos) {
                         total_minimizers += 1;
                         if bloom.contains(m.hash) {
@@ -108,7 +111,7 @@ impl SyntenyFinder {
                 };
 
                 // Filter by frequency
-                let mins = seq_sketch(seq, global_seq_id, self.k, w, |h| {
+                let mins = seq_sketch(seq, global_seq_id, self.k, w, self.soft_mask, |h| {
                     if let Some(&c) = counts.get(&h) {
                         c <= self.max_freq
                     } else {
