@@ -9,6 +9,7 @@
 *   `hnsm synt dna`: 基于 Minimizer 图的 DNA 共线性分析。
 *   `hnsm synt das`: 基于动态规划的结构域架构相似性分析。
 *   `hnsm synt merge`: 通用的共线性块合并/缝合工具。
+*   `hnsm synt view`: 共线性结果可视化工具 (SVG)。
 
 ## 2. `hnsm synt dna` 设计详情
 
@@ -170,7 +171,33 @@ hnsm synt merge raw_blocks.tsv -d 5 -o merged.tsv
 hnsm synt merge raw_blocks.tsv --chain-gap 50000 -o merged_manual.tsv
 ```
 
-## 4. 开发计划
+## 4. `hnsm synt view` 设计详情 (New)
+
+`hnsm synt view` 是一个轻量级的可视化工具，直接将 `hnsm synt dna/merge` 的结果转换为 SVG 矢量图，无需依赖 Python/R 环境。
+
+### 4.1. 核心功能
+*   **输入**: 共线性块文件 (.tsv) 和可选的基因组索引文件 (.fai)。
+*   **输出**: 标准 SVG 文件，可直接在浏览器或矢量图软件中打开。
+*   **布局**: 简单的线性堆叠布局 (Linear Stack Layout)。
+
+### 4.2. 算法逻辑
+1.  **坐标映射**: 将基因组序列映射到画布上的水平轨道 (Tracks)。
+2.  **贝塞尔曲线**: 使用三次贝塞尔曲线 (Cubic Bezier Curves) 连接共线性区域，平滑展示倒位 (Inversions) 和易位 (Translocations)。
+3.  **自动缩放**: 根据输入序列的最大长度自动调整画布宽度。
+
+### 4.3. 接口设计
+
+```bash
+hnsm synt view [OPTIONS] <blocks.tsv> [fai_files...]
+```
+
+#### 参数选项
+*   `--outfile, -o <FILE>`: 输出 SVG 文件路径。
+*   `--width <INT>`: 画布宽度 (默认: 1000)。
+*   `--height <INT>`: 画布高度 (默认: 600)。
+*   `--no-label`: 隐藏序列名称标签。
+
+## 5. 开发计划
 
 1.  **实现 `merge` 功能** (已完成):
     *   复用 `io::Segment` 结构体。
@@ -180,18 +207,22 @@ hnsm synt merge raw_blocks.tsv --chain-gap 50000 -o merged_manual.tsv
 2.  **集成测试** (已完成):
     *   使用 `hnsm synt dna` 的输出作为测试数据，验证能否正确合并人为分割的块。
 
-## 5. 背景与 ntSynt 对比 (Background & Comparison)
+3.  **实现 `view` 功能** (进行中):
+    *   实现 SVG 生成器。
+    *   集成到 `src/cmd/synt/view.rs`。
+
+## 6. 背景与 ntSynt 对比 (Background & Comparison)
 
 `hnsm synt dna` 的设计深受 **ntSynt** (Coombe et al., 2025) 的启发。我们的目标是在 Rust 生态中重现并优化其基于 Minimizer 图的宏观共线性检测算法，提供更高效、更易用的单一二进制工具。
 
-### 5.1. 核心相似点 (Similarities)
+### 6.1. 核心相似点 (Similarities)
 
 *   **算法逻辑**: 两者都采用 "Sketching -> Graph Building -> Path Finding" 的流程。
 *   **分层迭代**: 都使用从大窗口到小窗口的迭代策略（Iterative Refinement），并结合 Global Masking 技术来逐步解析复杂区域。
 *   **内存优化**: 都利用 Bloom Filter 来过滤 Singleton k-mers，显著降低大基因组分析的内存消耗。
 *   **参数模型**: 默认参数（如 block size, chain gap）都基于序列差异度（Divergence）进行动态调整。
 
-### 5.2. 主要差异与改进 (Differences & Improvements)
+### 6.2. 主要差异与改进 (Differences & Improvements)
 
 | 特性 | ntSynt (Original) | hnsm synt dna (Rust Implementation) |
 | :--- | :--- | :--- |
@@ -200,10 +231,11 @@ hnsm synt merge raw_blocks.tsv --chain-gap 50000 -o merged_manual.tsv
 | **哈希算法** | `ntHash` | `RapidHash` / `MurmurHash3` |
 | **软掩膜支持** | 需预处理 | 内置 `--soft-mask`，动态过滤小写碱基 k-mer |
 | **后处理** | 脚本处理 | 独立的 `hnsm synt merge` 命令，支持灵活缝合 |
+| **可视化** | 依赖 Python/R (ntSynt-viz) | 内置 `hnsm synt view` 命令，直接生成 SVG |
 | **输入/输出** | 依赖文件系统中间文件 | 流式处理，支持标准输入/输出 |
 | **安装与部署** | 需配置 Python 环境和编译 C++ | `cargo install` 或单文件分发 |
 
-### 5.3. 演进过程
+### 6.3. 演进过程
 
 `hnsm` 逐步移植并重构了 ntSynt 的关键组件：
 1.  **哈希与索引**: 使用 `minimizer_iter` 和 `rapidhash` 替代了 `indexlr`。
