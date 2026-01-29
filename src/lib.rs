@@ -3,9 +3,6 @@
 // Add these imports to use the stdsimd library
 #![feature(portable_simd)]
 
-#[macro_use]
-extern crate lazy_static;
-
 pub mod libs;
 
 pub use crate::libs::dbscan::*;

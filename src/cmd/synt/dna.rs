@@ -1,8 +1,7 @@
 use clap::*;
 use hnsm::libs::synteny::algo::SyntenyFinder;
 use std::collections::HashMap;
-use std::fs::File;
-use std::io::{BufWriter, Write};
+use std::io::Write;
 
 pub fn make_subcommand() -> Command {
     Command::new("dna")
@@ -61,8 +60,8 @@ pub fn make_subcommand() -> Command {
             Arg::new("outfile")
                 .short('o')
                 .long("outfile")
-                .help("Output filename")
-                .default_value("synteny.tsv"),
+                .help("Output filename. [stdout] for screen")
+                .default_value("stdout"),
         )
         .arg(
             Arg::new("verbose")
@@ -141,18 +140,34 @@ pub fn execute(matches: &ArgMatches) -> anyhow::Result<()> {
     for infile in &infiles {
         let reader = intspan::reader(infile);
         let mut fa_in = noodles_fasta::io::Reader::new(reader);
+
+        let path = std::path::Path::new(infile);
+        let file_name = path
+            .file_name()
+            .and_then(|s| s.to_str())
+            .unwrap_or("unknown");
+        let file_stem = file_name.split('.').next().unwrap_or("unknown");
+        let use_prefix = infiles.len() > 1;
+
         for result in fa_in.records() {
             let record = result?;
             global_seq_id += 1;
             let name = String::from_utf8(record.name().into())?;
+
+            let name = if use_prefix {
+                format!("{}.{}", file_stem, name)
+            } else {
+                name
+            };
+
             seq_names.insert(global_seq_id, name);
         }
     }
 
-    let mut writer = BufWriter::new(File::create(outfile)?);
+    let mut writer = intspan::writer(outfile);
     writeln!(
         writer,
-        "# Block_ID\tSeq_Name\tStart\tEnd\tStrand\tCount\tRound"
+        "# Block_ID\tRange\tCount\tRound"
     )?;
     let mut block_counter = 0;
 
@@ -171,16 +186,28 @@ pub fn execute(matches: &ArgMatches) -> anyhow::Result<()> {
     };
 
     finder.run(provider, |w, block| {
-        for (seq_id, range) in &block.ranges {
+        let mut ranges: Vec<_> = block.ranges.values().collect();
+        ranges.sort_by_key(|r| r.seq_id);
+
+        let flip = if let Some(first) = ranges.first() {
+            !first.strand
+        } else {
+            false
+        };
+
+        for range in ranges {
             let seq_name = seq_names
-                .get(seq_id)
+                .get(&range.seq_id)
                 .cloned()
-                .unwrap_or_else(|| format!("Seq_{}", seq_id));
-            let strand_char = if range.strand { '+' } else { '-' };
+                .unwrap_or_else(|| format!("Seq_{}", range.seq_id));
+            
+            let current_strand = if flip { !range.strand } else { range.strand };
+            let strand_char = if current_strand { '+' } else { '-' };
+            
             let _ = writeln!(
                 writer,
-                "{}\t{}\t{}\t{}\t{}\t{}\t{}",
-                block_counter, seq_name, range.start, range.end, strand_char, range.count, w
+                "{}\t{}({}):{}-{}\t{}\t{}",
+                block_counter, seq_name, strand_char, range.start, range.end, range.count, w
             );
         }
         block_counter += 1;

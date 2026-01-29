@@ -158,7 +158,7 @@ fn test_synteny_graph_cycle() {
 #[test]
 fn test_synteny_finder_run() -> anyhow::Result<()> {
     use crate::libs::synteny::algo::SyntenyFinder;
-    let finder = SyntenyFinder::new(5, vec![5], 2, 100, 0, 1000);
+    let finder = SyntenyFinder::new(5, vec![5], 2, 100, 0);
     let seq1 = b"ACGTACGTACGTACGTACGT";
     let seq2 = b"ACGTACGTACGTACGTACGT";
     let mut blocks = Vec::new();

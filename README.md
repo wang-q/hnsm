@@ -369,7 +369,9 @@ echo -e "tests/genome/sakai.fa.gz\ntests/genome/mg1655.fa.gz" |
 
 
 ```bash
-hnsm synteny tests/genome/mg1655.fa.gz tests/genome/sakai.fa.gz -k 21 --min-weight 2 --max-freq 100 --rounds 1000,100,10 -v
+hnsm synt dna tests/genome/small_1.fa tests/genome/small_2.fa -k 21 -o tests/synt/small_1_2.tsv
+
+hnsm synt dna tests/genome/mg1655.fa.gz tests/genome/sakai.fa.gz -k 21 --min-weight 2 --max-freq 100 --rounds 1000,100,10 -v
 
 ```
 

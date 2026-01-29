@@ -1,54 +1,5 @@
 use clap::*;
-use std::fs::File;
-use std::io::{BufRead, BufReader, BufWriter, Write};
-use std::path::Path;
-use anyhow::Context;
-
-#[derive(Debug, Clone)]
-struct Anchor {
-    q_name: String,
-    q_start: u64,
-    q_end: u64,
-    t_name: String,
-    t_start: u64,
-    t_end: u64,
-    strand: char, // '+' or '-'
-    score: f64,
-}
-
-impl Anchor {
-    fn from_line(line: &str) -> Option<Self> {
-        let fields: Vec<&str> = line.trim().split('\t').collect();
-        if fields.len() < 7 {
-            return None;
-        }
-
-        let q_name = fields[0].to_string();
-        let q_start = fields[1].parse().ok()?;
-        let q_end = fields[2].parse().ok()?;
-        let t_name = fields[3].to_string();
-        let t_start = fields[4].parse().ok()?;
-        let t_end = fields[5].parse().ok()?;
-        let strand = fields[6].chars().next()?;
-        let score = if fields.len() > 7 {
-            fields[7].parse().unwrap_or(0.0)
-        } else {
-            0.0
-        };
-
-        Some(Anchor {
-            q_name,
-            q_start,
-            q_end,
-            t_name,
-            t_start,
-            t_end,
-            strand,
-            score,
-        })
-    }
-
-}
+use hnsm::libs::synteny::io::{read_blocks, write_blocks, Block, Segment};
 
 pub fn make_subcommand() -> Command {
     Command::new("merge")
@@ -57,7 +8,7 @@ pub fn make_subcommand() -> Command {
             Arg::new("infile")
                 .required(true)
                 .index(1)
-                .help("Input synteny file (TSV: q_name, q_start, q_end, t_name, t_start, t_end, strand, score)"),
+                .help("Input synteny file (Format: hnsm Block TSV)"),
         )
         .arg(
             Arg::new("outfile")
@@ -80,118 +31,123 @@ pub fn execute(matches: &ArgMatches) -> anyhow::Result<()> {
     let outfile = matches.get_one::<String>("outfile").unwrap();
     let max_gap = *matches.get_one::<u64>("max_gap").unwrap();
 
-    eprintln!("Loading anchors from {}...", infile);
-    let anchors = load_anchors(infile)?;
-    eprintln!("Loaded {} anchors.", anchors.len());
+    eprintln!("Loading blocks from {}...", infile);
+    let blocks = read_blocks(infile)?;
+    eprintln!("Loaded {} blocks.", blocks.len());
 
-    let merged = merge_anchors(anchors, max_gap);
+    let merged = merge_blocks(blocks, max_gap);
     eprintln!("Merged into {} blocks.", merged.len());
 
-    write_anchors(&merged, outfile)?;
+    write_blocks(&merged, outfile)?;
     eprintln!("Written to {}", outfile);
 
     Ok(())
 }
 
-fn load_anchors<P: AsRef<Path>>(path: P) -> anyhow::Result<Vec<Anchor>> {
-    let file = File::open(path).context("Failed to open input file")?;
-    let reader = BufReader::new(file);
-    let mut anchors = Vec::new();
-
-    for line in reader.lines() {
-        let line = line?;
-        if line.starts_with('#') || line.is_empty() {
-            continue;
+fn merge_blocks(mut blocks: Vec<Block>, max_gap: u64) -> Vec<Block> {
+    // Sort primarily by first range (Reference)
+    // We assume the first range in each block corresponds to the same genome/role
+    // or at least that blocks are "comparable" via their first range.
+    blocks.sort_by(|a, b| {
+        if a.ranges.is_empty() || b.ranges.is_empty() {
+            return std::cmp::Ordering::Equal;
         }
-        if let Some(anchor) = Anchor::from_line(&line) {
-            anchors.push(anchor);
-        }
-    }
-    Ok(anchors)
-}
-
-fn write_anchors<P: AsRef<Path>>(anchors: &[Anchor], path: P) -> anyhow::Result<()> {
-    let file = File::create(path).context("Failed to create output file")?;
-    let mut writer = BufWriter::new(file);
-
-    writeln!(writer, "#q_name\tq_start\tq_end\tt_name\tt_start\tt_end\tstrand\tscore")?;
-    for a in anchors {
-        writeln!(
-            writer,
-            "{}\t{}\t{}\t{}\t{}\t{}\t{}\t{:.1}",
-            a.q_name, a.q_start, a.q_end, a.t_name, a.t_start, a.t_end, a.strand, a.score
-        )?;
-    }
-    Ok(())
-}
-
-fn merge_anchors(mut anchors: Vec<Anchor>, max_gap: u64) -> Vec<Anchor> {
-    // Sort primarily by query position
-    anchors.sort_by(|a, b| {
-        a.q_name
-            .cmp(&b.q_name)
-            .then(a.t_name.cmp(&b.t_name))
-            .then(a.strand.cmp(&b.strand))
-            .then(a.q_start.cmp(&b.q_start))
+        let r1 = &a.ranges[0];
+        let r2 = &b.ranges[0];
+        
+        r1.seq_name.cmp(&r2.seq_name)
+            .then(r1.start.cmp(&r2.start))
     });
 
     let mut merged = Vec::new();
-    if anchors.is_empty() {
+    if blocks.is_empty() {
         return merged;
     }
 
-    let mut current = anchors[0].clone();
+    let mut current = blocks[0].clone();
 
-    for next in anchors.into_iter().skip(1) {
+    for next in blocks.into_iter().skip(1) {
         if can_merge(&current, &next, max_gap) {
             current = merge_two(&current, &next);
         } else {
+            // Assign new ID to finalized block
+            current.id = merged.len() + 1;
             merged.push(current);
             current = next;
         }
     }
+    current.id = merged.len() + 1;
     merged.push(current);
 
     merged
 }
 
-fn can_merge(prev: &Anchor, next: &Anchor, max_gap: u64) -> bool {
-    if prev.q_name != next.q_name || prev.t_name != next.t_name || prev.strand != next.strand {
+fn can_merge(b1: &Block, b2: &Block, max_gap: u64) -> bool {
+    // 1. Must have same number of ranges
+    if b1.ranges.len() != b2.ranges.len() {
         return false;
     }
 
-    // Check query gap (next is guaranteed >= prev.q_start by sort)
-    // Overlap is allowed (gap < 0), effectively 0 distance
-    let q_gap = next.q_start.saturating_sub(prev.q_end);
-    if q_gap > max_gap {
-        return false;
-    }
-
-    // Check target gap based on strand
-    if prev.strand == '+' {
-        // Monotonic increasing on target
-        if next.t_start < prev.t_start {
-             // Order violation on target side for + strand
-             return false; 
-        }
-        let t_gap = next.t_start.saturating_sub(prev.t_end);
-        if t_gap > max_gap {
-            return false;
-        }
-    } else {
-        // Monotonic decreasing on target (for increasing query)
-        // prev: Q[100-200], T[500-600] (-)
-        // next: Q[300-400], T[300-400] (-) -> Valid
-        // next.t_end should be < prev.t_start approximately
+    // 2. Iterate through all ranges and check consistency
+    // We assume ranges in a block are ordered (e.g., Query, Target1, Target2...)
+    // If not, we should try to match by seq_name.
+    // For safety, let's match by index first, but verify seq_name.
+    
+    for (i, r1) in b1.ranges.iter().enumerate() {
+        let r2 = &b2.ranges[i];
         
-        if next.t_end > prev.t_end {
-            // Order violation: next block on target is "after" previous block,
-            // but for '-' strand it should be "before" (smaller coords)
+        // Genome mismatch
+        if r1.seq_name != r2.seq_name {
             return false;
         }
 
-        let t_gap = prev.t_start.saturating_sub(next.t_end);
-        if t_gap > max_gap {
+        // Strand mismatch
+        if r1.strand != r2.strand {
+            return false;
+        }
+
+        // Distance check
+        let gap = if r1.strand == '+' {
+            // Forward: b2 should be after b1
+            if r2.start < r1.end {
+                // Overlap or wrong order
+                // Allow small overlap? Usually chaining requires strict order.
+                // But simplified: check signed distance.
+                // If r2.start < r1.end, it's an overlap.
+                // Overlap is usually fine for merging if it's small?
+                // Or maybe strictly >?
+                // Let's allow overlap if it's not "contained".
+                // Actually, if we are merging "blocks", they should be sequential.
+                // Let's use absolute distance of (r2.start as i64 - r1.end as i64).
+                
+                if r2.start < r1.start { return false; } // Definitely wrong order
+                0 // Overlap treated as 0 gap
+            } else {
+                r2.start - r1.end
+            }
+        } else {
+            // Reverse: b2 should be "before" b1 in coordinates (logical after)
+            // Wait, if strand is -, it means the segment is inverted relative to the "positive" reference.
+            // But the coordinates are still genomic (start < end).
+            // If we are traversing the query in + direction, and we see a synteny block on - strand.
+            // Block 1: Q:100-200, T:500-400 (stored as 400-500, -)
+            // Block 2: Q:300-400, T:300-200 (stored as 200-300, -)
+            
+            // T1: 400-500 (-). T2: 200-300 (-).
+            // Logical flow on T: 500 -> 400 -> 300 -> 200.
+            // So T1.start (400) > T2.end (300).
+            // Gap = T1.start - T2.end.
+            
+            if r2.end > r1.start {
+                 // Wrong order for negative strand traversal
+                 // T1 (400-500), T2 (600-700) -> T1..T2 is + direction.
+                 // But we want - direction.
+                 return false;
+            }
+            r1.start - r2.end
+        };
+
+        if gap > max_gap {
             return false;
         }
     }
@@ -199,22 +155,25 @@ fn can_merge(prev: &Anchor, next: &Anchor, max_gap: u64) -> bool {
     true
 }
 
-fn merge_two(prev: &Anchor, next: &Anchor) -> Anchor {
-    let mut new_anchor = prev.clone();
+fn merge_two(b1: &Block, b2: &Block) -> Block {
+    let mut new_ranges = Vec::new();
     
-    // Query always extends min to max
-    new_anchor.q_start = prev.q_start.min(next.q_start);
-    new_anchor.q_end = prev.q_end.max(next.q_end);
+    for (i, r1) in b1.ranges.iter().enumerate() {
+        let r2 = &b2.ranges[i];
+        
+        // Merge range: min start, max end
+        // This is safe because we checked collinearity and overlap/gap.
+        new_ranges.push(Segment {
+            seq_name: r1.seq_name.clone(),
+            start: r1.start.min(r2.start),
+            end: r1.end.max(r2.end),
+            strand: r1.strand,
+            score: r1.score + r2.score, // Sum scores? Or max? Usually sum of counts.
+        });
+    }
 
-    // Target depends on strand, but since we store start/end as absolute coords:
-    // For +, start is min, end is max
-    // For -, start is min, end is max (just the span covers both)
-    // Wait, the block definition is usually start < end.
-    // The "span" of the merged block is the bounding box.
-    new_anchor.t_start = prev.t_start.min(next.t_start);
-    new_anchor.t_end = prev.t_end.max(next.t_end);
-
-    new_anchor.score += next.score;
-    
-    new_anchor
+    Block {
+        id: b1.id, // ID will be reassigned later
+        ranges: new_ranges,
+    }
 }

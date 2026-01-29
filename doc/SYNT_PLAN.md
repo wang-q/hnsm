@@ -16,21 +16,33 @@
 
 ### 2.1. 核心算法 (Algorithm)
 
-该工具采用分层迭代（Hierarchical Iterative）策略，结合 Minimizer 图与线性路径查找算法。
+该工具采用分层迭代（Hierarchical Iterative）策略，结合 Minimizer 图与线性路径查找算法，从粗到细逐步构建共线性块。
 
-1.  **Minimizer 提取**:
-    *   对输入基因组序列进行 Minimizer 采样（默认 k=24）。
-    *   通过 `max-freq` 过滤高频重复序列。
+1.  **分层迭代 (Iterative Refinement)**:
+    *   采用多轮（Rounds）策略，窗口大小（Window Size, `w`）从大到小变化（例如 1000 -> 100 -> 10）。
+    *   **全局掩膜 (Global Masking)**: 每一轮发现的共线性区域会被记录在全局掩膜（Coverage Mask）中。后续轮次在提取 Minimizer 时，会跳过已覆盖的区域，从而专注于未解决的复杂区域或更精细的结构。
 
-2.  **分层迭代 (Iterative Refinement)**:
-    *   采用多轮（Rounds）策略，逐步降低窗口大小（Window Size）以提高分辨率。
-    *   默认策略根据序列差异度（divergence）自动调整。
-    *   每一轮中，构建局部 Minimizer 图，寻找线性路径（Linear Paths）。
+2.  **Minimizer 提取与过滤 (Pass 1 & 2)**:
+    *   **Pass 1 (Counting)**: 遍历所有序列，统计 Minimizer 频率。使用 Bloom Filter 过滤掉仅出现一次的 Minimizer（Singletons），以减少内存占用。
+    *   **Pass 2 (Graph Building)**: 再次遍历序列，构建 Minimizer 图。
+        *   **Repeat Filtering**: 忽略频率超过 `max-freq` 的高频 Minimizer（通常是转座子或简单重复序列）。
+        *   **Mask Filtering**: 忽略落在全局掩膜区域内的 Minimizer。
 
-3.  **路径扩展与合并**:
-    *   **Linear Path Finding**: 使用 O(E) 的图遍历算法快速识别线性共线性区域。
-    *   **Block Construction**: 将线性路径转换为共线性块（Synteny Blocks）。
-    *   **Merging**: 基于距离阈值合并相邻的碎片化块。
+3.  **图构建与简化 (Graph Processing)**:
+    *   **节点 (Nodes)**: 代表唯一的 Minimizer Hash。
+    *   **边 (Edges)**: 代表两个 Minimizer 在基因组上的邻接关系。
+    *   **权重过滤 (Weight Pruning)**: 仅保留权重（支持的基因组数量）大于 `min-weight` 的边，去除偶然的噪音连接。
+    *   **传递归约 (Transitive Reduction)**: 移除冗余的传递边（如 A->B->C 存在时，移除 A->C），简化图结构。
+
+4.  **线性路径查找 (Linear Path Finding)**:
+    *   使用 O(E) 的全图扫描算法。
+    *   识别图中互为唯一邻居（Reciprocal Best Hits in Graph）的节点链。
+    *   这些链代表了多基因组间高度保守的线性共线性骨架。
+
+5.  **块构建 (Block Construction)**:
+    *   将抽象的 Hash 路径映射回具体的基因组坐标。
+    *   使用二分查找（Binary Search）高效定位每个 Hash 在各基因组中的具体位置（Range）。
+    *   输出包含所有输入基因组对应坐标的共线性块。
 
 ### 2.2. 参数说明 (Parameters)
 
@@ -39,11 +51,42 @@
 *   `--max-freq <INT>`: 过滤高频 k-mer 的阈值（默认 1000）。
 *   `--rounds, -r <STR>`: 自定义分层迭代的窗口大小序列（如 "10000,1000,100"）。
 *   `--block-size, -b <INT>`: 最小共线性块大小（bp）。
-*   `--merge, -m <INT>`: 内部合并块的最大间隙（bp）。注意：此参数用于算法内部的微小合并，大规模碎片合并建议使用 `hnsm synt merge`。
+*   `--min-weight <INT>`: 最小边权重（支持的基因组数量，默认 2）。
 
 ### 2.3. 输出格式 (Output)
 
-输出为标准的 TSV 格式，包含详细的坐标和统计信息，可直接作为 `hnsm synt merge` 的输入。
+输出为 Block TSV 格式。每一行代表一个基因组片段（Range），共享相同 ID 的行属于同一个共线性块（Block）。
+
+字段说明：
+1.  **Block_ID**: 共线性块的唯一标识符（整数）。
+2.  **Range**: 格式为 `Genome.Chr(Strand):Start-End`。
+    *   `Genome.Chr`: 序列名称，通常由文件名和染色体名拼接而成（如 `S288c.I`）。
+    *   `Strand`: `+` 或 `-`。注意：第一个基因组的链方向会被标准化为 `+`。
+    *   `Start-End`: 1-based 起止坐标。
+3.  **Count**: 块中包含的 Minimizer 数量。
+4.  **Round**: （可选）发现该块时的窗口大小（迭代轮次）。
+
+**注意**:
+由于采用了分层迭代策略，不同轮次（Round）发现的共线性块可能会在坐标上相互重叠。
+*   大窗口（如 1000）发现的块通常代表宏观的共线性骨架。
+*   小窗口（如 10）发现的块则填充了细节，或者延伸到了大窗口未能覆盖的边缘区域。
+*   **Masking 机制**：每一轮发现的区域会被“掩盖”（Masking），在后续小窗口轮次中，只会对未被掩盖的区域（即之前未能确定共线性的复杂或边缘区域）进行重新扫描和建图。这保证了算法能专注于那些难以处理的区域，而不是重复计算已经明确的核心骨架。
+*   用户后续可以使用 `hnsm synt merge` 对这些重叠或碎片化的块进行合并与精简。
+
+样例：
+
+```tsv
+# Block_ID	Range	Count	Round
+# 第一轮 (Round 1001) 发现的核心区域
+0	small_1.seq1(+):500-1089	589	1001
+0	small_2.seq1(+):500-1089	589	1001
+# 第二轮 (Round 101) 扩展到了更大的范围
+1	small_1.seq1(+):50-1539	899	101
+1	small_2.seq1(+):50-1539	899	101
+# 第三轮 (Round 11) 进一步延伸至边缘
+2	small_1.seq1(+):5-1584	89	11
+2	small_2.seq1(+):5-1584	89	11
+```
 
 ## 3. `hnsm synt merge` 设计详情
 
