@@ -1,2 +1,3 @@
 [toolchain]
-channel = "nightly-2025-01-16" # same as portable-simd
+channel = "nightly-2026-01-26" # same as portable-simd
+components = ["rustfmt", "clippy", "miri", "rust-src"]
