@@ -179,3 +179,33 @@ hnsm synt merge raw_blocks.tsv --chain-gap 50000 -o merged_manual.tsv
 
 2.  **集成测试** (已完成):
     *   使用 `hnsm synt dna` 的输出作为测试数据，验证能否正确合并人为分割的块。
+
+## 5. 背景与 ntSynt 对比 (Background & Comparison)
+
+`hnsm synt dna` 的设计深受 **ntSynt** (Coombe et al., 2025) 的启发。我们的目标是在 Rust 生态中重现并优化其基于 Minimizer 图的宏观共线性检测算法，提供更高效、更易用的单一二进制工具。
+
+### 5.1. 核心相似点 (Similarities)
+
+*   **算法逻辑**: 两者都采用 "Sketching -> Graph Building -> Path Finding" 的流程。
+*   **分层迭代**: 都使用从大窗口到小窗口的迭代策略（Iterative Refinement），并结合 Global Masking 技术来逐步解析复杂区域。
+*   **内存优化**: 都利用 Bloom Filter 来过滤 Singleton k-mers，显著降低大基因组分析的内存消耗。
+*   **参数模型**: 默认参数（如 block size, chain gap）都基于序列差异度（Divergence）进行动态调整。
+
+### 5.2. 主要差异与改进 (Differences & Improvements)
+
+| 特性 | ntSynt (Original) | hnsm synt dna (Rust Implementation) |
+| :--- | :--- | :--- |
+| **语言与架构** | Python 脚本 + C++ 二进制 (Hybrid Pipeline) | 纯 Rust 实现 (Single Binary)，无外部依赖 |
+| **图数据结构** | `igraph` (Python/C binding) | `petgraph` (Rust)，配合定制的内存优化邻接表 |
+| **哈希算法** | `ntHash` | `RapidHash` / `MurmurHash3` (支持 SIMD) |
+| **软掩膜支持** | 需预处理 | 内置 `--soft-mask`，动态过滤小写碱基 k-mer |
+| **后处理** | 脚本处理 | 独立的 `hnsm synt merge` 命令，支持灵活缝合 |
+| **输入/输出** | 依赖文件系统中间文件 | 流式处理，支持标准输入/输出 |
+| **安装与部署** | 需配置 Python 环境和编译 C++ | `cargo install` 或单文件分发 |
+
+### 5.3. 演进过程
+
+`hnsm` 逐步移植并重构了 ntSynt 的关键组件：
+1.  **哈希与索引**: 使用 `minimizer_iter` 和 `rapidhash` 替代了 `indexlr`。
+2.  **图算法**: 使用 Rust 的 `petgraph` 库重写了构图和路径查找逻辑，并针对共线性图的稀疏特性进行了 O(E) 遍历优化。
+3.  **工程化**: 将原本分散的预处理、过滤、比对步骤整合为单一命令 `hnsm synt dna`，并统一了 I/O 格式。
