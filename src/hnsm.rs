@@ -44,8 +44,7 @@ fn main() -> anyhow::Result<()> {
         .subcommand(cmd::clust::make_subcommand())
         // Synteny
         .subcommand(cmd::das::make_subcommand())
-        .subcommand(cmd::chain::make_subcommand())
-        .subcommand(cmd::synteny::make_subcommand())
+        .subcommand(cmd::synt::make_subcommand())
         .after_help(
             r###"
 Subcommand groups:
@@ -65,15 +64,14 @@ Subcommand groups:
 
 * Synteny
     * das
-    * chain
+    * synt dna / synt merge
 
 "###,
         );
 
     // Check which subcommand the user ran...
     match app.get_matches().subcommand() {
-        Some(("chain", sub_matches)) => cmd::chain::execute(sub_matches),
-        Some(("synteny", sub_matches)) => cmd::synteny::execute(sub_matches),
+        Some(("synt", sub_matches)) => cmd::synt::execute(sub_matches),
         Some(("clust", sub_matches)) => cmd::clust::execute(sub_matches),
         Some(("count", sub_matches)) => cmd::count::execute(sub_matches),
         Some(("das", sub_matches)) => cmd::das::execute(sub_matches),

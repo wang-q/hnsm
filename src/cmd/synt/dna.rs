@@ -5,7 +5,7 @@ use std::fs::File;
 use std::io::{BufWriter, Write};
 
 pub fn make_subcommand() -> Command {
-    Command::new("synteny")
+    Command::new("dna")
         .about("Synteny detection using minimizer graphs")
         .arg(
             Arg::new("infiles")

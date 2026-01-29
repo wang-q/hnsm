@@ -1,6 +1,5 @@
 //! Subcommand modules for the `hnsm` binary.
 
-pub mod chain;
 pub mod clust;
 pub mod count;
 pub mod das;
@@ -26,4 +25,5 @@ pub mod sixframe;
 pub mod size;
 pub mod some;
 pub mod split;
-pub mod synteny;
+pub mod synt;
+

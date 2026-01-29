@@ -11,7 +11,7 @@
 | **序列过滤** | Bloom Filter (公共/重复 k-mers) | `hnsm::hash` (HashSets) | **完成**。实现了 Bloom Filter 优化内存使用，用于过滤单次出现的 k-mers。 |
 | **Minimizer 生成** | `indexlr` (btllib) | `hnsm::hash` | **已完成**。基于 `minimizer_iter` 实现了 `seq_sketch`，支持位置、链信息及多种哈希算法。 |
 | **图构建** | Minimizer Graph (igraph) | `hnsm::synteny::graph` | **已完成**。基于 `petgraph` 实现了 `SyntenyGraph`，支持多基因组图构建、边权重过滤及路径查找。 |
-| **共线性检测** | 路径查找 / 组件分析 | `hnsm::loc` | **已完成**。基于图遍历算法，寻找共线性路径并转换为 SyntenyBlock。 |
+| **共线性检测** | 路径查找 / 组件分析 | `hnsm::loc` | **已完成**。基于图遍历算法 (O(E) 全局扫描优化)，寻找共线性路径并转换为 SyntenyBlock (二分查找优化)。 |
 | **细化 (Refinement)** | 迭代减小 `w` (窗口大小) | `hnsm::io`, `hnsm::nt` | **已完成**。实现了多轮迭代细化（rounds），利用 IntSpan 掩盖已覆盖区域。 |
 
 ## 3. 已实现的库功能 (`src/libs`)
@@ -61,16 +61,17 @@
     1.  创建了 `hnsm::synteny::graph` 模块。
     2.  定义了 `Node` (Minimizer), `Edge` (邻接关系), `Occurrence` (基因组位置) 结构。
     3.  实现了 `SyntenyGraph` 结构及多基因组图构建逻辑（`add_minimizers`）。
-    4.  实现了边权重过滤 (`prune_low_weight_edges`) 和线性路径查找 (`get_linear_paths`)。
+    4.  实现了边权重过滤 (`prune_low_weight_edges`) 和线性路径查找 (`get_linear_paths`，已优化为 O(E) 全局扫描)。
     5.  实现了基于频率的 k-mer 过滤（在 `hnsm synteny` 命令中通过两遍扫描实现）。
     6.  针对超大基因组优化过滤内存（引入 Bloom Filter）。
+    7.  实现了传递规约 (`transitive_reduction`) 以简化图结构。
 
 ### 第三阶段：共线性块识别
 *   **状态**：已完成 (`src/libs/synteny/algo.rs`)
 *   **目标**：从图中提取共线性块。
 *   **已完成任务**：
     1.  整合流程：在 `SyntenyFinder::run` 中实现了控制逻辑。
-    2.  块处理：实现了 `SyntenyBlock::from_path`。
+    2.  块处理：实现了 `SyntenyBlock::from_path` (利用二分查找优化 O(N*logM))。
     3.  输出：CLI 输出了 TSV 格式。
 
 ### 第四阶段：迭代细化
@@ -93,9 +94,9 @@
         *   `--rounds`：窗口大小列表（如 "100,10"）。
         *   `--min-weight`：最小边权重。
         *   `--max-freq`：最大 k-mer 频率。
-    3.  输出：TSV 格式输出。
+    3.  输出：TSV 格式输出 (使用 `BufWriter` 优化 I/O 性能)。
 
-## 5. 验证与测试
+## 6. 验证与测试
 *   **单元测试**:
     *   `src/libs/synteny/tests.rs`: 涵盖图构建、路径查找、循环处理和 Bloom Filter 集成。
     *   `src/libs/bloom.rs`: Bloom Filter 基本功能测试。
@@ -103,7 +104,7 @@
     *   使用 `tests/fasta` 中的数据进行端到端测试。
     *   验证了 `rounds` 迭代和内存优化效果。
 
-## 6. 参考资料
+## 7. 参考资料
 *   **ntSynt Paper**: Coombe et al., 2025.
 *   **Codebase**: `c:\Users\wangq\Scripts\hnsm\ntSynt-main`
 *   **Existing hnsm modules**: `src/cmd/distance.rs`.
