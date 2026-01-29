@@ -107,6 +107,7 @@ Cargo.lock
 *.lst
 *.sizes
 *.xlsx
+*.svg
 
 PL-*/
 /tmp/

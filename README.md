@@ -143,6 +143,8 @@ hnsm count tests/fasta/ufasta.fa.gz
 hnsm masked tests/fasta/ufasta.fa
 hnsm n50 tests/fasta/ufasta.fa -N 90 -N 50 -S -t
 
+hnsm size tests/genome/mg1655.fa.gz -o tests/genome/mg1655.size.tsv
+
 hnsm one tests/fasta/ufasta.fa read12
 hnsm some tests/fasta/ufasta.fa tests/fasta/list.txt
 hnsm order tests/fasta/ufasta.fa tests/fasta/list.txt
@@ -375,13 +377,18 @@ hnsm synt dna tests/genome/small_1.fa tests/genome/small_2.fa -k 21 -o tests/syn
 
 hnsm synt dna tests/genome/small_1.fa tests/genome/small_2.fa -k 21 --rounds 500,10 --chain-gap 500 -o tests/synt/small_1_2_500.tsv
 
-hnsm synt dna tests/genome/mg1655.fa.gz tests/genome/sakai.fa.gz -k 21 --min-weight 2 --max-freq 100 --rounds 1000,100,10 -v
-
 # Merge fragmented blocks
 hnsm synt merge tests/synt/small_1_2.tsv -o tests/synt/small_1_2.merged.tsv
 
 # Merge with divergence-based parameters (e.g., 5% divergence -> chain-gap 100000)
 hnsm synt merge tests/synt/small_1_2_500.tsv -d 5.0 -o tests/synt/small_1_2.d5.tsv
+
+# Read synteny blocks
+hnsm synt dna tests/genome/mg1655.fa.gz tests/genome/sakai.fa.gz -k 21 --chain-gap 100 --min-weight 2 --max-freq 100 --rounds 1000,100,10 -v -o tests/synt/mg1655_sakai.tsv
+
+hnsm synt merge tests/synt/mg1655_sakai.tsv --chain-gap 1000 -o tests/synt/mg1655_sakai.1000.tsv
+
+hnsm synt view tests/synt/mg1655_sakai.tsv -o tests/synt/mg1655_sakai.svg
 
 ```
 
