@@ -170,8 +170,8 @@ mod tests {
     #[test]
     fn test_hash_hv() {
         // Generate random input data
-        let mut rng = rand::thread_rng();
-        let kmer_hash_set: RapidHashSet<u64> = (0..1000).map(|_| rng.gen::<u64>()).collect();
+        let mut rng = rand::rng();
+        let kmer_hash_set: RapidHashSet<u64> = (0..1000).map(|_| rng.random::<u64>()).collect();
         let hv_d = 4096;
 
         // Run the SIMD version
@@ -190,8 +190,8 @@ mod tests {
     #[test]
     fn test_hash_hv_serial_vs_simd() {
         // Generate random input data
-        let mut rng = rand::thread_rng();
-        let kmer_hash_set: RapidHashSet<u64> = (0..1000).map(|_| rng.gen::<u64>()).collect();
+        let mut rng = rand::rng();
+        let kmer_hash_set: RapidHashSet<u64> = (0..1000).map(|_| rng.random::<u64>()).collect();
         let hv_d = 4096;
 
         // Run normal version
