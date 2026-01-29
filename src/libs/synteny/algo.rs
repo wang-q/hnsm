@@ -12,7 +12,6 @@ pub struct SyntenyFinder {
     pub min_weight: usize,
     pub max_freq: u32,
     pub block_size: usize,
-    pub merge_dist: usize,
 }
 
 impl SyntenyFinder {
@@ -22,7 +21,6 @@ impl SyntenyFinder {
         min_weight: usize,
         max_freq: u32,
         block_size: usize,
-        merge_dist: usize,
     ) -> Self {
         Self {
             k,
@@ -30,7 +28,6 @@ impl SyntenyFinder {
             min_weight,
             max_freq,
             block_size,
-            merge_dist,
         }
     }
 

@@ -44,19 +44,6 @@ pub fn make_subcommand() -> Command {
                 .value_parser(value_parser!(usize)),
         )
         .arg(
-            Arg::new("merge")
-                .short('m')
-                .long("merge")
-                .help("Maximum distance for merging blocks (bp). Defaults depend on divergence.")
-                .value_parser(value_parser!(usize)),
-        )
-        .arg(
-            Arg::new("indel")
-                .long("indel")
-                .help("Threshold for indel detection (bp). Defaults depend on divergence.")
-                .value_parser(value_parser!(usize)),
-        )
-        .arg(
             Arg::new("min_weight")
                 .long("min-weight")
                 .help("Minimum edge weight (number of supporting genomes)")
@@ -102,18 +89,18 @@ pub fn execute(matches: &ArgMatches) -> anyhow::Result<()> {
     let divergence = matches.get_one::<f64>("divergence");
 
     // Logic from ntSynt
-    let (default_rounds, default_block_size, default_merge, default_indel) =
+    let (default_rounds, default_block_size) =
         if let Some(d) = divergence {
             if *d < 1.0 {
-                ("100,10", 500, 10000, 10000)
+                ("100,10", 500)
             } else if *d <= 10.0 {
-                ("250,100", 1000, 100000, 50000)
+                ("250,100", 1000)
             } else {
-                ("500,250", 10000, 1000000, 100000)
+                ("500,250", 10000)
             }
         } else {
             // Fallback if no divergence specified, use "medium" defaults or what was previously hardcoded
-            ("1000,100,10", 0, 100000, 50000)
+            ("1000,100,10", 0)
         };
 
     let rounds_str = matches
@@ -123,8 +110,6 @@ pub fn execute(matches: &ArgMatches) -> anyhow::Result<()> {
     let block_size = *matches
         .get_one::<usize>("block_size")
         .unwrap_or(&default_block_size);
-    let merge_dist = *matches.get_one::<usize>("merge").unwrap_or(&default_merge);
-    let _indel_dist = *matches.get_one::<usize>("indel").unwrap_or(&default_indel); // Not used yet but parsed
 
     let rounds: Vec<usize> = rounds_str
         .split(',')
@@ -141,7 +126,7 @@ pub fn execute(matches: &ArgMatches) -> anyhow::Result<()> {
             .init();
     }
 
-    let finder = SyntenyFinder::new(k, rounds, min_weight, max_freq, block_size, merge_dist);
+    let finder = SyntenyFinder::new(k, rounds, min_weight, max_freq, block_size);
 
     // Pre-scan to build seq_names map
     // We could do this inside provider but we need names for output.

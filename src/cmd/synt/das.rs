@@ -9,9 +9,9 @@ pub fn make_subcommand() -> Command {
 Domain architecture similarity via dynamic programming
 
 
-cargo run --bin hnsm das 1 --sep ""
+cargo run --bin hnsm synt das 1 --sep ""
 
-cargo run --bin hnsm das 1 --sep "" --ma 2 --mm=-1.0 --gp=-1.0
+cargo run --bin hnsm synt das 1 --sep "" --ma 2 --mm=-1.0 --gp=-1.0
 
 
 "###,
