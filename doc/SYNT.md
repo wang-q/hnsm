@@ -1,4 +1,4 @@
-# `hnsm synt` - 共线性分析命令组设计方案
+# `hnsm synt` - 共线性分析命令组使用文档
 
 ## 1. 概述 (Overview)
 
