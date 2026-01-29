@@ -38,7 +38,7 @@ impl SyntenyGraph {
 
     /// Add minimizers from a single sequence to the graph.
     /// Assumes minimizers are sorted by position.
-    pub fn add_minimizers(&mut self, minimizers: &[MinimizerInfo]) {
+    pub fn add_minimizers(&mut self, minimizers: &[MinimizerInfo], max_indel: u32) {
         if minimizers.is_empty() {
             return;
         }
@@ -65,14 +65,16 @@ impl SyntenyGraph {
             if let (Some(u), Some(prev)) = (prev_idx, prev_info) {
                 if prev.seq_id == info.seq_id {
                     let dist = info.pos.saturating_sub(prev.pos);
-                    self.graph.add_edge(
-                        u,
-                        idx,
-                        Edge {
-                            seq_id: info.seq_id,
-                            distance: dist,
-                        },
-                    );
+                    if dist <= max_indel {
+                        self.graph.add_edge(
+                            u,
+                            idx,
+                            Edge {
+                                seq_id: info.seq_id,
+                                distance: dist,
+                            },
+                        );
+                    }
                 }
             }
 

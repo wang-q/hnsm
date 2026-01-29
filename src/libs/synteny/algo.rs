@@ -12,6 +12,7 @@ pub struct SyntenyFinder {
     pub min_weight: usize,
     pub max_freq: u32,
     pub block_size: usize,
+    pub chain_gap: u32,
 }
 
 impl SyntenyFinder {
@@ -21,6 +22,7 @@ impl SyntenyFinder {
         min_weight: usize,
         max_freq: u32,
         block_size: usize,
+        chain_gap: u32,
     ) -> Self {
         Self {
             k,
@@ -28,6 +30,7 @@ impl SyntenyFinder {
             min_weight,
             max_freq,
             block_size,
+            chain_gap,
         }
     }
 
@@ -117,7 +120,7 @@ impl SyntenyFinder {
                 let mins_filtered: Vec<MinimizerInfo> =
                     mins.into_iter().filter(|m| !is_covered(m.pos)).collect();
 
-                graph.add_minimizers(&mins_filtered);
+                graph.add_minimizers(&mins_filtered, self.chain_gap);
             })?;
 
             info!("Graph built. Edges: {}", graph.graph.edge_count());

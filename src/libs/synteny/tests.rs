@@ -61,8 +61,8 @@ fn test_synteny_graph_linear_path() {
         },
     ];
 
-    graph.add_minimizers(&seq1);
-    graph.add_minimizers(&seq2);
+    graph.add_minimizers(&seq1, 100000);
+    graph.add_minimizers(&seq2, 100000);
 
     // Initial check: edges count
     // 10->20: 2 edges
@@ -112,7 +112,7 @@ fn test_synteny_graph_cycle() {
         },
     ];
 
-    graph.add_minimizers(&seq1);
+    graph.add_minimizers(&seq1, 100000);
 
     // Prune with weight 1 (keep everything)
     graph.prune_low_weight_edges(1);
@@ -158,7 +158,7 @@ fn test_synteny_graph_cycle() {
 #[test]
 fn test_synteny_finder_run() -> anyhow::Result<()> {
     use crate::libs::synteny::algo::SyntenyFinder;
-    let finder = SyntenyFinder::new(5, vec![5], 2, 100, 0);
+    let finder = SyntenyFinder::new(5, vec![5], 2, 100, 0, 100000);
     let seq1 = b"ACGTACGTACGTACGTACGT";
     let seq2 = b"ACGTACGTACGTACGTACGT";
     let mut blocks = Vec::new();

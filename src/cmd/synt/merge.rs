@@ -4,6 +4,14 @@ use hnsm::libs::synteny::io::{read_blocks, write_blocks, Block, Segment};
 pub fn make_subcommand() -> Command {
     Command::new("merge")
         .about("Merge fragmented synteny blocks")
+        .after_help(
+            "Default parameters based on divergence (-d):\n  \
+             < 1.0%:   --chain-gap 10000\n  \
+             1.0-10.0%: --chain-gap 100000\n  \
+             > 10.0%:  --chain-gap 1000000\n\
+             \n\
+             If --divergence is not specified, --chain-gap defaults to 100000."
+        )
         .arg(
             Arg::new("infile")
                 .required(true)
@@ -14,37 +22,85 @@ pub fn make_subcommand() -> Command {
             Arg::new("outfile")
                 .short('o')
                 .long("outfile")
-                .default_value("merged.tsv")
-                .help("Output filename"),
+                .help("Output filename. [stdout] for screen")
+                .default_value("stdout"),
         )
         .arg(
-            Arg::new("max_gap")
-                .long("max-gap")
-                .default_value("100000")
+            Arg::new("divergence")
+                .short('d')
+                .long("divergence")
+                .value_parser(value_parser!(f64))
+                .help("Approx. maximum percent sequence divergence (e.g., 1.0 for 1%)"),
+        )
+        .arg(
+            Arg::new("chain_gap")
+                .long("chain-gap")
                 .value_parser(value_parser!(u64))
-                .help("Maximum gap size allowed for merging"),
+                .help("Maximum gap size allowed for merging [default: 100000]"),
+        )
+        .arg(
+            Arg::new("verbose")
+                .long("verbose")
+                .short('v')
+                .action(clap::ArgAction::SetTrue)
+                .help("Verbose output"),
         )
 }
 
 pub fn execute(matches: &ArgMatches) -> anyhow::Result<()> {
     let infile = matches.get_one::<String>("infile").unwrap();
     let outfile = matches.get_one::<String>("outfile").unwrap();
-    let max_gap = *matches.get_one::<u64>("max_gap").unwrap();
+    
+    // Determine default chain_gap based on divergence
+    // ntSynt:
+    // < 1%: 10,000
+    // 1-10%: 100,000
+    // > 10%: 1,000,000
+    // Default if no divergence: 100,000 (middle ground)
+    let divergence = matches.get_one::<f64>("divergence");
+    let default_gap = if let Some(d) = divergence {
+        if *d < 1.0 {
+            10_000
+        } else if *d <= 10.0 {
+            100_000
+        } else {
+            1_000_000
+        }
+    } else {
+        100_000
+    };
 
-    eprintln!("Loading blocks from {}...", infile);
-    let blocks = read_blocks(infile)?;
-    eprintln!("Loaded {} blocks.", blocks.len());
+    let chain_gap = *matches.get_one::<u64>("chain_gap").unwrap_or(&default_gap);
 
-    let merged = merge_blocks(blocks, max_gap);
-    eprintln!("Merged into {} blocks.", merged.len());
+    if matches.get_flag("verbose") {
+        env_logger::Builder::new()
+            .filter_level(log::LevelFilter::Info)
+            .init();
+    } else {
+        env_logger::Builder::new()
+            .filter_level(log::LevelFilter::Warn)
+            .init();
+    }
+
+    log::info!("Loading blocks from {}...", infile);
+    let mut blocks = read_blocks(infile)?;
+    log::info!("Loaded {} blocks.", blocks.len());
+
+    // Normalize block ranges: sort by seq_name to ensure consistent order for N-way comparison
+    for block in &mut blocks {
+        block.ranges.sort_by(|a, b| a.seq_name.cmp(&b.seq_name));
+    }
+
+    let merged = merge_blocks(blocks, chain_gap);
+    log::info!("Merged into {} blocks.", merged.len());
 
     write_blocks(&merged, outfile)?;
-    eprintln!("Written to {}", outfile);
+    // log::info!("Written to {}", outfile);
 
     Ok(())
 }
 
-fn merge_blocks(mut blocks: Vec<Block>, max_gap: u64) -> Vec<Block> {
+fn merge_blocks(mut blocks: Vec<Block>, chain_gap: u64) -> Vec<Block> {
     // Sort primarily by first range (Reference)
     // We assume the first range in each block corresponds to the same genome/role
     // or at least that blocks are "comparable" via their first range.
@@ -67,7 +123,7 @@ fn merge_blocks(mut blocks: Vec<Block>, max_gap: u64) -> Vec<Block> {
     let mut current = blocks[0].clone();
 
     for next in blocks.into_iter().skip(1) {
-        if can_merge(&current, &next, max_gap) {
+        if can_merge(&current, &next, chain_gap) {
             current = merge_two(&current, &next);
         } else {
             // Assign new ID to finalized block
@@ -82,16 +138,14 @@ fn merge_blocks(mut blocks: Vec<Block>, max_gap: u64) -> Vec<Block> {
     merged
 }
 
-fn can_merge(b1: &Block, b2: &Block, max_gap: u64) -> bool {
+fn can_merge(b1: &Block, b2: &Block, chain_gap: u64) -> bool {
     // 1. Must have same number of ranges
     if b1.ranges.len() != b2.ranges.len() {
         return false;
     }
 
     // 2. Iterate through all ranges and check consistency
-    // We assume ranges in a block are ordered (e.g., Query, Target1, Target2...)
-    // If not, we should try to match by seq_name.
-    // For safety, let's match by index first, but verify seq_name.
+    // Ranges are now sorted by seq_name, so we can safely compare by index.
     
     for (i, r1) in b1.ranges.iter().enumerate() {
         let r2 = &b2.ranges[i];
@@ -108,46 +162,32 @@ fn can_merge(b1: &Block, b2: &Block, max_gap: u64) -> bool {
 
         // Distance check
         let gap = if r1.strand == '+' {
-            // Forward: b2 should be after b1
+            // Forward strand case:
+            // The "next" block (r2) should physically follow the "current" block (r1).
+            // Genomic coordinates: r1.start < r1.end <= r2.start < r2.end
             if r2.start < r1.end {
                 // Overlap or wrong order
-                // Allow small overlap? Usually chaining requires strict order.
-                // But simplified: check signed distance.
-                // If r2.start < r1.end, it's an overlap.
-                // Overlap is usually fine for merging if it's small?
-                // Or maybe strictly >?
-                // Let's allow overlap if it's not "contained".
-                // Actually, if we are merging "blocks", they should be sequential.
-                // Let's use absolute distance of (r2.start as i64 - r1.end as i64).
-                
-                if r2.start < r1.start { return false; } // Definitely wrong order
-                0 // Overlap treated as 0 gap
+                if r2.start < r1.start { return false; } // Definitely wrong order (r2 starts before r1)
+                0 // Overlap treated as 0 gap (allow merging overlapping blocks)
             } else {
                 r2.start - r1.end
             }
         } else {
-            // Reverse: b2 should be "before" b1 in coordinates (logical after)
-            // Wait, if strand is -, it means the segment is inverted relative to the "positive" reference.
-            // But the coordinates are still genomic (start < end).
-            // If we are traversing the query in + direction, and we see a synteny block on - strand.
-            // Block 1: Q:100-200, T:500-400 (stored as 400-500, -)
-            // Block 2: Q:300-400, T:300-200 (stored as 200-300, -)
-            
-            // T1: 400-500 (-). T2: 200-300 (-).
-            // Logical flow on T: 500 -> 400 -> 300 -> 200.
-            // So T1.start (400) > T2.end (300).
-            // Gap = T1.start - T2.end.
-            
+            // Reverse strand case:
+            // The "next" block (r2) should logically follow r1 in the query's traversal order.
+            // But since it's on the negative strand, "logical next" means "physical previous" (upstream).
+            // Genomic coordinates: r2.start < r2.end <= r1.start < r1.end
+            // Example:
+            // Block 1 (r1): 400-500 (-)  <- Physically downstream
+            // Block 2 (r2): 200-300 (-)  <- Physically upstream (logical next)
             if r2.end > r1.start {
-                 // Wrong order for negative strand traversal
-                 // T1 (400-500), T2 (600-700) -> T1..T2 is + direction.
-                 // But we want - direction.
+                 // Wrong order: r2 is physically after r1, which violates the negative strand collinearity
                  return false;
             }
             r1.start - r2.end
         };
 
-        if gap > max_gap {
+        if gap > chain_gap {
             return false;
         }
     }

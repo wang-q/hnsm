@@ -55,3 +55,68 @@ fn command_synt_dna() -> anyhow::Result<()> {
 
     Ok(())
 }
+
+#[test]
+fn command_synt_merge() -> anyhow::Result<()> {
+    // Create a temporary input file with fragmented blocks
+    let input_path = "tests/temp_merge_in.tsv";
+    let output_path = "tests/temp_merge_out.tsv";
+
+    // Block 1: 100-200
+    // Block 2: 300-400
+    // Gap: 100 bp. chain_gap=150 should merge them.
+    let input_content = "\
+# Block_ID\tRange\tCount\tRound
+1\tG1(+):100-200\t10\t1
+1\tG2(+):100-200\t10\t1
+2\tG1(+):300-400\t10\t1
+2\tG2(+):300-400\t10\t1
+";
+    fs::write(input_path, input_content)?;
+
+    let mut cmd = Command::cargo_bin("hnsm")?;
+    let output = cmd
+        .arg("synt")
+        .arg("merge")
+        .arg(input_path)
+        .arg("-o")
+        .arg(output_path)
+        .arg("--chain-gap")
+        .arg("150")
+        .output()?;
+
+    assert!(output.status.success());
+
+    let content = fs::read_to_string(output_path)?;
+    let lines: Vec<&str> = content.lines().filter(|l| !l.starts_with('#')).collect();
+
+    // Should be merged into 1 block (2 lines for 2 genomes)
+    assert_eq!(lines.len(), 2);
+
+    // Check range values
+    // G1 range should be 100-400
+    // Note: The order of lines depends on hash map or implementation details, 
+    // but merge.rs sorts by seq_name.
+    // G1 comes before G2.
+    
+    let line1 = lines[0];
+    let line2 = lines[1];
+    
+    assert!(line1.contains("G1(+):100-400"));
+    assert!(line2.contains("G2(+):100-400"));
+    
+    // Verify score summation
+    // 10 + 10 = 20.0
+    assert!(line1.contains("\t20.0"));
+    assert!(line2.contains("\t20.0"));
+    
+    // Cleanup
+    if std::path::Path::new(input_path).exists() {
+        fs::remove_file(input_path)?;
+    }
+    if std::path::Path::new(output_path).exists() {
+        fs::remove_file(output_path)?;
+    }
+
+    Ok(())
+}

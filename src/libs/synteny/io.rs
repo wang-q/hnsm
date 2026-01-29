@@ -1,5 +1,5 @@
 use std::fs::File;
-use std::io::{BufRead, BufReader, BufWriter, Write};
+use std::io::{BufRead, BufReader, Write};
 use std::path::Path;
 use anyhow::Context;
 
@@ -118,9 +118,8 @@ pub fn read_blocks_from_reader<R: BufRead>(reader: R) -> anyhow::Result<Vec<Bloc
     Ok(blocks)
 }
 
-pub fn write_blocks<P: AsRef<Path>>(blocks: &[Block], path: P) -> anyhow::Result<()> {
-    let file = File::create(path).context("Failed to create output file")?;
-    let mut writer = BufWriter::new(file);
+pub fn write_blocks(blocks: &[Block], path: &str) -> anyhow::Result<()> {
+    let mut writer = intspan::writer(path);
 
     writeln!(writer, "# Block_ID\tRange\tScore")?;
     for block in blocks {

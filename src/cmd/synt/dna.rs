@@ -43,6 +43,12 @@ pub fn make_subcommand() -> Command {
                 .value_parser(value_parser!(usize)),
         )
         .arg(
+            Arg::new("chain_gap")
+                .long("chain-gap")
+                .help("Maximum gap size between chained minimizers (bp). Defaults depend on divergence.")
+                .value_parser(value_parser!(u32)),
+        )
+        .arg(
             Arg::new("min_weight")
                 .long("min-weight")
                 .help("Minimum edge weight (number of supporting genomes)")
@@ -88,18 +94,18 @@ pub fn execute(matches: &ArgMatches) -> anyhow::Result<()> {
     let divergence = matches.get_one::<f64>("divergence");
 
     // Logic from ntSynt
-    let (default_rounds, default_block_size) =
+    let (default_rounds, default_block_size, default_chain_gap) =
         if let Some(d) = divergence {
             if *d < 1.0 {
-                ("100,10", 500)
+                ("100,10", 500, 10000)
             } else if *d <= 10.0 {
-                ("250,100", 1000)
+                ("250,100", 1000, 50000)
             } else {
-                ("500,250", 10000)
+                ("500,250", 10000, 50000)
             }
         } else {
             // Fallback if no divergence specified, use "medium" defaults or what was previously hardcoded
-            ("1000,100,10", 0)
+            ("1000,100,10", 0, 20000)
         };
 
     let rounds_str = matches
@@ -109,6 +115,9 @@ pub fn execute(matches: &ArgMatches) -> anyhow::Result<()> {
     let block_size = *matches
         .get_one::<usize>("block_size")
         .unwrap_or(&default_block_size);
+    let chain_gap = *matches
+        .get_one::<u32>("chain_gap")
+        .unwrap_or(&default_chain_gap);
 
     let rounds: Vec<usize> = rounds_str
         .split(',')
@@ -125,7 +134,7 @@ pub fn execute(matches: &ArgMatches) -> anyhow::Result<()> {
             .init();
     }
 
-    let finder = SyntenyFinder::new(k, rounds, min_weight, max_freq, block_size);
+    let finder = SyntenyFinder::new(k, rounds, min_weight, max_freq, block_size, chain_gap);
 
     // Pre-scan to build seq_names map
     // We could do this inside provider but we need names for output.

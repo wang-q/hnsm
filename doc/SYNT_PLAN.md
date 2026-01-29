@@ -75,6 +75,8 @@
 
 样例：
 
+* `hnsm synt dna tests/genome/small_1.fa tests/genome/small_2.fa -k 21`
+
 ```tsv
 # Block_ID	Range	Count	Round
 # 第一轮 (Round 1001) 发现的核心区域
@@ -84,8 +86,24 @@
 1	small_1.seq1(+):50-1539	899	101
 1	small_2.seq1(+):50-1539	899	101
 # 第三轮 (Round 11) 进一步延伸至边缘
+# 注意：Count (89) 较小是因为大部分锚点已被前两轮 Masking，这里仅包含新发现的边缘或填补空隙的锚点
+# 为何看起来是连续的？
+# 尽管中间区域已被 Mask（无锚点），但只要两侧剩余的 Minimizer 距离小于 `--chain-gap`，
+# 它们仍会被连接在一起，从而形成跨越 Mask 区域的连续 Block。
 2	small_1.seq1(+):5-1584	89	11
 2	small_2.seq1(+):5-1584	89	11
+```
+
+* `hnsm synt dna tests/genome/small_1.fa tests/genome/small_2.fa -k 21 --rounds 500,10 --chain-gap 500`
+
+```tsv
+# Block_ID      Range   Count   Round
+0       small_1.seq1(+):250-1339        1089    501
+0       small_2.seq1(+):250-1339        1089    501
+1       small_1.seq1(+):5-249   244     11
+1       small_2.seq1(+):5-249   244     11
+2       small_1.seq1(+):1340-1584       244     11
+2       small_2.seq1(+):1340-1584       244     11
 ```
 
 ## 3. `hnsm synt merge` 设计详情
