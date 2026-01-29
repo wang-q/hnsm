@@ -42,8 +42,7 @@ fn main() -> anyhow::Result<()> {
         .subcommand(cmd::manifold::make_subcommand())
         // clustering
         .subcommand(cmd::clust::make_subcommand())
-        // Synteny
-        .subcommand(cmd::das::make_subcommand())
+        // synteny
         .subcommand(cmd::synt::make_subcommand())
         .after_help(
             r###"
@@ -60,11 +59,11 @@ Subcommand groups:
     * DNA/protein: distance / hv
     * vectors: similarity
     * manifold
-* Clustering: clust cc / clust dbscan
+* Clustering
+    * clust cc / clust dbscan
 
 * Synteny
-    * das
-    * synt dna / synt merge
+    * synt das / synt dna / synt merge
 
 "###,
         );
@@ -74,7 +73,6 @@ Subcommand groups:
         Some(("synt", sub_matches)) => cmd::synt::execute(sub_matches),
         Some(("clust", sub_matches)) => cmd::clust::execute(sub_matches),
         Some(("count", sub_matches)) => cmd::count::execute(sub_matches),
-        Some(("das", sub_matches)) => cmd::das::execute(sub_matches),
         Some(("dedup", sub_matches)) => cmd::dedup::execute(sub_matches),
         Some(("distance", sub_matches)) => cmd::distance::execute(sub_matches),
         Some(("n50", sub_matches)) => cmd::n50::execute(sub_matches),

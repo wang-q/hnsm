@@ -2,7 +2,6 @@
 
 pub mod clust;
 pub mod count;
-pub mod das;
 pub mod dedup;
 pub mod distance;
 pub mod filter;
