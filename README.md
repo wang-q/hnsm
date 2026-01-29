@@ -365,6 +365,16 @@ echo -e "tests/genome/sakai.fa.gz\ntests/genome/mg1655.fa.gz" |
 
 ```
 
+* synteny
+
+
+```bash
+hnsm synteny tests/genome/mg1655.fa.gz tests/genome/sakai.fa.gz -k 21 --min-weight 2 --max-freq 100 --rounds 1000,100,10 -v
+
+```
+
+
+
 ### Proteomes
 
 ```bash

@@ -52,8 +52,9 @@ nalgebra = "0.33.2"
 
 which = "7.0.0"
 tempfile = "3.14.0"
-
 cmd_lib = "1.9.4"
+log = "0.4.20"
+env_logger = "0.11.5"
 
 [[bin]]
 name = "hnsm"

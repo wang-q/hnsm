@@ -1,3 +1,4 @@
+pub mod bloom;
 pub mod dbscan;
 pub mod hash;
 pub mod hv;
@@ -6,3 +7,4 @@ pub mod linalg;
 pub mod loc;
 pub mod mds;
 pub mod nt;
+pub mod synteny;

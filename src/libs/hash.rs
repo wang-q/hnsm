@@ -1,4 +1,5 @@
 use itertools::Itertools;
+use minimizer_iter::MinimizerBuilder;
 use std::iter::FromIterator;
 
 // These codes were adapted from https://curiouscoding.nl/posts/fast-minimizers/
@@ -116,4 +117,137 @@ pub fn seq_mins(
     let hashset: rapidhash::RapidHashSet<u64> = rapidhash::RapidHashSet::from_iter(minimizers);
 
     Ok(hashset)
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+pub struct MinimizerInfo {
+    pub hash: u64,
+    pub seq_id: u32,
+    pub pos: u32,
+    pub strand: bool, // true: +, false: -
+}
+
+// Wrapper for Filter logic
+struct FilterBuildHasher<'a, F> {
+    filter: &'a F,
+}
+
+impl<'a, F> Clone for FilterBuildHasher<'a, F> {
+    fn clone(&self) -> Self {
+        FilterBuildHasher {
+            filter: self.filter,
+        }
+    }
+}
+
+impl<'a, F> Copy for FilterBuildHasher<'a, F> {}
+
+impl<'a, F> std::hash::BuildHasher for FilterBuildHasher<'a, F>
+where
+    F: Fn(u64) -> bool,
+{
+    type Hasher = FilterHasher<'a, F>;
+    fn build_hasher(&self) -> Self::Hasher {
+        FilterHasher {
+            filter: self.filter,
+            state: 0,
+        }
+    }
+}
+
+struct FilterHasher<'a, F> {
+    filter: &'a F,
+    state: u64,
+}
+
+impl<'a, F> std::hash::Hasher for FilterHasher<'a, F>
+where
+    F: Fn(u64) -> bool,
+{
+    fn write(&mut self, bytes: &[u8]) {
+        // Use RapidHash logic directly
+        self.state = rapidhash::rapidhash(bytes);
+    }
+
+    fn finish(&self) -> u64 {
+        let h = self.state;
+        // If filter returns false, we want to reject this hash.
+        // minimizer_iter selects the MINIMUM hash.
+        // If we return u64::MAX, it will be ignored unless all hashes in window are MAX.
+        if (self.filter)(h) {
+            h
+        } else {
+            u64::MAX
+        }
+    }
+}
+
+/// Sketch a sequence to find minimizers.
+///
+/// # Arguments
+/// * `seq` - The DNA sequence
+/// * `seq_id` - ID of the sequence
+/// * `k` - K-mer size
+/// * `w` - Window size
+/// * `filter` - A predicate that returns true if a hash should be KEPT.
+pub fn seq_sketch<F>(seq: &[u8], seq_id: u32, k: usize, w: usize, filter: F) -> Vec<MinimizerInfo>
+where
+    F: Fn(u64) -> bool,
+{
+    // Use minimizer_iter with our custom FilterBuildHasher
+    let build_hasher = FilterBuildHasher { filter: &filter };
+
+    // minimizer_iter::MinimizerBuilder
+    let min_iter = MinimizerBuilder::<u64, _>::new()
+        .minimizer_size(k)
+        .width(w as u16)
+        .canonical() // Ensure canonical minimizers (min of fwd/rev)
+        .hasher(build_hasher)
+        .iter(seq);
+
+    min_iter
+        .map(|(hash, pos, is_rc)| {
+            // is_rc is bool: true if the minimizer is from the reverse complement
+            let strand = !is_rc;
+
+            MinimizerInfo {
+                hash,
+                seq_id,
+                pos: pos as u32,
+                strand,
+            }
+        })
+        .filter(|m| m.hash != u64::MAX) // Filter out masked (invalid) minimizers
+        .collect()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_seq_sketch_basic() {
+        let seq = b"ACGTACGT";
+        let k = 3;
+        let w = 3; // minimizer_iter requires odd window size?
+        let mins = seq_sketch(seq, 1, k, w, |_| true);
+
+        assert!(!mins.is_empty());
+        for m in &mins {
+            assert_eq!(m.seq_id, 1);
+            assert!(m.pos < seq.len() as u32);
+        }
+    }
+
+    #[test]
+    fn test_seq_sketch_strand() {
+        // AAAA (fwd) vs TTTT (rev)
+        // If canonical is working, it should pick the smaller hash.
+        // Let's rely on consistency.
+        let seq = b"ACGT";
+        let k = 4;
+        let w = 1;
+        let mins = seq_sketch(seq, 1, k, w, |_| true);
+        assert_eq!(mins.len(), 1);
+    }
 }
