@@ -383,6 +383,8 @@ hnsm synt merge tests/synt/small_1_2.tsv -o tests/synt/small_1_2.merged.tsv
 # Merge with divergence-based parameters (e.g., 5% divergence -> chain-gap 100000)
 hnsm synt merge tests/synt/small_1_2_500.tsv -d 5.0 -o tests/synt/small_1_2.d5.tsv
 
+cargo run --bin hnsm synt view tests/synt/small_1_2.tsv -o tmp.svg
+
 # Read synteny blocks
 hnsm synt dna tests/genome/mg1655.fa.gz tests/genome/sakai.fa.gz -k 21 --chain-gap 100 --min-weight 2 --max-freq 100 --rounds 1000,100,10 -v -o tests/synt/mg1655_sakai.tsv
 
@@ -391,8 +393,6 @@ hnsm synt merge tests/synt/mg1655_sakai.tsv --chain-gap 1000 -o tests/synt/mg165
 hnsm synt view tests/synt/mg1655_sakai.tsv -o tests/synt/mg1655_sakai.svg
 
 ```
-
-
 
 ### Proteomes
 

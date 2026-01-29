@@ -154,7 +154,7 @@ hnsm synt merge [OPTIONS] <infile>
 
 #### 参数选项
 *   `--divergence, -d <FLOAT>`: 预估序列差异度（%）。用于自动设置默认的 `chain-gap`。
-*   `--chain-gap, -c <INT>`: 允许合并的最大间隙（bp）。如果指定，覆盖 `--divergence` 推导的默认值。
+*   `--chain-gap <INT>`: 允许合并的最大间隙（bp）。如果指定，覆盖 `--divergence` 推导的默认值。
 *   `--outfile, -o <FILE>`: 输出文件路径。
 
 ### 3.4. 工作流示例 (Workflows)
@@ -171,12 +171,12 @@ hnsm synt merge raw_blocks.tsv -d 5 -o merged.tsv
 hnsm synt merge raw_blocks.tsv --chain-gap 50000 -o merged_manual.tsv
 ```
 
-## 4. `hnsm synt view` 设计详情 (New)
+## 4. `hnsm synt view` 设计详情
 
 `hnsm synt view` 是一个轻量级的可视化工具，直接将 `hnsm synt dna/merge` 的结果转换为 SVG 矢量图，无需依赖 Python/R 环境。
 
 ### 4.1. 核心功能
-*   **输入**: 共线性块文件 (.tsv) 和可选的基因组索引文件 (.fai)。
+*   **输入**: 共线性块文件 (.tsv) 和可选的基因组长度文件 (.size)。
 *   **输出**: 标准 SVG 文件，可直接在浏览器或矢量图软件中打开。
 *   **布局**: 简单的线性堆叠布局 (Linear Stack Layout)。
 
@@ -188,28 +188,30 @@ hnsm synt merge raw_blocks.tsv --chain-gap 50000 -o merged_manual.tsv
 ### 4.3. 接口设计
 
 ```bash
-hnsm synt view [OPTIONS] <blocks.tsv> [fai_files...]
+hnsm synt view [OPTIONS] <infile> [size_files...]
 ```
 
 #### 参数选项
-*   `--outfile, -o <FILE>`: 输出 SVG 文件路径。
+*   `infile` (Required): 输入共线性块文件 (.tsv)。
+*   `size_files` (Optional): 染色体长度文件，用于准确绘制染色体边界。
+*   `--outfile, -o <FILE>`: 输出 SVG 文件路径 (默认: stdout)。
 *   `--width <INT>`: 画布宽度 (默认: 1000)。
-*   `--height <INT>`: 画布高度 (默认: 600)。
+*   `--height <INT>`: 每个轨道的高度（即基因组间的距离）(默认: 300)。
 *   `--no-label`: 隐藏序列名称标签。
 
-## 5. 开发计划
+## 5. `hnsm synt das` 设计详情
 
-1.  **实现 `merge` 功能** (已完成):
-    *   复用 `io::Segment` 结构体。
-    *   实现 `simple` 合并算法。
-    *   集成到 `src/cmd/synt/merge.rs`。
+`hnsm synt das` 用于计算结构域架构相似性（Domain Architecture Similarity），采用动态规划算法对序列特征进行比对。
 
-2.  **集成测试** (已完成):
-    *   使用 `hnsm synt dna` 的输出作为测试数据，验证能否正确合并人为分割的块。
+### 5.1. 参数说明
 
-3.  **实现 `view` 功能** (进行中):
-    *   实现 SVG 生成器。
-    *   集成到 `src/cmd/synt/view.rs`。
+*   `infile` (Required): 输入文件。
+*   `--ma <FLOAT>`: 匹配得分 (Match score)，默认 1.0。
+*   `--mm <FLOAT>`: 错配得分 (Mismatch score)，默认 -0.2。
+*   `--gp <FLOAT>`: 空隙惩罚 (Gap penalty)，默认 -0.01。
+*   `--sep <STR>`: 分隔符，默认 "\t"。
+*   `--header, -H`: 标记输入文件是否包含表头。
+*   `--outfile, -o <FILE>`: 输出文件路径 (默认: stdout)。
 
 ## 6. 背景与 ntSynt 对比 (Background & Comparison)
 
