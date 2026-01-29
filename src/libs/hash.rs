@@ -207,7 +207,7 @@ where
         filter: &filter,
     };
 
-    let builder = MinimizerBuilder::<u64, _>::new()
+    let builder = MinimizerBuilder::<u64, _>::new_mod()
         .minimizer_size(k)
         .width(w as u16)
         .canonical() // Ensure canonical minimizers (min of fwd/rev)
@@ -251,8 +251,8 @@ mod tests {
 
     #[test]
     fn test_seq_sketch_basic() {
-        let seq = b"ACGTACGT";
-        let k = 3;
+        let seq = b"ACGTACGTACGT";
+        let k = 5;
         let w = 3; // minimizer_iter requires odd window size?
         let mins = seq_sketch(seq, 1, k, w, false, |_| true);
 

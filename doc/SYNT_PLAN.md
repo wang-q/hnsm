@@ -197,7 +197,7 @@ hnsm synt merge raw_blocks.tsv --chain-gap 50000 -o merged_manual.tsv
 | :--- | :--- | :--- |
 | **语言与架构** | Python 脚本 + C++ 二进制 (Hybrid Pipeline) | 纯 Rust 实现 (Single Binary)，无外部依赖 |
 | **图数据结构** | `igraph` (Python/C binding) | `petgraph` (Rust)，配合定制的内存优化邻接表 |
-| **哈希算法** | `ntHash` | `RapidHash` / `MurmurHash3` (支持 SIMD) |
+| **哈希算法** | `ntHash` | `Mod-Minimizer` (配合 `RapidHash`) |
 | **软掩膜支持** | 需预处理 | 内置 `--soft-mask`，动态过滤小写碱基 k-mer |
 | **后处理** | 脚本处理 | 独立的 `hnsm synt merge` 命令，支持灵活缝合 |
 | **输入/输出** | 依赖文件系统中间文件 | 流式处理，支持标准输入/输出 |
