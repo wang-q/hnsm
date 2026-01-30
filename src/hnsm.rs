@@ -53,17 +53,17 @@ Subcommand groups:
     * records: one / some / order / split
     * transform: replace / rc / filter / dedup / mask / sixframe
     * indexing: gz / range / prefilter
-* Fastq files: interleave
+* Fastq files: interleave / fq2fa
 
 * Distance
     * DNA/protein: distance / hv
     * vectors: similarity
     * manifold
 * Clustering
-    * clust cc / clust dbscan / clust mcl
+    * clust cc / clust dbscan / clust km / clust mcl
 
 * Synteny
-    * synt das / synt dna / synt merge
+    * synt das / synt dna / synt merge / synt view
 
 "###,
         );

@@ -253,3 +253,42 @@ fn command_clust_mcl_pair() -> anyhow::Result<()> {
 
     Ok(())
 }
+
+#[test]
+fn command_clust_kmedoids() -> anyhow::Result<()> {
+    let mut cmd = Command::cargo_bin("hnsm")?;
+    let output = cmd
+        .arg("clust")
+        .arg("km")
+        .arg("tests/clust/IBPA.fa.tsv")
+        .arg("-k")
+        .arg("2")
+        .output()?;
+    let stdout = String::from_utf8(output.stdout)?;
+
+    // Output should contain at least 2 lines (clusters)
+    assert!(stdout.lines().count() >= 2);
+    
+    Ok(())
+}
+
+#[test]
+fn command_clust_kmedoids_pair() -> anyhow::Result<()> {
+    let mut cmd = Command::cargo_bin("hnsm")?;
+    let output = cmd
+        .arg("clust")
+        .arg("k-medoids")
+        .arg("tests/clust/IBPA.fa.tsv")
+        .arg("-k")
+        .arg("2")
+        .arg("--format")
+        .arg("pair")
+        .output()?;
+    let stdout = String::from_utf8(output.stdout)?;
+
+    // Should contain tab-separated pairs
+    assert!(stdout.contains("\t"));
+    assert!(stdout.lines().count() >= 2);
+
+    Ok(())
+}

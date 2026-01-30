@@ -3,6 +3,7 @@ pub mod dbscan;
 pub mod hash;
 pub mod hv;
 pub mod io;
+pub mod kmedoids;
 pub mod linalg;
 pub mod loc;
 pub mod mcl;
