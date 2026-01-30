@@ -63,7 +63,7 @@ Subcommand groups:
     * clust cc / clust dbscan / clust km / clust mcl
 
 * Synteny
-    * synt das / synt dna / synt merge / synt view
+    * synt chain / synt das / synt dna / synt merge / synt view
 
 "###,
         );

@@ -1,26 +1,35 @@
 use clap::*;
 
+use hnsm::libs::synteny::chain::{Anchor, Chain, ChainOpt, DagChainer};
 use itertools::Itertools;
-use std::cmp::Ordering;
 use std::collections::HashMap;
 use std::io::{self, BufRead};
 
 // Create clap subcommand arguments
 pub fn make_subcommand() -> Command {
-    Command::new("chain")
-        .about("Chains of syntenic genes")
+    Command::new("dag")
+        .about("Synteny chains via DAGchainer algorithm")
         .after_help(
             r###"
 Algorithm adopted from `DAGchainer`
 
+# Legacy format
 cat ~/Scripts/DAGCHAINER/data_sets/Arabidopsis/Arabidopsis.Release5.matchList.filtered |
     tsv-filter --eq 1:1 --eq 5:2 \
     > ath-1-2.tsv
 
-cargo run --bin hnsm chain ath-1-2.tsv
+hnsm synt dag ath-1-2.tsv
 
-
+# Standard format
+hnsm synt dag match.tsv --annot annot.tsv
 "###,
+        )
+        .arg(
+            Arg::new("annot")
+                .long("annot")
+                .short('a')
+                .num_args(1)
+                .help("Annotation file (tsv: mol, acc, start, end). If provided, infile is treated as a match file (tsv: acc1, acc2, score)."),
         )
         .arg(
             Arg::new("infile")
@@ -93,18 +102,6 @@ cargo run --bin hnsm chain ath-1-2.tsv
         )
 }
 
-#[derive(Debug)]
-pub struct ChainOpt {
-    gap_open_penalty: f32,
-    gap_extension_penalty: f32,
-    bp_gap_size: i32,
-    max_match_score: f32,
-    max_dist_between_matches: i32,
-    min_alignment_score: f32,
-    reverse_order: bool,
-    max_y: i32,
-}
-
 // command implementation
 pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     //----------------------------
@@ -125,28 +122,33 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
         opt_mna as f32 * 0.5 * opt_mms
     };
 
-    let mut chain_opt = ChainOpt {
+    let chain_opt = ChainOpt {
         gap_open_penalty: opt_go,
         gap_extension_penalty: opt_ge,
         bp_gap_size: opt_bgs,
         max_match_score: opt_mms,
         max_dist_between_matches: opt_mdm,
         min_alignment_score: opt_mas,
-        reverse_order: false,
-        max_y: 0,
     };
 
     //----------------------------
     // Ops
     //----------------------------
-    let (acc_info, acc_pair_map, mol_pair_map) = parse_input_file(infile, &chain_opt)?;
+    let (acc_info, acc_pair_map, mol_pair_map) = if let Some(annot_file) = args.get_one::<String>("annot") {
+        let acc_info = read_annotations(annot_file)?;
+        let (acc_pair_map, mol_pair_map) = parse_match_file(infile, &acc_info, &chain_opt)?;
+        (acc_info, acc_pair_map, mol_pair_map)
+    } else {
+        parse_legacy_input(infile, &chain_opt)?
+    };
     // eprintln!("{:#?}", mol_pair_map);
 
+    let mut alignment_count = 0;
     for mol_pair in mol_pair_map.keys() {
         let mut scores = vec![];
 
         for acc_pair in mol_pair_map.get(mol_pair).unwrap() {
-            scores.push(Score {
+            scores.push(MatchPair {
                 pair_key: acc_pair.clone(),
                 x: acc_info.get(&acc_pair.0).unwrap().mid as i32,
                 y: acc_info.get(&acc_pair.1).unwrap().mid as i32,
@@ -161,11 +163,47 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
             .collect::<Vec<_>>();
 
         // The maximum column value of any match. Used to adjust coords for reverse diagonals
+        let mut max_y = 0;
         if let Some(value) = scores.iter().map(|e| e.y).max_by(|a, b| a.cmp(b)) {
-            chain_opt.max_y = value;
+            max_y = value;
         }
         // eprintln!("scores = {:#?}", scores);
-        print_chains(&mut scores, &chain_opt);
+
+        // Sort scores by x coordinate, then y coordinate
+        // This is CRITICAL for the DP algorithm which assumes topological order (or at least X order)
+        scores.sort_by(|a, b| {
+            if a.x == b.x {
+                a.y.cmp(&b.y)
+            } else {
+                a.x.cmp(&b.x)
+            }
+        });
+
+        // Convert to Anchors for the library
+        let anchors: Vec<Anchor> = scores
+            .iter()
+            .enumerate()
+            .map(|(i, s)| Anchor {
+                id: i,
+                x: s.x,
+                y: s.y,
+                score: s.score,
+            })
+            .collect();
+
+        // Run DagChainer
+        let chainer = DagChainer::new(chain_opt.clone());
+        let chains = chainer.find_chains(&anchors);
+
+        for chain in chains {
+            // Check minimum number of pairs
+            if chain.indices.len() < opt_mna as usize {
+                continue;
+            }
+
+            print_alignment(&scores, &chain, max_y, alignment_count);
+            alignment_count += 1;
+        }
     }
     eprintln!("chain_opt = {:#?}", chain_opt);
 
@@ -176,8 +214,8 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
 struct Feature {
     mol: String,
     acc: String,
-    end5: usize,
-    end3: usize,
+    // end5: usize,
+    // end3: usize,
     mid: usize,
 }
 
@@ -195,8 +233,8 @@ fn store_acc_info(
         let feature = Feature {
             mol: mol.to_string(),
             acc: acc.to_string(),
-            end5,
-            end3,
+            // end5,
+            // end3,
             mid: mid_pt,
         };
 
@@ -210,8 +248,8 @@ fn pair_key(
     acc_1: &str,
     acc_2: &str,
 ) -> ((String, String), (String, String)) {
-    let mut acc_pair_key = (String::new(), String::new());
-    let mut mol_pair_key = (String::new(), String::new());
+    let acc_pair_key;
+    let mol_pair_key;
 
     let ft_1 = acc_info.get(acc_1).unwrap();
     let ft_2 = acc_info.get(acc_2).unwrap();
@@ -241,7 +279,7 @@ fn scoring_f(evalue: f64, max_match_score: f32) -> f32 {
     rounded_score.min(max_match_score as f64) as f32 // Ensure it does not exceed MAX_MATCH_SCORE
 }
 
-fn parse_input_file(
+fn parse_legacy_input(
     file_path: &str,
     opt: &ChainOpt,
 ) -> anyhow::Result<(
@@ -291,12 +329,7 @@ fn parse_input_file(
         if score > 1.0e-5 {
             continue;
         }
-        // if mol_1 == mol_2 & &!include_self {
-        //     continue;
-        // }
-        // if mol_1 != mol_2 & &tandem_only {
-        //     continue;
-        // }
+
         let score = scoring_f(score, opt.max_match_score);
 
         // Handle features
@@ -306,8 +339,6 @@ fn parse_input_file(
         let (acc_pair_key, mol_pair_key) = pair_key(&acc_info, acc_1, acc_2);
         if acc_pair_map.contains_key(&acc_pair_key) {
             let prev = acc_pair_map.get_mut(&acc_pair_key).unwrap();
-            // take the lowest e_value for the match pair
-            // Important when there are multiple HSPs reported between two accessions
             if *prev < score {
                 *prev = score;
             }
@@ -329,175 +360,145 @@ fn parse_input_file(
     Ok((acc_info, acc_pair_map, mol_pair_map))
 }
 
+fn read_annotations(path: &str) -> anyhow::Result<HashMap<String, Feature>> {
+    let file = std::fs::File::open(path)?;
+    let reader = io::BufReader::new(file);
+    let mut acc_info = HashMap::new();
+
+    for line in reader.lines() {
+        let line = line?;
+        let parts: Vec<&str> = line.trim().split('\t').collect();
+        if parts.len() < 4 {
+            continue;
+        }
+
+        let mol = parts[0];
+        let acc = parts[1];
+        let start: usize = parts[2].parse()?;
+        let end: usize = parts[3].parse()?;
+
+        store_acc_info(mol, acc, start, end, &mut acc_info);
+    }
+    Ok(acc_info)
+}
+
+fn parse_match_file(
+    file_path: &str,
+    acc_info: &HashMap<String, Feature>,
+    opt: &ChainOpt,
+) -> anyhow::Result<(
+    HashMap<(String, String), f32>,
+    HashMap<(String, String), Vec<(String, String)>>,
+)> {
+    let file = std::fs::File::open(file_path)?;
+    let reader = io::BufReader::new(file);
+
+    let mut acc_pair_map: HashMap<(String, String), f32> = HashMap::new();
+    let mut mol_pair_map: HashMap<(String, String), Vec<(String, String)>> = HashMap::new();
+
+    for line in reader.lines() {
+        let line = line?;
+        let line = line.trim();
+        if line.is_empty() || line.starts_with('#') {
+            continue;
+        }
+
+        let parts: Vec<&str> = line.split('\t').collect();
+        if parts.len() < 3 {
+            continue;
+        }
+
+        let acc_1 = parts[0];
+        let acc_2 = parts[1];
+        let mut score: f64 = parts[2].parse().unwrap_or(1.0); // Default score if parsing fails? Or expect valid score.
+
+        // Adjust e_value if it's too low (assuming input is e-value if very small)
+        // If input is bitscore (e.g. > 10), we should probably handle it differently.
+        // Original logic assumes E-value.
+        // Let's assume input is E-value for consistency with legacy, OR pre-calculated score.
+        // If score is > 1.0 (bitscore?), we might want to take it as is.
+        // But `scoring_f` expects E-value.
+        // Let's assume input is E-value.
+        if score < 1.0e-250 {
+            score = 1.0e-250;
+        }
+        
+        // Filter self
+        if acc_1 == acc_2 {
+            continue;
+        }
+
+        // Calculate score
+        // If input is already a score (large positive), `scoring_f` might produce weird results if it expects small E-values.
+        // `scoring_f`: -log10(evalue) * 10.
+        // If input is 50.0 (bitscore), -log10(50) is negative.
+        // We should probably check if score looks like an E-value or a Score.
+        // For now, let's strictly follow legacy behavior: Input is E-value.
+        let score = scoring_f(score, opt.max_match_score);
+
+        if !acc_info.contains_key(acc_1) || !acc_info.contains_key(acc_2) {
+            continue;
+        }
+
+        let (acc_pair_key, mol_pair_key) = pair_key(acc_info, acc_1, acc_2);
+        
+        if acc_pair_map.contains_key(&acc_pair_key) {
+            let prev = acc_pair_map.get_mut(&acc_pair_key).unwrap();
+            if *prev < score {
+                *prev = score;
+            }
+        } else {
+            acc_pair_map.insert(acc_pair_key.clone(), score);
+        }
+
+        mol_pair_map
+            .entry(mol_pair_key)
+            .or_default()
+            .push(acc_pair_key);
+    }
+    
+    for mol_pair in mol_pair_map.keys().cloned().collect::<Vec<_>>() {
+        let value = mol_pair_map.get_mut(&mol_pair).unwrap();
+        *value = value.iter().unique().cloned().collect();
+    }
+
+    Ok((acc_pair_map, mol_pair_map))
+}
+
 #[derive(Debug, Clone)]
-struct Score {
+struct MatchPair {
     pair_key: (String, String),
     x: i32,
     y: i32,
     score: f32,
 }
 
-#[derive(Debug, Default)]
-struct Path {
-    score: f32,
-    rc: i32,
-    sub: usize,
-}
-
-// reverse complement the second coordinate set.
-fn adjust_scores(mut scores: Vec<Score>) -> anyhow::Result<Vec<Score>> {
-    // if unsafe { REVERSE_ORDER } {
-    //     for score in scores.iter_mut() {
-    //         score.y = unsafe { MAX_Y - score.y + 1 };
-    //     }
-    // }
-    scores.sort_by(|a, b| {
-        if a.x == b.x {
-            a.y.cmp(&b.y)
-        } else {
-            a.x.cmp(&b.x)
-        }
-    });
-    Ok(scores)
-}
-
-//  Find and output highest scoring chains in scores treating it as a DAG
-fn print_chains(scores: &mut Vec<Score>, options: &ChainOpt) {
-    loop {
-        let mut updated = false;
-
-        // Initialize path scores and 'from' indices
-        let n = scores.len();
-        let mut path_scores = vec![0.0; n];
-        let mut from_indices = vec![-1; n];
-        for i in 0..n {
-            path_scores[i] = scores[i].score;
-            from_indices[i] = -1_i32;
-        }
-
-        for j in 1..n {
-            for i in (0..j).rev() {
-                let del_x = scores[j].x - scores[i].x - 1;
-                let del_y = scores[j].y - scores[i].y - 1;
-
-                if del_x < 0 || del_y < 0 {
-                    continue;
-                }
-
-                // Check maximum distances
-                if del_x > options.max_dist_between_matches
-                    && del_y > options.max_dist_between_matches
-                {
-                    break;
-                }
-                if del_x > options.max_dist_between_matches
-                    || del_y > options.max_dist_between_matches
-                {
-                    continue;
-                }
-
-                let num_gaps = ((del_x + del_y + (del_x - del_y).abs()) as f32
-                    / (2 * options.bp_gap_size) as f32
-                    + 0.5) as i32;
-                let mut new_score = path_scores[i] + scores[j].score;
-
-                if num_gaps > 0 {
-                    new_score += options.gap_open_penalty
-                        + (num_gaps as f32 * options.gap_extension_penalty);
-                }
-
-                if new_score > path_scores[j] {
-                    path_scores[j] = new_score;
-                    from_indices[j] = i as i32;
-                    updated = true;
-                }
-            }
-        }
-
-        let high_scores: Vec<Path> = path_scores
-            .iter()
-            .enumerate()
-            .filter(|&(_, &score)| score >= options.min_alignment_score)
-            .map(|(sub, &score)| Path {
-                score,
-                sub,
-                rc: scores[sub].x + scores[sub].y,
-            })
-            .collect();
-
-        let mut high: Vec<Path> = high_scores;
-        high.sort_by(|a, b| {
-            if a.score != b.score {
-                a.score
-                    .partial_cmp(&b.score)
-                    .unwrap_or(Ordering::Equal)
-                    .reverse()
-            } else {
-                a.rc.cmp(&b.rc)
-            }
-        });
-
-        let mut ali_ct = 0;
-        for entry in high {
-            if from_indices[entry.sub] != -1 {
-                let alignment_path = build_alignment_path(&from_indices, entry.sub);
-                print_alignment(scores, &path_scores, alignment_path, options, ali_ct);
-                ali_ct += 1;
-            }
-        }
-
-        if !updated {
-            break;
-        }
-
-        // Retain only updated scores
-        let mut index = 0;
-        scores.retain(|_| {
-            index += 1;
-            from_indices[index - 1] != -1
-        });
-    }
-}
-
-fn build_alignment_path(from_indices: &[i32], start_index: usize) -> Vec<usize> {
-    let mut path = Vec::new();
-    let mut current = start_index;
-
-    while from_indices[current] >= 0 {
-        path.push(current);
-        current = from_indices[current] as usize;
-    }
-    path.push(current); // Include the start path.reverse();
-    path
-}
-
 fn print_alignment(
-    scores: &[Score],
-    path_scores: &[f32],
-    path: Vec<usize>,
-    options: &ChainOpt,
+    scores: &[MatchPair],
+    chain: &Chain,
+    _max_y: i32,
     alignment_count: usize,
 ) {
     println!(
         "> Alignment #{} score = {:.1}",
         alignment_count + 1,
-        path_scores[*path.first().unwrap()]
+        chain.score
     );
-    for &index in &path {
-        let print_y = if options.reverse_order {
-            options.max_y - scores[index].y + 1
-        } else {
-            scores[index].y
-        };
+    for (i, &index) in chain.indices.iter().enumerate() {
+        let print_y = scores[index].y; 
+        // Note: reverse_order logic removed as it was always false in original code, 
+        // but if we want to support it, we need to pass a flag. 
+        // Assuming forward order for now as per original execute function.
+        
         println!(
             "{}\t{},{}\t{}\t{}\t{:7.1}\t{:7.1}",
-            path.iter().position(|&x| x == index).unwrap(),
+            i,
             scores[index].pair_key.0,
             scores[index].pair_key.1,
             scores[index].x,
             print_y,
             scores[index].score,
-            path_scores[index],
+            chain.path_scores[i],
         );
     }
 }
