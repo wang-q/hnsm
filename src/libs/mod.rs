@@ -5,5 +5,6 @@ pub mod hv;
 pub mod io;
 pub mod linalg;
 pub mod loc;
+pub mod mcl;
 pub mod nt;
 pub mod synteny;

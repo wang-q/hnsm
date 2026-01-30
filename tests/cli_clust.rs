@@ -148,3 +148,68 @@ fn command_clust_cc() -> anyhow::Result<()> {
 
     Ok(())
 }
+
+#[test]
+fn command_clust_mcl() -> anyhow::Result<()> {
+    let mut cmd = Command::cargo_bin("hnsm")?;
+    let output = cmd
+        .arg("clust")
+        .arg("mcl")
+        .arg("tests/clust/mcl_test.tsv")
+        .arg("--inflation")
+        .arg("2.0")
+        .output()?;
+    let stdout = String::from_utf8(output.stdout)?;
+
+    assert_eq!(stdout.lines().count(), 2);
+    assert!(stdout.contains("A\tB\tC"));
+    assert!(stdout.contains("D\tE"));
+
+    Ok(())
+}
+
+#[test]
+fn command_clust_mcl_complex() -> anyhow::Result<()> {
+    let mut cmd = Command::cargo_bin("hnsm")?;
+    let output = cmd
+        .arg("clust")
+        .arg("mcl")
+        .arg("tests/clust/mcl_complex.tsv")
+        .arg("--inflation")
+        .arg("2.0")
+        .output()?;
+    let stdout = String::from_utf8(output.stdout)?;
+
+    assert_eq!(stdout.lines().count(), 2);
+    // Cluster 1: n1, n2, n3, n4
+    assert!(stdout.contains("n1\tn2\tn3\tn4"));
+    // Cluster 2: n5, n6, n7
+    assert!(stdout.contains("n5\tn6\tn7"));
+
+    Ok(())
+}
+
+#[test]
+fn command_clust_mcl_pair() -> anyhow::Result<()> {
+    let mut cmd = Command::cargo_bin("hnsm")?;
+    let output = cmd
+        .arg("clust")
+        .arg("mcl")
+        .arg("tests/clust/mcl_test.tsv")
+        .arg("--format")
+        .arg("pair")
+        .output()?;
+    let stdout = String::from_utf8(output.stdout)?;
+
+    // Cluster 1 (size 3) + Cluster 2 (size 2) = 5 pairs
+    assert_eq!(stdout.lines().count(), 5);
+    
+    // Check representative output
+    assert!(stdout.contains("A\tA"));
+    assert!(stdout.contains("A\tB"));
+    assert!(stdout.contains("A\tC"));
+    assert!(stdout.contains("D\tD"));
+    assert!(stdout.contains("D\tE"));
+
+    Ok(())
+}

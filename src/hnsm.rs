@@ -60,7 +60,7 @@ Subcommand groups:
     * vectors: similarity
     * manifold
 * Clustering
-    * clust cc / clust dbscan
+    * clust cc / clust dbscan / clust mcl
 
 * Synteny
     * synt das / synt dna / synt merge
