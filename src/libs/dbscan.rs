@@ -52,8 +52,11 @@ where
     ///
     /// # Returns
     ///
-    /// Returns cluster labels for each point in the dataset. Noisy samples are
-    /// set to `None`.
+    /// Returns a reference to the vector of cluster labels for each point in the dataset.
+    /// * `Some(id)`: The point belongs to cluster `id`.
+    /// * `None`: The point is considered noise.
+    ///
+    /// # Example
     ///
     /// ```
     /// # use hnsm::Dbscan;
@@ -172,7 +175,16 @@ where
         res
     }
 
-    /// Finds and prints the representative point of each cluster.
+    /// Finds the representative point (medoid) for each cluster and pairs all members with it.
+    ///
+    /// The representative point is the one with the minimum sum of distances to all other points
+    /// within the same cluster.
+    ///
+    /// # Returns
+    ///
+    /// A vector of `(representative_index, member_index)` pairs.
+    /// * For clustered points: `(medoid, member)`
+    /// * For noise points: `(self, self)`
     pub fn results_pair(&self, matrix: &intspan::ScoringMatrix<T>) -> Vec<(usize, usize)> {
         let (cluster_map, noise_points) = self.all_clusters();
 
