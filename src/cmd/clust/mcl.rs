@@ -18,6 +18,10 @@ Output formats:
     * cluster: Each line contains points of one cluster.
     * pair: Each line contains a (representative point, cluster member) pair.
 
+Note:
+For the 'pair' format, the representative point is the medoid (point with maximum sum of similarities to other cluster members).
+If there are ties, the alphabetically first member is chosen.
+
 Reference:
 Stijn van Dongen, Graph Clustering by Flow Simulation. PhD thesis, University of Utrecht, May 2000.
 "###,
@@ -130,16 +134,36 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
         }
         "pair" => {
             for component in clusters {
+                // Find representative (medoid) based on max similarity sum
+                let mut best_rep = *component.first().unwrap();
+                let mut max_sum = f32::NEG_INFINITY;
+
+                for &candidate in &component {
+                    let mut current_sum = 0.0;
+                    for &member in &component {
+                        current_sum += sm.get(candidate, member);
+                    }
+
+                    if current_sum > max_sum {
+                        max_sum = current_sum;
+                        best_rep = candidate;
+                    } else if (current_sum - max_sum).abs() < 1e-5 {
+                        // Tie-break by name
+                        if names[candidate] < names[best_rep] {
+                            best_rep = candidate;
+                        }
+                    }
+                }
+
+                let rep_name = &names[best_rep];
                 let mut members: Vec<&str> = component
                     .iter()
                     .map(|&idx| names[idx].as_str())
                     .collect();
-                members.sort(); // Sort to pick a consistent representative
-                
-                if let Some(rep) = members.first().copied() {
-                    for member in members {
-                        writer.write_fmt(format_args!("{}\t{}\n", rep, member))?;
-                    }
+                members.sort(); // Sort members for output consistency
+
+                for member in members {
+                    writer.write_fmt(format_args!("{}\t{}\n", rep_name, member))?;
                 }
             }
         }

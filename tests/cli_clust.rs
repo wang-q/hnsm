@@ -150,6 +150,25 @@ fn command_clust_cc() -> anyhow::Result<()> {
 }
 
 #[test]
+fn command_clust_cc_pair() -> anyhow::Result<()> {
+    let mut cmd = Command::cargo_bin("hnsm")?;
+    let output = cmd
+        .arg("clust")
+        .arg("cc")
+        .arg("tests/clust/IBPA.fa.05.tsv")
+        .arg("--format")
+        .arg("pair")
+        .output()?;
+    let stdout = String::from_utf8(output.stdout)?;
+
+    assert_eq!(stdout.lines().count(), 10);
+    assert!(stdout.contains("A0A192CFC5_ECO25\tIBPA_ECOLI"));
+    assert!(stdout.contains("IBPA_ECOLI_GA_LV\tIBPA_ECOLI_GA_LV"));
+
+    Ok(())
+}
+
+#[test]
 fn command_clust_mcl() -> anyhow::Result<()> {
     let mut cmd = Command::cargo_bin("hnsm")?;
     let output = cmd

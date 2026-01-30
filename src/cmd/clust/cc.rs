@@ -10,6 +10,13 @@ pub fn make_subcommand() -> Command {
             r###"
 Ignores scores and writes all connected components.
 
+Output formats:
+    * cluster: Each line contains points of one cluster.
+    * pair: Each line contains a (representative point, cluster member) pair.
+
+Note:
+    For the 'pair' format, the representative point is the alphabetically first member of the cluster.
+
 "###,
         )
         .arg(
@@ -17,6 +24,17 @@ Ignores scores and writes all connected components.
                 .required(true)
                 .index(1)
                 .help("Input file containing pairwise distances in .tsv format"),
+        )
+        .arg(
+            Arg::new("format")
+                .long("format")
+                .action(ArgAction::Set)
+                .value_parser([
+                    builder::PossibleValue::new("cluster"),
+                    builder::PossibleValue::new("pair"),
+                ])
+                .default_value("cluster")
+                .help("Output format for clustering results"),
         )
         .arg(
             Arg::new("outfile")
@@ -34,6 +52,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     // Args
     //----------------------------
     let infile = args.get_one::<String>("infile").unwrap();
+    let opt_format = args.get_one::<String>("format").unwrap();
     let mut writer = intspan::writer(args.get_one::<String>("outfile").unwrap());
 
     //----------------------------
@@ -72,14 +91,35 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     scc.sort_by_key(|cc| std::cmp::Reverse(cc.len()));
 
     // Output each component
-    for cc in &scc {
-        writer.write_fmt(format_args!(
-            "{}\n",
-            cc.iter()
-                .map(|&idx| names.get_index(idx).unwrap().as_str())
-                .collect::<Vec<_>>()
-                .join("\t")
-        ))?;
+    match opt_format.as_str() {
+        "cluster" => {
+            for cc in &scc {
+                writer.write_fmt(format_args!(
+                    "{}\n",
+                    cc.iter()
+                        .map(|&idx| names.get_index(idx).unwrap().as_str())
+                        .collect::<Vec<_>>()
+                        .join("\t")
+                ))?;
+            }
+        }
+        "pair" => {
+            for cc in &scc {
+                let members: Vec<&str> = cc
+                    .iter()
+                    .map(|&idx| names.get_index(idx).unwrap().as_str())
+                    .collect();
+                // Already sorted in cc, but let's be safe or just use the first as rep
+                // Note: scc sorting logic above sorts members within component
+                
+                if let Some(rep) = members.first().copied() {
+                    for member in members {
+                        writer.write_fmt(format_args!("{}\t{}\n", rep, member))?;
+                    }
+                }
+            }
+        }
+        _ => unreachable!(),
     }
 
     Ok(())

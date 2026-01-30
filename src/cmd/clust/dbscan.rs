@@ -13,6 +13,9 @@ Output formats:
     * cluster: Each line contains points of one cluster.
     * pair: Each line contains a (representative point, cluster member) pair.
 
+Note:
+For the 'pair' format, the representative point is the medoid (point with minimum sum of distances to other cluster members).
+
 "###,
         )
         .arg(
