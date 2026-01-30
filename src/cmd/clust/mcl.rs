@@ -65,6 +65,22 @@ Stijn van Dongen, Graph Clustering by Flow Simulation. PhD thesis, University of
                 .help("Inflation parameter. Controls the granularity of clusters. Higher values = tighter/more clusters."),
         )
         .arg(
+            Arg::new("prune")
+                .long("prune")
+                .num_args(1)
+                .default_value("1e-5")
+                .value_parser(value_parser!(f64))
+                .help("Pruning threshold. Matrix entries smaller than this will be set to zero."),
+        )
+        .arg(
+            Arg::new("max_iter")
+                .long("max_iter")
+                .num_args(1)
+                .default_value("100")
+                .value_parser(value_parser!(usize))
+                .help("Maximum number of iterations."),
+        )
+        .arg(
             Arg::new("outfile")
                 .long("outfile")
                 .short('o')
@@ -80,6 +96,8 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     let opt_same = *args.get_one::<f32>("same").unwrap();
     let opt_missing = *args.get_one::<f32>("missing").unwrap();
     let inflation = *args.get_one::<f64>("inflation").unwrap();
+    let prune = *args.get_one::<f64>("prune").unwrap();
+    let max_iter = *args.get_one::<usize>("max_iter").unwrap();
     let outfile = args.get_one::<String>("outfile").unwrap();
 
     let mut writer = intspan::writer(outfile);
@@ -89,7 +107,9 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     let (sm, names) = ScoringMatrix::<f32>::from_pair_scores(infile, opt_same, opt_missing);
     
     // 2. MCL Algorithm
-    let mcl = hnsm::Mcl::new(inflation);
+    let mut mcl = hnsm::Mcl::new(inflation);
+    mcl.set_prune_limit(prune);
+    mcl.set_max_iter(max_iter);
     let clusters = mcl.perform_clustering(&sm);
 
     // 3. Output

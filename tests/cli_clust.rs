@@ -190,6 +190,27 @@ fn command_clust_mcl_complex() -> anyhow::Result<()> {
 }
 
 #[test]
+fn command_clust_mcl_args() -> anyhow::Result<()> {
+    let mut cmd = Command::cargo_bin("hnsm")?;
+    let output = cmd
+        .arg("clust")
+        .arg("mcl")
+        .arg("tests/clust/mcl_test.tsv")
+        .arg("--prune")
+        .arg("1e-3")
+        .arg("--max_iter")
+        .arg("50")
+        .output()?;
+    let stdout = String::from_utf8(output.stdout)?;
+
+    assert_eq!(stdout.lines().count(), 2);
+    assert!(stdout.contains("A\tB\tC"));
+    assert!(stdout.contains("D\tE"));
+
+    Ok(())
+}
+
+#[test]
 fn command_clust_mcl_pair() -> anyhow::Result<()> {
     let mut cmd = Command::cargo_bin("hnsm")?;
     let output = cmd
