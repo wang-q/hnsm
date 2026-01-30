@@ -95,6 +95,9 @@ Stijn van Dongen, Graph Clustering by Flow Simulation. PhD thesis, University of
 }
 
 pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
+    //----------------------------
+    // 1. Args
+    //----------------------------
     let infile = args.get_one::<String>("infile").unwrap();
     let opt_format = args.get_one::<String>("format").unwrap();
     let opt_same = *args.get_one::<f32>("same").unwrap();
@@ -106,25 +109,45 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
 
     let mut writer = intspan::writer(outfile);
 
-    // 1. Load Matrix
+    //----------------------------
+    // 2. Load Matrix
+    //----------------------------
     // ScoringMatrix::from_pair_scores is only implemented for f32
     let (sm, names) = ScoringMatrix::<f32>::from_pair_scores(infile, opt_same, opt_missing);
     
-    // 2. MCL Algorithm
+    //----------------------------
+    // 3. Clustering
+    //----------------------------
     let mut mcl = hnsm::Mcl::new(inflation);
     mcl.set_prune_limit(prune);
     mcl.set_max_iter(max_iter);
-    let clusters = mcl.perform_clustering(&sm);
+    let mut clusters = mcl.perform_clustering(&sm);
 
-    // 3. Output
+    // Sort members within each cluster to ensure deterministic representative selection (by name)
+    for c in &mut clusters {
+        c.sort_by_key(|&idx| &names[idx]);
+    }
+
+    // Sort clusters: first by first member name, then by size (descending)
+    clusters.sort_by(|a, b| {
+        let name_a = &names[a[0]];
+        let name_b = &names[b[0]];
+        match b.len().cmp(&a.len()) {
+            std::cmp::Ordering::Equal => name_a.cmp(name_b),
+            other => other,
+        }
+    });
+
+    //----------------------------
+    // 4. Output
+    //----------------------------
     match opt_format.as_str() {
         "cluster" => {
             for component in clusters {
-                let mut members: Vec<&str> = component
+                let members: Vec<&str> = component
                     .iter()
                     .map(|&idx| names[idx].as_str())
                     .collect();
-                members.sort(); // Sort for consistent output
         
                 writer.write_fmt(format_args!(
                     "{}\n",
@@ -156,11 +179,10 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
                 }
 
                 let rep_name = &names[best_rep];
-                let mut members: Vec<&str> = component
+                let members: Vec<&str> = component
                     .iter()
                     .map(|&idx| names[idx].as_str())
                     .collect();
-                members.sort(); // Sort members for output consistency
 
                 for member in members {
                     writer.write_fmt(format_args!("{}\t{}\n", rep_name, member))?;

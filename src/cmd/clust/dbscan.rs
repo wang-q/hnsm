@@ -9,12 +9,15 @@ pub fn make_subcommand() -> Command {
             r###"
 Density-based spatial clustering of applications with noise (DBSCAN).
 
+Note: The input file should contain pairwise distances (lower is better), NOT similarities.
+
 Output formats:
     * cluster: Each line contains points of one cluster.
     * pair: Each line contains a (representative point, cluster member) pair.
 
 Note:
 For the 'pair' format, the representative point is the medoid (point with minimum sum of distances to other cluster members).
+If there are ties, the alphabetically first member is chosen.
 
 "###,
         )
@@ -80,7 +83,7 @@ For the 'pair' format, the representative point is the medoid (point with minimu
 // command implementation
 pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     //----------------------------
-    // Args
+    // 1. Args
     //----------------------------
     let infile = args.get_one::<String>("infile").unwrap();
 
@@ -93,17 +96,39 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     let mut writer = intspan::writer(args.get_one::<String>("outfile").unwrap());
 
     //----------------------------
-    // Ops
+    // 2. Load Matrix
     //----------------------------
 
     // Load matrix from pairwise distances
     let (matrix, names) = intspan::ScoringMatrix::from_pair_scores(infile, opt_same, opt_missing);
 
+    //----------------------------
+    // 3. Clustering
+    //----------------------------
     let mut dbscan = hnsm::Dbscan::new(opt_eps, opt_min_points);
-    let _ = dbscan.perform_clustering(&matrix);
+    dbscan.perform_clustering(&matrix);
+    let mut clusters = dbscan.results_cluster();
+
+    // Sort members within each cluster
+    for c in &mut clusters {
+        c.sort_by_key(|&idx| &names[idx]);
+    }
+
+    // Sort clusters: first by first member name, then by size (descending)
+    clusters.sort_by(|a, b| {
+        let name_a = &names[a[0]];
+        let name_b = &names[b[0]];
+        match b.len().cmp(&a.len()) {
+            std::cmp::Ordering::Equal => name_a.cmp(name_b),
+            other => other,
+        }
+    });
+
+    //----------------------------
+    // 4. Output
+    //----------------------------
     match opt_format.as_str() {
         "cluster" => {
-            let clusters = dbscan.results_cluster();
             for c in clusters {
                 writer.write_fmt(format_args!(
                     "{}\n",
@@ -115,9 +140,27 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
             }
         }
         "pair" => {
-            let rep_points = dbscan.results_pair(&matrix);
-            for (rep, point) in rep_points {
-                writer.write_fmt(format_args!("{}\t{}\n", names[rep], names[point]))?;
+            for component in clusters {
+                // Find medoid
+                let mut best_rep = *component.first().unwrap();
+                let mut min_sum = f32::MAX;
+
+                for &candidate in &component {
+                    let mut current_sum = 0.0;
+                    for &member in &component {
+                        current_sum += matrix.get(candidate, member);
+                    }
+                    if current_sum < min_sum {
+                        min_sum = current_sum;
+                        best_rep = candidate;
+                    }
+                    // Implicit tie-break (first one wins, which is alphabetical)
+                }
+
+                let rep_name = &names[best_rep];
+                for &member_idx in &component {
+                    writer.write_fmt(format_args!("{}\t{}\n", rep_name, names[member_idx]))?;
+                }
             }
         }
         _ => unreachable!(),

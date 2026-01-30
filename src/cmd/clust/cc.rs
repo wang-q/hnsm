@@ -5,7 +5,7 @@ use std::io::Write;
 // Create clap subcommand arguments
 pub fn make_subcommand() -> Command {
     Command::new("cc")
-        .about("Connected components clustering")
+        .about("Connected components clustering (ignoring weights)")
         .after_help(
             r###"
 Ignores scores and writes all connected components.
@@ -23,7 +23,7 @@ Note:
             Arg::new("infile")
                 .required(true)
                 .index(1)
-                .help("Input file containing pairwise distances in .tsv format"),
+                .help("Input file containing pairwise relations (weights ignored) in .tsv format"),
         )
         .arg(
             Arg::new("format")
@@ -49,14 +49,14 @@ Note:
 // command implementation
 pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     //----------------------------
-    // Args
+    // 1. Args
     //----------------------------
     let infile = args.get_one::<String>("infile").unwrap();
     let opt_format = args.get_one::<String>("format").unwrap();
     let mut writer = intspan::writer(args.get_one::<String>("outfile").unwrap());
 
     //----------------------------
-    // Ops
+    // 2. Load Graph
     //----------------------------
     let mut names = indexmap::IndexSet::new();
 
@@ -77,6 +77,9 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
         );
     }
 
+    //----------------------------
+    // 3. Clustering
+    //----------------------------
     let mut scc = petgraph::algo::tarjan_scc(&graph);
 
     // First sort members within each component alphabetically
@@ -90,7 +93,9 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     // Finally sort by size (descending) while maintaining alphabetical order for same size
     scc.sort_by_key(|cc| std::cmp::Reverse(cc.len()));
 
-    // Output each component
+    //----------------------------
+    // 4. Output
+    //----------------------------
     match opt_format.as_str() {
         "cluster" => {
             for cc in &scc {
