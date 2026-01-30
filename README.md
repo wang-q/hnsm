@@ -502,12 +502,16 @@ hyperfine --warmup 1 \
 | `distance` | 140.9 ± 2.9 | 135.1 | 147.9 | 1.00 |
 | `hv` | 1034.9 ± 14.5 | 1022.8 | 1072.1 | 7.34 ± 0.18 |
 
-```powershell
-# # WSL has not perf
-# # cargo install blondie
-# # cargo install flamegraph
-# $ENV:DTRACE = "blondie_dtrace.exe"
-# flamegraph -- hnsm distance tests/clust/mg1655.pro.fa.gz tests/clust/pao1.pro.fa.gz -k 7 -w 2 -p 1 --merge > $null
+```bash
+# WSL has not perf
+# cargo install blondie
+
+# Install xcode from appstore to get sctrace
+
+cargo install flamegraph
+
+flamegraph -- \
+    hnsm distance tests/clust/mg1655.pro.fa.gz tests/clust/pao1.pro.fa.gz -k 7 -w 2 -p 1 --merge > /dev/null
 
 ```
 
