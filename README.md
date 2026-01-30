@@ -488,10 +488,28 @@ hyperfine --warmup 1 \
 
 ```
 
+* hash_hd_bit
+
 | Command    |    Mean [ms] | Min [ms] | Max [ms] |    Relative |
 |:-----------|-------------:|---------:|---------:|------------:|
 | `distance` |  161.5 ± 3.3 |    154.6 |    167.4 |        1.00 |
 | `hv`       | 1571.1 ± 4.4 |   1564.7 |   1577.3 | 9.73 ± 0.20 |
+
+* hash_hd_i8
+
+| Command | Mean [ms] | Min [ms] | Max [ms] | Relative |
+|:---|---:|---:|---:|---:|
+| `distance` | 140.9 ± 2.9 | 135.1 | 147.9 | 1.00 |
+| `hv` | 1034.9 ± 14.5 | 1022.8 | 1072.1 | 7.34 ± 0.18 |
+
+```powershell
+# # WSL has not perf
+# # cargo install blondie
+# # cargo install flamegraph
+# $ENV:DTRACE = "blondie_dtrace.exe"
+# flamegraph -- hnsm distance tests/clust/mg1655.pro.fa.gz tests/clust/pao1.pro.fa.gz -k 7 -w 2 -p 1 --merge > $null
+
+```
 
 * Six-frame
 

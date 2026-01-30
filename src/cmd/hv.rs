@@ -278,7 +278,8 @@ fn load_file(
         file_set.extend(set);
     }
 
-    let hv: Vec<i32> = hnsm::hash_hv(&file_set, opt_dim);
+    let seed_vec: Vec<u64> = file_set.into_iter().collect();
+    let hv: Vec<i32> = hnsm::hash_hv_i8(&seed_vec, opt_dim);
     let entry = HvEntry {
         name: infile.to_string(),
         set: hv,
