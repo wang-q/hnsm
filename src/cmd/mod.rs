@@ -6,6 +6,7 @@ pub mod dedup;
 pub mod distance;
 pub mod filter;
 pub mod fq2fa;
+pub mod gff;
 pub mod gz;
 pub mod hv;
 pub mod interleave;

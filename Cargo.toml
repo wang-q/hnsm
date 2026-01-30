@@ -25,11 +25,12 @@ crossbeam = "0.8.4"
 rayon = "1.10.0"
 
 intspan = "0.8.7"
-noodles = { version = "0.91.0", features = ["core", "fasta", "fastq", "bgzf"] }
+noodles = { version = "0.91.0", features = ["core", "fasta", "fastq", "bgzf", "gff"] }
 noodles-core = "0.16.0"
 noodles-fasta = "0.49.0"
 noodles-fastq = "0.17.0"
 noodles-bgzf = "0.37.0"
+noodles-gff = "0.54.0"
 
 # data structure
 petgraph = "0.7.1"

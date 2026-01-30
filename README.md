@@ -329,6 +329,18 @@ curl -L https://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/000/008/865/GCF_000008865.2
     hnsm filter stdin -s |
     hnsm gz stdin -o tests/genome/sakai.fa
 
+curl -L https://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/000/005/845/GCF_000005845.2_ASM584v2/GCF_000005845.2_ASM584v2_genomic.gff.gz \
+    > tests/genome/mg1655.gff.gz
+
+curl -L https://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/000/005/845/GCF_000005845.2_ASM584v2/GCF_000005845.2_ASM584v2_protein.faa.gz \
+    > tests/genome/mg1655.pro.fa.gz
+
+curl -L https://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/000/008/865/GCF_000008865.2_ASM886v2/GCF_000008865.2_ASM886v2_protein.faa.gz \
+    > tests/genome/sakai.pro.fa.gz
+
+curl -L https://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/000/006/765/GCF_000006765.1_ASM676v1/GCF_000006765.1_ASM676v1_protein.faa.gz \
+    > tests/genome/pao1.pro.fa.gz
+
 ```
 
 * mash
@@ -397,46 +409,38 @@ hnsm synt view tests/synt/mg1655_sakai.tsv -o tests/synt/mg1655_sakai.svg
 ### Proteomes
 
 ```bash
-curl -L https://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/000/005/845/GCF_000005845.2_ASM584v2/GCF_000005845.2_ASM584v2_protein.faa.gz \
-    > tests/clust/mg1655.pro.fa.gz
 
-curl -L https://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/000/008/865/GCF_000008865.2_ASM886v2/GCF_000008865.2_ASM886v2_protein.faa.gz \
-    > tests/clust/sakai.pro.fa.gz
-
-curl -L https://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/000/006/765/GCF_000006765.1_ASM676v1/GCF_000006765.1_ASM676v1_protein.faa.gz \
-    > tests/clust/pao1.pro.fa.gz
-
-hnsm distance tests/clust/mg1655.pro.fa.gz tests/clust/pao1.pro.fa.gz -k 7 -w 2 |
+hnsm distance tests/genome/mg1655.pro.fa.gz tests/genome/pao1.pro.fa.gz -k 7 -w 2 |
     rgr filter stdin --ne 3:1
 
 hyperfine --warmup 1 \
     -n p1 \
-    'hnsm distance tests/clust/mg1655.pro.fa.gz tests/clust/pao1.pro.fa.gz -k 7 -w 2 -p 1 > /dev/null' \
+    'hnsm distance tests/genome/mg1655.pro.fa.gz tests/genome/pao1.pro.fa.gz -k 7 -w 2 -p 1 > /dev/null' \
     -n p2 \
-    'hnsm distance tests/clust/mg1655.pro.fa.gz tests/clust/pao1.pro.fa.gz -k 7 -w 2 -p 2 > /dev/null' \
+    'hnsm distance tests/genome/mg1655.pro.fa.gz tests/genome/pao1.pro.fa.gz -k 7 -w 2 -p 2 > /dev/null' \
     -n p3 \
-    'hnsm distance tests/clust/mg1655.pro.fa.gz tests/clust/pao1.pro.fa.gz -k 7 -w 2 -p 3 > /dev/null' \
+    'hnsm distance tests/genome/mg1655.pro.fa.gz tests/genome/pao1.pro.fa.gz -k 7 -w 2 -p 3 > /dev/null' \
     -n p4 \
-    'hnsm distance tests/clust/mg1655.pro.fa.gz tests/clust/pao1.pro.fa.gz -k 7 -w 2 -p 4 > /dev/null' \
+    'hnsm distance tests/genome/mg1655.pro.fa.gz tests/genome/pao1.pro.fa.gz -k 7 -w 2 -p 4 > /dev/null' \
     -n p6 \
-    'hnsm distance tests/clust/mg1655.pro.fa.gz tests/clust/pao1.pro.fa.gz -k 7 -w 2 -p 6 > /dev/null' \
+    'hnsm distance tests/genome/mg1655.pro.fa.gz tests/genome/pao1.pro.fa.gz -k 7 -w 2 -p 6 > /dev/null' \
     -n p8 \
-    'hnsm distance tests/clust/mg1655.pro.fa.gz tests/clust/pao1.pro.fa.gz -k 7 -w 2 -p 8 > /dev/null' \
+    'hnsm distance tests/genome/mg1655.pro.fa.gz tests/genome/pao1.pro.fa.gz -k 7 -w 2 -p 8 > /dev/null' \
     --export-markdown dis.md.tmp
 
 hyperfine --warmup 1 \
     -n p1 \
-    'hnsm distance tests/clust/mg1655.pro.fa.gz tests/clust/pao1.pro.fa.gz -k 7 -w 2 --zero -p 1 > /dev/null' \
+    'hnsm distance tests/genome/mg1655.pro.fa.gz tests/genome/pao1.pro.fa.gz -k 7 -w 2 --zero -p 1 > /dev/null' \
     -n p2 \
-    'hnsm distance tests/clust/mg1655.pro.fa.gz tests/clust/pao1.pro.fa.gz -k 7 -w 2 --zero -p 2 > /dev/null' \
+    'hnsm distance tests/genome/mg1655.pro.fa.gz tests/genome/pao1.pro.fa.gz -k 7 -w 2 --zero -p 2 > /dev/null' \
     -n p3 \
-    'hnsm distance tests/clust/mg1655.pro.fa.gz tests/clust/pao1.pro.fa.gz -k 7 -w 2 --zero -p 3 > /dev/null' \
+    'hnsm distance tests/genome/mg1655.pro.fa.gz tests/genome/pao1.pro.fa.gz -k 7 -w 2 --zero -p 3 > /dev/null' \
     -n p4 \
-    'hnsm distance tests/clust/mg1655.pro.fa.gz tests/clust/pao1.pro.fa.gz -k 7 -w 2 --zero -p 4 > /dev/null' \
+    'hnsm distance tests/genome/mg1655.pro.fa.gz tests/genome/pao1.pro.fa.gz -k 7 -w 2 --zero -p 4 > /dev/null' \
     -n p6 \
-    'hnsm distance tests/clust/mg1655.pro.fa.gz tests/clust/pao1.pro.fa.gz -k 7 -w 2 --zero -p 6 > /dev/null' \
+    'hnsm distance tests/genome/mg1655.pro.fa.gz tests/genome/pao1.pro.fa.gz -k 7 -w 2 --zero -p 6 > /dev/null' \
     -n p8 \
-    'hnsm distance tests/clust/mg1655.pro.fa.gz tests/clust/pao1.pro.fa.gz -k 7 -w 2 --zero -p 8 > /dev/null' \
+    'hnsm distance tests/genome/mg1655.pro.fa.gz tests/genome/pao1.pro.fa.gz -k 7 -w 2 --zero -p 8 > /dev/null' \
     --export-markdown dis.md.tmp
 
 ```
@@ -469,21 +473,21 @@ hnsm hv tests/clust/IBPA.fa
 hnsm distance tests/clust/IBPA.fa --merge
 #tests/clust/IBPA.fa     tests/clust/IBPA.fa     763     763     763     763     0.0000  1.0000  1.0000
 
-hnsm hv tests/clust/mg1655.pro.fa.gz
-#tests/clust/mg1655.pro.fa.gz    tests/clust/mg1655.pro.fa.gz    1240734 1240734 1240734 1240734 0.0000  1.0000  1.0000
-hnsm distance tests/clust/mg1655.pro.fa.gz --merge
-#tests/clust/mg1655.pro.fa.gz    tests/clust/mg1655.pro.fa.gz    1267403 1267403 1267403 1267403 0.0000  1.0000  1.0000
+hnsm hv tests/genome/mg1655.pro.fa.gz
+#tests/genome/mg1655.pro.fa.gz    tests/genome/mg1655.pro.fa.gz    1240734 1240734 1240734 1240734 0.0000  1.0000  1.0000
+hnsm distance tests/genome/mg1655.pro.fa.gz --merge
+#tests/genome/mg1655.pro.fa.gz    tests/genome/mg1655.pro.fa.gz    1267403 1267403 1267403 1267403 0.0000  1.0000  1.0000
 
-hnsm hv tests/clust/mg1655.pro.fa.gz tests/clust/pao1.pro.fa.gz -k 7 -w 1
-#tests/clust/mg1655.pro.fa.gz    tests/clust/pao1.pro.fa.gz      1240734 1733273 81195   2892811 0.4154  0.0281  0.0654
-hnsm distance tests/clust/mg1655.pro.fa.gz tests/clust/pao1.pro.fa.gz -k 7 -w 1 --merge
-#tests/clust/mg1655.pro.fa.gz    tests/clust/pao1.pro.fa.gz      1267403 1770832 60605   2977630 0.4602  0.0204  0.0478
+hnsm hv tests/genome/mg1655.pro.fa.gz tests/genome/pao1.pro.fa.gz -k 7 -w 1
+#tests/genome/mg1655.pro.fa.gz    tests/genome/pao1.pro.fa.gz      1240734 1733273 81195   2892811 0.4154  0.0281  0.0654
+hnsm distance tests/genome/mg1655.pro.fa.gz tests/genome/pao1.pro.fa.gz -k 7 -w 1 --merge
+#tests/genome/mg1655.pro.fa.gz    tests/genome/pao1.pro.fa.gz      1267403 1770832 60605   2977630 0.4602  0.0204  0.0478
 
 hyperfine --warmup 1 \
     -n distance \
-    'hnsm distance tests/clust/mg1655.pro.fa.gz tests/clust/pao1.pro.fa.gz -k 7 -w 2 -p 1 --merge > /dev/null' \
+    'hnsm distance tests/genome/mg1655.pro.fa.gz tests/genome/pao1.pro.fa.gz -k 7 -w 2 -p 1 --merge > /dev/null' \
     -n hv \
-    'hnsm hv tests/clust/mg1655.pro.fa.gz tests/clust/pao1.pro.fa.gz -k 7 -w 2 -p 1 > /dev/null' \
+    'hnsm hv tests/genome/mg1655.pro.fa.gz tests/genome/pao1.pro.fa.gz -k 7 -w 2 -p 1 > /dev/null' \
     --export-markdown dis.md.tmp
 
 ```
@@ -511,7 +515,7 @@ hyperfine --warmup 1 \
 cargo install flamegraph
 
 flamegraph -- \
-    hnsm distance tests/clust/mg1655.pro.fa.gz tests/clust/pao1.pro.fa.gz -k 7 -w 2 -p 1 --merge > /dev/null
+    hnsm distance tests/genome/mg1655.pro.fa.gz tests/genome/pao1.pro.fa.gz -k 7 -w 2 -p 1 --merge > /dev/null
 
 ```
 
@@ -519,7 +523,7 @@ flamegraph -- \
 
 ```bash
 hnsm sixframe tests/genome/sakai.fa.gz --len 35 |
-    hnsm distance stdin tests/clust/mg1655.pro.fa.gz -k 7 -w 2 -p 4 |
+    hnsm distance stdin tests/genome/mg1655.pro.fa.gz -k 7 -w 2 -p 4 |
     wc -l
 #21124
 
