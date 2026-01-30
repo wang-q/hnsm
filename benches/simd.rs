@@ -1,5 +1,3 @@
-#![feature(array_chunks)]
-#![feature(slice_as_chunks)]
 // Add these imports to use the stdsimd library
 #![feature(portable_simd)]
 use std::simd::prelude::*;
