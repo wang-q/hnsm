@@ -111,6 +111,13 @@ hnsm synt dag pos.tsv match.tsv
                 .default_value("stdout")
                 .help("Output filename. [stdout] for screen"),
         )
+        .arg(
+            Arg::new("verbose")
+                .long("verbose")
+                .short('v')
+                .action(clap::ArgAction::SetTrue)
+                .help("Verbose output"),
+        )
 }
 
 // command implementation
@@ -119,6 +126,16 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     // Args
     //----------------------------
     let infiles: Vec<_> = args.get_many::<String>("infiles").unwrap().collect();
+
+    if args.get_flag("verbose") {
+        env_logger::Builder::new()
+            .filter_level(log::LevelFilter::Info)
+            .init();
+    } else {
+        env_logger::Builder::new()
+            .filter_level(log::LevelFilter::Warn)
+            .init();
+    }
 
     let opt_go = *args.get_one::<f32>("go").unwrap();
     let opt_ge = *args.get_one::<f32>("ge").unwrap();
@@ -147,14 +164,25 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     //----------------------------
     let pos_file = &infiles[0];
     let match_file = &infiles[1];
+    
+    log::info!("Loading positions from {}", pos_file);
     let acc_info = read_positions(pos_file)?;
+    log::info!("Loaded {} features", acc_info.len());
+
+    log::info!("Loading matches from {}", match_file);
     let (acc_pair_map, mol_pair_map) = parse_match_file(match_file, &acc_info, &chain_opt)?;
+    log::info!(
+        "Loaded {} match pairs for {} molecule pairs",
+        acc_pair_map.len(),
+        mol_pair_map.len()
+    );
     // eprintln!("{:#?}", mol_pair_map);
 
     let outfile = args.get_one::<String>("outfile").unwrap();
     let mut writer: Box<dyn Write> = if outfile == "stdout" {
         Box::new(io::BufWriter::new(io::stdout()))
     } else {
+        log::info!("Writing output to {}", outfile);
         Box::new(io::BufWriter::new(std::fs::File::create(outfile)?))
     };
 
@@ -220,7 +248,8 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
             alignment_count += 1;
         }
     }
-    eprintln!("chain_opt = {:#?}", chain_opt);
+    log::info!("Total alignments found: {}", alignment_count);
+    log::info!("chain_opt = {:#?}", chain_opt);
 
     Ok(())
 }
