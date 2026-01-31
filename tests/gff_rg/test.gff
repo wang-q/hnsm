@@ -1,5 +1,6 @@
 ##gff-version 3
-chr1	.	gene	1000	2000	.	+	.	ID=gene1;Name=GENE1
-chr1	.	mRNA	1000	2000	.	+	.	ID=mRNA1;Parent=gene1
+chr1	.	gene	1000	2000	.	+	.	ID=gene1;Name=GENE1;locus_tag=b0001
+chr1	.	mRNA	1000	2000	.	+	.	ID=mRNA1;Parent=gene1;gene=thrL;product=thr operon leader peptide
 chr1	.	gene	3000	4000	.	-	.	ID=prefix:gene2;Name=GENE2
 chr1	.	mRNA	3000	4000	.	-	.	ID=prefix:mRNA2;Parent=gene2
+chr1	.	CDS	5000	6000	.	+	.	ID=cds-NP_414542.1;Name=NP_414542.1

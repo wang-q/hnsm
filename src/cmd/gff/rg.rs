@@ -17,7 +17,10 @@ Examples:
 2. Extract 'mRNA' features with assembly name 'Human':
    hnsm gff rg tests/gff_rg/test.gff --tag mRNA --asm Human -o output.tsv
 
-3. Simplify sequence IDs:
+3. Use 'ID' as the identifier:
+   hnsm gff rg tests/gff_rg/test.gff --key ID
+
+4. Simplify sequence IDs:
    hnsm gff rg tests/gff_rg/test.gff --simplify
 
 "###,
@@ -42,11 +45,33 @@ Examples:
                 .help("Assembly name. Default: inferred from filename"),
         )
         .arg(
+            Arg::new("key")
+                .long("key")
+                .num_args(1)
+                .default_value("ID")
+                .value_parser([
+                    "ID",
+                    "Name",
+                    "Parent",
+                    "gene",
+                    "locus_tag",
+                    "protein_id",
+                    "product",
+                ])
+                .help("GFF attribute to use as feature key"),
+        )
+        .arg(
             Arg::new("simplify")
                 .long("simplify")
                 .short('s')
                 .action(ArgAction::SetTrue)
                 .help("Simplify sequence names"),
+        )
+        .arg(
+            Arg::new("seq_simplify")
+                .long("ss")
+                .action(ArgAction::SetTrue)
+                .help("Simplify reference sequence names"),
         )
         .arg(
             Arg::new("outfile")
@@ -65,10 +90,12 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     //----------------------------
     let infile = args.get_one::<String>("infile").unwrap();
     let outfile = args.get_one::<String>("outfile").unwrap();
-    let tag = args.get_one::<String>("tag").unwrap();
+    let opt_tag = args.get_one::<String>("tag").unwrap();
+    let opt_key = args.get_one::<String>("key").unwrap();
     let is_simplify = args.get_flag("simplify");
+    let is_seq_simplify = args.get_flag("seq_simplify");
 
-    let asm = if let Some(g) = args.get_one::<String>("asm") {
+    let opt_asm = if let Some(g) = args.get_one::<String>("asm") {
         g.clone()
     } else {
         let path = std::path::Path::new(infile);
@@ -79,7 +106,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
         file_name.split('.').next().unwrap_or("unknown").to_string()
     };
 
-    eprintln!("gff rg: infile={}, outfile={}, tag={}, asm={}, simplify={}", infile, outfile, tag, asm, is_simplify);
+    eprintln!("gff rg: infile={}, outfile={}, tag={}, asm={}, simplify={}, key={}", infile, outfile, opt_tag, opt_asm, is_simplify, opt_key);
 
     let reader = intspan::reader(infile);
     let mut reader = gff::io::Reader::new(reader);
@@ -87,26 +114,32 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
 
     for result in reader.record_bufs() {
         let record = result?;
-        if record.ty().to_ascii_lowercase() != tag.to_ascii_lowercase().as_bytes() {
+        if record.ty().to_ascii_lowercase() != opt_tag.to_ascii_lowercase().as_bytes() {
             continue;
         }
 
-        // ID
-        let mut id = match record.attributes().get(b"ID") {
-            Some(gff::feature::record_buf::attributes::field::Value::String(s)) => s.to_string(),
-            _ => "NA".to_string(),
-        };
+        // Attributes
+        let mut key = "NA".to_string();
+        if let Some(gff::feature::record_buf::attributes::field::Value::String(s)) =
+            record.attributes().get(opt_key.as_bytes())
+        {
+            key = s.to_string();
+        }
+
         if is_simplify {
-            if let Some((_, s)) = id.split_once(':') {
-                id = s.to_string();
-            }
-            if let Some(i) = id.find(&[' ', '.', ',', '-'][..]) {
-                id = id[..i].to_string();
+            if let Some(i) = key.find(&[' ', '.', ',', '-'][..]) {
+                key = key[..i].to_string();
             }
         }
         
         // Range
-        let seq_name = record.reference_sequence_name();
+        let mut seq_name = record.reference_sequence_name().to_string();
+        if is_seq_simplify {
+            if let Some(i) = seq_name.find(&[' ', '.', ',', '-'][..]) {
+                seq_name = seq_name[..i].to_string();
+            }
+        }
+
         let strand = match record.strand() {
             gff::feature::record::Strand::Reverse => "-",
             _ => "+",
@@ -117,7 +150,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
         writeln!(
             writer,
             "{}\t{}.{}({}):{}-{}",
-            id, asm, seq_name, strand, start, end
+            key, opt_asm, seq_name, strand, start, end
         )?;
     }
 

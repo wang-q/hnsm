@@ -213,6 +213,23 @@ hnsm synt view [OPTIONS] <infile> [size_files...]
 *   `--header, -H`: 标记输入文件是否包含表头。
 *   `--outfile, -o <FILE>`: 输出文件路径 (默认: stdout)。
 
+## 基于蛋白相似度的共线性检测
+
+### E. coli mg1655 基因组内部
+
+```bash
+# 1. 生成基因位置
+hnsm gff rg tests/genome/mg1655.gff.gz --tag cds --key protein_id --asm mg1655 -s --ss -o mg1655.rg.tsv
+
+# 2. 计算蛋白相似度矩阵
+hnsm distance tests/genome/mg1655.pro.fa.gz -k 7 -w 2 |
+    rgr filter stdin --ff-ne 1:2 \
+    > mg1655.dist.tsv
+
+# dag chain
+
+```
+
 ## 6. 背景与 ntSynt 对比 (Background & Comparison)
 
 `hnsm synt dna` 的设计深受 **ntSynt** (Coombe et al., 2025) 的启发。我们的目标是在 Rust 生态中重现并优化其基于 Minimizer 图的宏观共线性检测算法，提供更高效、更易用的单一二进制工具。
