@@ -10,31 +10,44 @@ pub fn make_subcommand() -> Command {
             r###"
 Algorithm adopted from `ntSynt`
 
-* Algorithm & Scoring
-    1. Minimizer Sketching (Compression)
-       The sequence is reduced to a set of "minimizers" (representative k-mers).
-       A window `w` slides over the sequence, picking the lexicographically smallest k-mer.
-       This reduces data size while preserving local similarity.
+* Algorithm & Design
+    The tool uses a Hierarchical Iterative strategy with Minimizer Graphs to find synteny blocks.
 
-    2. Graph-Based Chaining
+    1. Iterative Refinement (Hierarchical Strategy)
+       * Multi-Round: Runs in multiple rounds with decreasing window sizes `w` (e.g., 1000 -> 100 -> 10).
+       * Global Masking: Regions covered by previous rounds are recorded in a global mask. Subsequent rounds only process unmasked areas, allowing the algorithm to focus on unresolved complex regions or fine details.
+
+    2. Pass 1: Minimizer Counting
+       * Scans all sequences to count minimizer frequencies.
+       * Bloom Filter: Uses a Bloom filter to efficiently discard singletons (minimizers appearing only once) to reduce memory usage.
+
+    3. Pass 2: Graph Construction
        * Nodes: Minimizers shared between genomes.
-       * Edges: Connect minimizers that are adjacent in the original sequences.
-       * Synteny Blocks: Linear paths in this graph represent syntenic regions.
+       * Filtering:
+         - Repeat Filtering: Ignores minimizers with frequency > `--max-freq`.
+         - Mask Filtering: Ignores minimizers falling into masked regions.
+       * Edges: Connects minimizers that are adjacent in the original sequences within `--chain-gap`.
 
-    3. Iterative Refinement (Multi-Round)
-       The algorithm runs in multiple rounds with decreasing window sizes (e.g., w=1000 -> w=100 -> w=10).
-       * Large w: Finds large, coarse synteny blocks quickly.
-       * Small w: Fills in gaps and finds smaller blocks in remaining regions.
-       Regions covered by previous rounds are masked to avoid redundancy.
+    4. Graph Refinement
+       * Weight Pruning: Removes edges with weight (supporting genomes) < `--min-weight` to eliminate noise.
+       * Transitive Reduction: Simplifies the graph by removing redundant transitive edges (e.g., if A->B->C exists, remove A->C).
 
-    4. Filtering & Cleaning
-       * Repetitive Elements: High-frequency minimizers (repeats) are ignored.
-       * Gap Filling: Blocks are merged if they are close enough (`--chain-gap`).
-       * Size Filter: Short blocks are discarded (`--block-size`).
+    5. Path Finding & Block Construction
+       * Linear Paths: Identifies chains of Reciprocal Best Hits in the graph using an O(E) algorithm.
+       * Block Construction: Maps abstract hash paths back to genomic coordinates using Binary Search.
+       * Size Filtering: Discards blocks shorter than `--block-size`.
+
+* Output Format (Block TSV)
+    Block_ID    Range                           Count   Round
+    1           S288c.I(+):100-2000             15      1000
+    1           S288c.II(-):5000-7000           15      1000
+
+    * Range: `Genome.Chr(Strand):Start-End` (1-based)
+    * Strand: Relative to the first genome in the block (which is always normalized to `+`).
+    * Note: Overlapping blocks from different rounds are expected.
 
 * Examples
     hnsm synt dna genome1.fa genome2.fa
-
 "###,
         )
         .arg(
@@ -48,7 +61,7 @@ Algorithm adopted from `ntSynt`
             Arg::new("kmer")
                 .short('k')
                 .long("kmer")
-                .help("K-mer size")
+                .help("Minimizer k-mer size")
                 .default_value("24")
                 .value_parser(value_parser!(usize)),
         )
@@ -56,40 +69,40 @@ Algorithm adopted from `ntSynt`
             Arg::new("divergence")
                 .short('d')
                 .long("divergence")
-                .help("Approximate sequence divergence (%)")
+                .help("Seq divergence (%). Adjusts rounds, block-size, chain-gap.")
                 .value_parser(value_parser!(f64)),
         )
         .arg(
             Arg::new("rounds")
                 .short('r')
                 .long("rounds")
-                .help("Window sizes for iterative refinement (comma-separated). Defaults depend on divergence.")
+                .help("Refinement window sizes (e.g., \"10k,1k,100\"). Default depends on -d.")
                 .value_parser(value_parser!(String)),
         )
         .arg(
             Arg::new("block_size")
                 .short('b')
                 .long("block-size")
-                .help("Minimum synteny block size (bp). Defaults depend on divergence.")
+                .help("Min synteny block size (bp). Default depends on -d.")
                 .value_parser(value_parser!(usize)),
         )
         .arg(
             Arg::new("chain_gap")
                 .long("chain-gap")
-                .help("Maximum gap size between chained minimizers (bp). Defaults depend on divergence.")
+                .help("Max gap between chained minimizers (bp). Default depends on -d.")
                 .value_parser(value_parser!(u32)),
         )
         .arg(
             Arg::new("min_weight")
                 .long("min-weight")
-                .help("Minimum edge weight (number of supporting genomes)")
+                .help("Min edge weight (supporting genomes)")
                 .default_value("2")
                 .value_parser(value_parser!(usize)),
         )
         .arg(
             Arg::new("max_freq")
                 .long("max-freq")
-                .help("Maximum k-mer frequency to consider (filter repeats)")
+                .help("Max k-mer frequency (filter repeats)")
                 .default_value("1000")
                 .value_parser(value_parser!(u32)),
         )
@@ -97,7 +110,7 @@ Algorithm adopted from `ntSynt`
             Arg::new("soft_mask")
                 .long("soft-mask")
                 .action(clap::ArgAction::SetTrue)
-                .help("Ignore soft-masked repeats (lowercase bases)"),
+                .help("Ignore soft-masked (lowercase) k-mers"),
         )
         .arg(
             Arg::new("outfile")

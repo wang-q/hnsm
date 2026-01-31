@@ -13,62 +13,16 @@
 
 ## 2. `hnsm synt dna` 设计详情
 
-`hnsm synt dna` 是基于 Minimizer 图的高效 DNA 共线性分析工具，专为处理全基因组序列设计。
+`hnsm synt dna` 是基于 Minimizer 图的高效 DNA 共线性分析工具。
 
-### 2.1. 核心算法 (Algorithm)
+请参考命令行帮助获取详细的算法说明和参数列表：
 
-该工具采用分层迭代（Hierarchical Iterative）策略，结合 Minimizer 图与线性路径查找算法，从粗到细逐步构建共线性块。
+```bash
+hnsm synt dna --help
+```
 
-1.  **分层迭代 (Iterative Refinement)**:
-    *   采用多轮（Rounds）策略，窗口大小（Window Size, `w`）从大到小变化（例如 1000 -> 100 -> 10）。
-    *   **全局掩膜 (Global Masking)**: 每一轮发现的共线性区域会被记录在全局掩膜（Coverage Mask）中。后续轮次在提取 Minimizer 时，会跳过已覆盖的区域，从而专注于未解决的复杂区域或更精细的结构。
+### 2.1. 结果解读示例 (Output Interpretation Example)
 
-2.  **Minimizer 提取与过滤 (Pass 1 & 2)**:
-    *   **Pass 1 (Counting)**: 遍历所有序列，统计 Minimizer 频率。使用 Bloom Filter 过滤掉仅出现一次的 Minimizer（Singletons），以减少内存占用。
-    *   **Pass 2 (Graph Building)**: 再次遍历序列，构建 Minimizer 图。
-        *   **Repeat Filtering**: 忽略频率超过 `max-freq` 的高频 Minimizer（通常是转座子或简单重复序列）。
-        *   **Mask Filtering**: 忽略落在全局掩膜区域内的 Minimizer。
-
-3.  **图构建与简化 (Graph Processing)**:
-    *   **节点 (Nodes)**: 代表唯一的 Minimizer Hash。
-    *   **边 (Edges)**: 代表两个 Minimizer 在基因组上的邻接关系。
-    *   **权重过滤 (Weight Pruning)**: 仅保留权重（支持的基因组数量）大于 `min-weight` 的边，去除偶然的噪音连接。
-    *   **传递归约 (Transitive Reduction)**: 移除冗余的传递边（如 A->B->C 存在时，移除 A->C），简化图结构。
-
-4.  **线性路径查找 (Linear Path Finding)**:
-    *   使用 O(E) 的全图扫描算法。
-    *   识别图中互为唯一邻居（Reciprocal Best Hits in Graph）的节点链。
-    *   这些链代表了多基因组间高度保守的线性共线性骨架。
-
-5.  **块构建 (Block Construction)**:
-    *   将抽象的 Hash 路径映射回具体的基因组坐标。
-    *   使用二分查找（Binary Search）高效定位每个 Hash 在各基因组中的具体位置（Range）。
-    *   输出包含所有输入基因组对应坐标的共线性块。
-
-### 2.2. 参数说明 (Parameters)
-
-*   `--divergence, -d <FLOAT>`: 预估的序列差异度（%）。此参数会自动调整 rounds, block-size, merge 等默认值。
-*   `--kmer, -k <INT>`: Minimizer k-mer 大小（默认 24）。
-*   `--max-freq <INT>`: 过滤高频 k-mer 的阈值（默认 1000）。
-*   `--soft-mask`: 忽略软掩膜（小写碱基）的 k-mer。如果输入序列已通过 RepeatMasker 等工具处理，开启此选项可避免重复区域导致的假阳性。
-*   `--rounds, -r <STR>`: 自定义分层迭代的窗口大小序列（如 "10000,1000,100"）。
-*   `--block-size, -b <INT>`: 最小共线性块大小（bp）。
-*   `--min-weight <INT>`: 最小边权重（支持的基因组数量，默认 2）。
-
-### 2.3. 输出格式 (Output)
-
-输出为 Block TSV 格式。每一行代表一个基因组片段（Range），共享相同 ID 的行属于同一个共线性块（Block）。
-
-字段说明：
-1.  **Block_ID**: 共线性块的唯一标识符（整数）。
-2.  **Range**: 格式为 `Genome.Chr(Strand):Start-End`。
-    *   `Genome.Chr`: 序列名称，通常由文件名和染色体名拼接而成（如 `S288c.I`）。
-    *   `Strand`: `+` 或 `-`。注意：第一个基因组的链方向会被标准化为 `+`。
-    *   `Start-End`: 1-based 起止坐标。
-3.  **Count**: 块中包含的 Minimizer 数量。
-4.  **Round**: （可选）发现该块时的窗口大小（迭代轮次）。
-
-**注意**:
 由于采用了分层迭代策略，不同轮次（Round）发现的共线性块可能会在坐标上相互重叠。
 *   大窗口（如 1000）发现的块通常代表宏观的共线性骨架。
 *   小窗口（如 10）发现的块则填充了细节，或者延伸到了大窗口未能覆盖的边缘区域。
@@ -218,17 +172,20 @@ hnsm synt view [OPTIONS] <infile> [size_files...]
 ### E. coli mg1655 基因组内部
 
 ```bash
-# 1. 生成基因位置
+# 生成基因位置
 hnsm gff rg tests/genome/mg1655.gff.gz --tag cds --key protein_id --asm mg1655 -s --ss -o mg1655.rg.tsv
 
-# 2. 计算蛋白相似度矩阵
-hnsm dist seq tests/genome/mg1655.pro.fa.gz -k 7 -w 2 --sim |
+# 计算蛋白相似度矩阵
+hnsm dist seq tests/genome/mg1655.pro.fa.gz -k 7 -w 2 --sim -p 8 |
     rgr filter stdin --ff-ne 1:2 \
     > mg1655.sim.tsv
 
 # dag chain
 # 接收两个文件：1. 基因位置文件 2. 蛋白相似度矩阵文件
-hnsm synt dna mg1655.rg.tsv mg1655.sim.tsv -o mg1655.dag.tsv
+hnsm synt dag mg1655.rg.tsv mg1655.sim.tsv -o mg1655.chain.tsv
+
+# 显示共线性块
+hnsm synt view mg1655.chain.tsv mg1655.size.tsv -o mg1655.chain.svg
 
 ```
 
