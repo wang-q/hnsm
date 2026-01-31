@@ -227,6 +227,8 @@ hnsm dist seq tests/genome/mg1655.pro.fa.gz -k 7 -w 2 --sim |
     > mg1655.sim.tsv
 
 # dag chain
+# 接收两个文件：1. 基因位置文件 2. 蛋白相似度矩阵文件
+hnsm synt dna mg1655.rg.tsv mg1655.sim.tsv -o mg1655.dag.tsv
 
 ```
 

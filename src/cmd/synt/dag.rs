@@ -3,7 +3,7 @@ use clap::*;
 use hnsm::libs::synteny::chain::{Anchor, Chain, ChainOpt, DagChainer};
 use itertools::Itertools;
 use std::collections::HashMap;
-use std::io::{self, BufRead};
+use std::io::{self, BufRead, Write};
 
 // Create clap subcommand arguments
 pub fn make_subcommand() -> Command {
@@ -13,29 +13,16 @@ pub fn make_subcommand() -> Command {
             r###"
 Algorithm adopted from `DAGchainer`
 
-# Legacy format
-cat ~/Scripts/DAGCHAINER/data_sets/Arabidopsis/Arabidopsis.Release5.matchList.filtered |
-    tsv-filter --eq 1:1 --eq 5:2 \
-    > ath-1-2.tsv
-
-hnsm synt dag ath-1-2.tsv
-
 # Standard format
-hnsm synt dag match.tsv --annot annot.tsv
+hnsm synt dag annot.tsv match.tsv
 "###,
         )
         .arg(
-            Arg::new("annot")
-                .long("annot")
-                .short('a')
-                .num_args(1)
-                .help("Annotation file (tsv: mol, acc, start, end). If provided, infile is treated as a match file (tsv: acc1, acc2, score)."),
-        )
-        .arg(
-            Arg::new("infile")
+            Arg::new("infiles")
                 .required(true)
                 .index(1)
-                .help("Set the input file to use"),
+                .num_args(2)
+                .help("Input files: 1. Annotation file, 2. Match file."),
         )
         .arg(
             Arg::new("go")
@@ -107,7 +94,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     //----------------------------
     // Args
     //----------------------------
-    let infile = args.get_one::<String>("infile").unwrap();
+    let infiles: Vec<_> = args.get_many::<String>("infiles").unwrap().collect();
 
     let opt_go = *args.get_one::<f32>("go").unwrap();
     let opt_ge = *args.get_one::<f32>("ge").unwrap();
@@ -134,14 +121,18 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     //----------------------------
     // Ops
     //----------------------------
-    let (acc_info, acc_pair_map, mol_pair_map) = if let Some(annot_file) = args.get_one::<String>("annot") {
-        let acc_info = read_annotations(annot_file)?;
-        let (acc_pair_map, mol_pair_map) = parse_match_file(infile, &acc_info, &chain_opt)?;
-        (acc_info, acc_pair_map, mol_pair_map)
-    } else {
-        parse_legacy_input(infile, &chain_opt)?
-    };
+    let annot_file = &infiles[0];
+    let match_file = &infiles[1];
+    let acc_info = read_annotations(annot_file)?;
+    let (acc_pair_map, mol_pair_map) = parse_match_file(match_file, &acc_info, &chain_opt)?;
     // eprintln!("{:#?}", mol_pair_map);
+
+    let outfile = args.get_one::<String>("outfile").unwrap();
+    let mut writer: Box<dyn Write> = if outfile == "stdout" {
+        Box::new(io::BufWriter::new(io::stdout()))
+    } else {
+        Box::new(io::BufWriter::new(std::fs::File::create(outfile)?))
+    };
 
     let mut alignment_count = 0;
     for mol_pair in mol_pair_map.keys() {
@@ -201,7 +192,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
                 continue;
             }
 
-            print_alignment(&scores, &chain, max_y, alignment_count);
+            print_alignment(&mut writer, &scores, &chain, max_y, alignment_count)?;
             alignment_count += 1;
         }
     }
@@ -273,93 +264,6 @@ fn pair_key(
     (acc_pair_key, mol_pair_key)
 }
 
-fn scoring_f(evalue: f64, max_match_score: f32) -> f32 {
-    let match_score = -evalue.log10() * 10.0;
-    let rounded_score = (match_score + 0.5).floor() / 10.0; // Round to one decimal place
-    rounded_score.min(max_match_score as f64) as f32 // Ensure it does not exceed MAX_MATCH_SCORE
-}
-
-fn parse_legacy_input(
-    file_path: &str,
-    opt: &ChainOpt,
-) -> anyhow::Result<(
-    HashMap<String, Feature>,
-    HashMap<(String, String), f32>,
-    HashMap<(String, String), Vec<(String, String)>>,
-)> {
-    let file = std::fs::File::open(file_path)?;
-    let reader = io::BufReader::new(file);
-
-    let mut acc_info: HashMap<String, Feature> = HashMap::new();
-    let mut acc_pair_map: HashMap<(String, String), f32> = HashMap::new();
-    let mut mol_pair_map: HashMap<(String, String), Vec<(String, String)>> = HashMap::new();
-
-    for line in reader.lines() {
-        let line = line?;
-        let line = line.trim();
-        // Skip empty lines and those without word characters
-        if line.is_empty() || !line.chars().any(|c| c.is_alphanumeric()) {
-            continue;
-        }
-
-        let parts: Vec<&str> = line.split('\t').collect();
-        if parts.len() < 9 {
-            continue; // Ensure there are enough fields
-        }
-
-        let mol_1 = parts[0];
-        let acc_1 = parts[1];
-        let end5_1: usize = parts[2].parse().unwrap();
-        let end3_1: usize = parts[3].parse().unwrap();
-        let mol_2 = parts[4];
-        let acc_2 = parts[5];
-        let end5_2: usize = parts[6].parse().unwrap();
-        let end3_2: usize = parts[7].parse().unwrap();
-        let mut score: f64 = parts[8].parse().unwrap();
-
-        // Adjust e_value if it's too low
-        if score < 1.0e-250 {
-            score = 1.0e-250;
-        }
-
-        // Filtering records
-        if acc_1 == acc_2 {
-            continue; // No self comparisons
-        }
-        if score > 1.0e-5 {
-            continue;
-        }
-
-        let score = scoring_f(score, opt.max_match_score);
-
-        // Handle features
-        store_acc_info(mol_1, acc_1, end5_1, end3_1, &mut acc_info);
-        store_acc_info(mol_2, acc_2, end5_2, end3_2, &mut acc_info);
-
-        let (acc_pair_key, mol_pair_key) = pair_key(&acc_info, acc_1, acc_2);
-        if acc_pair_map.contains_key(&acc_pair_key) {
-            let prev = acc_pair_map.get_mut(&acc_pair_key).unwrap();
-            if *prev < score {
-                *prev = score;
-            }
-        } else {
-            acc_pair_map.insert(acc_pair_key.clone(), score);
-        }
-
-        mol_pair_map
-            .entry(mol_pair_key)
-            .or_default()
-            .push(acc_pair_key);
-    }
-
-    for mol_pair in mol_pair_map.keys().cloned().collect::<Vec<_>>() {
-        let value = mol_pair_map.get_mut(&mol_pair).unwrap();
-        *value = value.iter().unique().cloned().collect();
-    }
-
-    Ok((acc_info, acc_pair_map, mol_pair_map))
-}
-
 fn read_annotations(path: &str) -> anyhow::Result<HashMap<String, Feature>> {
     let file = std::fs::File::open(path)?;
     let reader = io::BufReader::new(file);
@@ -368,16 +272,39 @@ fn read_annotations(path: &str) -> anyhow::Result<HashMap<String, Feature>> {
     for line in reader.lines() {
         let line = line?;
         let parts: Vec<&str> = line.trim().split('\t').collect();
-        if parts.len() < 4 {
-            continue;
+
+        if parts.len() == 2 {
+            // hnsm gff rg format: key \t mol(strand):start-end
+            let acc = parts[0];
+            let location = parts[1];
+
+            // Parse location: "Human.chr1(+):100-200" or "chr1:100-200"
+            // Split by last ':' to separate mol+strand from range
+            if let Some((mol_strand, range)) = location.rsplit_once(':') {
+                // Parse range "100-200"
+                if let Some((start_s, end_s)) = range.split_once('-') {
+                    let start: usize = start_s.parse()?;
+                    let end: usize = end_s.parse()?;
+
+                    // Parse mol and strand from "Human.chr1(+)"
+                    // If (...) is present, remove it.
+                    let mol = if let Some(idx) = mol_strand.find('(') {
+                        &mol_strand[..idx]
+                    } else {
+                        mol_strand
+                    };
+
+                    store_acc_info(mol, acc, start, end, &mut acc_info);
+                }
+            }
+        } else if parts.len() >= 4 {
+            // Standard 4-column format
+            let mol = parts[0];
+            let acc = parts[1];
+            let start: usize = parts[2].parse()?;
+            let end: usize = parts[3].parse()?;
+            store_acc_info(mol, acc, start, end, &mut acc_info);
         }
-
-        let mol = parts[0];
-        let acc = parts[1];
-        let start: usize = parts[2].parse()?;
-        let end: usize = parts[3].parse()?;
-
-        store_acc_info(mol, acc, start, end, &mut acc_info);
     }
     Ok(acc_info)
 }
@@ -410,38 +337,29 @@ fn parse_match_file(
 
         let acc_1 = parts[0];
         let acc_2 = parts[1];
-        let mut score: f64 = parts[2].parse().unwrap_or(1.0); // Default score if parsing fails? Or expect valid score.
+        let raw_score: f64 = parts[2].parse().unwrap_or(0.0);
 
-        // Adjust e_value if it's too low (assuming input is e-value if very small)
-        // If input is bitscore (e.g. > 10), we should probably handle it differently.
-        // Original logic assumes E-value.
-        // Let's assume input is E-value for consistency with legacy, OR pre-calculated score.
-        // If score is > 1.0 (bitscore?), we might want to take it as is.
-        // But `scoring_f` expects E-value.
-        // Let's assume input is E-value.
-        if score < 1.0e-250 {
-            score = 1.0e-250;
-        }
-        
         // Filter self
         if acc_1 == acc_2 {
             continue;
         }
 
         // Calculate score
-        // If input is already a score (large positive), `scoring_f` might produce weird results if it expects small E-values.
-        // `scoring_f`: -log10(evalue) * 10.
-        // If input is 50.0 (bitscore), -log10(50) is negative.
-        // We should probably check if score looks like an E-value or a Score.
-        // For now, let's strictly follow legacy behavior: Input is E-value.
-        let score = scoring_f(score, opt.max_match_score);
+        let score = if raw_score <= 1.0 {
+            // Assume Similarity (0.0 - 1.0)
+            // Scale to 0 - max_match_score
+            (raw_score as f32) * opt.max_match_score
+        } else {
+            // Assume Bitscore or pre-calculated score > 1.0
+            (raw_score as f32).min(opt.max_match_score)
+        };
 
         if !acc_info.contains_key(acc_1) || !acc_info.contains_key(acc_2) {
             continue;
         }
 
         let (acc_pair_key, mol_pair_key) = pair_key(acc_info, acc_1, acc_2);
-        
+
         if acc_pair_map.contains_key(&acc_pair_key) {
             let prev = acc_pair_map.get_mut(&acc_pair_key).unwrap();
             if *prev < score {
@@ -456,7 +374,7 @@ fn parse_match_file(
             .or_default()
             .push(acc_pair_key);
     }
-    
+
     for mol_pair in mol_pair_map.keys().cloned().collect::<Vec<_>>() {
         let value = mol_pair_map.get_mut(&mol_pair).unwrap();
         *value = value.iter().unique().cloned().collect();
@@ -473,24 +391,27 @@ struct MatchPair {
     score: f32,
 }
 
-fn print_alignment(
+fn print_alignment<W: Write>(
+    writer: &mut W,
     scores: &[MatchPair],
     chain: &Chain,
     _max_y: i32,
     alignment_count: usize,
-) {
-    println!(
+) -> io::Result<()> {
+    writeln!(
+        writer,
         "> Alignment #{} score = {:.1}",
         alignment_count + 1,
         chain.score
-    );
+    )?;
     for (i, &index) in chain.indices.iter().enumerate() {
-        let print_y = scores[index].y; 
-        // Note: reverse_order logic removed as it was always false in original code, 
-        // but if we want to support it, we need to pass a flag. 
+        let print_y = scores[index].y;
+        // Note: reverse_order logic removed as it was always false in original code,
+        // but if we want to support it, we need to pass a flag.
         // Assuming forward order for now as per original execute function.
-        
-        println!(
+
+        writeln!(
+            writer,
             "{}\t{},{}\t{}\t{}\t{:7.1}\t{:7.1}",
             i,
             scores[index].pair_key.0,
@@ -499,6 +420,7 @@ fn print_alignment(
             print_y,
             scores[index].score,
             chain.path_scores[i],
-        );
+        )?;
     }
+    Ok(())
 }
