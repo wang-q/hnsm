@@ -7,7 +7,7 @@ fn main() -> anyhow::Result<()> {
     let app = Command::new("hnsm")
         .version(crate_version!())
         .author(crate_authors!())
-        .about("Homogeneous Nucleic acids/amino acids Smart Matching")
+        .about("Homogeneous Nucleic/amino acids Smart Matching")
         .propagate_version(true)
         .arg_required_else_help(true)
         .color(ColorChoice::Auto)
@@ -61,8 +61,8 @@ fn main() -> anyhow::Result<()> {
     * manifold
 * Clustering
     * clust cc / clust dbscan / clust km / clust mcl
-* Distancd Matrix
-    * mat phylip
+* Matrix
+    * mat compare / mat format / mat pair / mat phylip / mat subset
 * Synteny
     * synt chain / synt das / synt dna / synt merge / synt view
 

@@ -1,4 +1,4 @@
-# hnsm - **H**omogeneous **N**ucleic acids/amino acids **S**mart **M**atching
+# hnsm - **H**omogeneous **N**ucleic/amino acids **S**mart **M**atching
 
 [![Publish](https://github.com/wang-q/hnsm/actions/workflows/publish.yml/badge.svg)](https://github.com/wang-q/hnsm/actions)
 [![Build](https://github.com/wang-q/hnsm/actions/workflows/build.yml/badge.svg)](https://github.com/wang-q/hnsm/actions)
@@ -16,7 +16,7 @@ provides:
 - ⚡️ Parallel processing for large datasets
 
 <!-- TOC -->
-* [hnsm - **H**omogeneous **N**ucleic acids/amino acids **S**mart **M**atching](#hnsm---homogeneous-nucleic-acidsamino-acids-smart-matching)
+* [hnsm - **H**omogeneous **N**ucleic/amino acids **S**mart **M**atching](#hnsm---homogeneous-nucleicamino-acids-smart-matching)
   * [Install](#install)
   * [Synopsis](#synopsis)
     * [`hnsm help`](#hnsm-help)
@@ -73,7 +73,7 @@ cargo build
 
 ```console
 $ hnsm help
-Homogeneous Nucleic acids/amino acids Smart Matching
+Homogeneous Nucleic/amino acids Smart Matching
 
 Usage: hnsm [COMMAND]
 
