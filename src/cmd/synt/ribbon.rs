@@ -6,19 +6,19 @@ use std::io::{BufRead, BufReader, Write};
 use hnsm::libs::synteny::io::{read_blocks, Block};
 
 pub fn make_subcommand() -> Command {
-    Command::new("view")
-        .about("Visualize synteny blocks as SVG")
+    Command::new("ribbon")
+        .about("Visualize synteny blocks as ribbon SVG")
         .after_help(
             r#"
 EXAMPLES:
     # Basic usage
-    hnsm synt view blocks.tsv -o plot.svg
+    hnsm synt ribbon blocks.tsv -o plot.svg
 
     # With size files for accurate chromosome lengths
-    hnsm synt view blocks.tsv genome1.size.tsv genome2.size.tsv -o plot.svg
+    hnsm synt ribbon blocks.tsv genome1.size.tsv genome2.size.tsv -o plot.svg
 
     # Custom size
-    hnsm synt view blocks.tsv -o plot.svg --width 1200 --height 200
+    hnsm synt ribbon blocks.tsv -o plot.svg --width 1200 --height 200
 "#,
         )
         .arg(
