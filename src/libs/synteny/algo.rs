@@ -2,7 +2,6 @@ use crate::libs::bloom::BloomFilter;
 use crate::libs::hash::{seq_sketch, MinimizerInfo};
 use crate::libs::synteny::block::SyntenyBlock;
 use crate::libs::synteny::graph::SyntenyGraph;
-use intspan::IntSpan;
 use log::info;
 use std::collections::HashMap;
 
@@ -48,7 +47,7 @@ impl SyntenyFinder {
         P: FnMut(&mut dyn FnMut(&str, &[u8])) -> anyhow::Result<()>,
         F: FnMut(usize, &SyntenyBlock),
     {
-        let mut coverage: HashMap<u32, IntSpan> = HashMap::new();
+        let mut coverage: HashMap<u32, intspan::IntSpan> = HashMap::new();
 
         for &raw_w in &self.rounds {
             let mut w = raw_w;

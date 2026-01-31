@@ -12,6 +12,7 @@ pub mod interleave;
 pub mod manifold;
 pub mod mask;
 pub mod masked;
+pub mod mat;
 pub mod n50;
 pub mod one;
 pub mod order;

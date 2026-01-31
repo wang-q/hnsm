@@ -3,7 +3,7 @@ use std::process::Command;
 
 #[test]
 fn command_mat_phylip() -> anyhow::Result<()> {
-    let mut cmd = Command::cargo_bin("nwr")?;
+    let mut cmd = Command::cargo_bin("hnsm")?;
     let output = cmd
         .arg("mat")
         .arg("phylip")

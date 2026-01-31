@@ -13,7 +13,7 @@ Input format:
 
 Examples:
     1. Convert pairwise distances to PHYLIP matrix:
-       nwr mat phylip input.tsv -o output.phy
+       hnsm mat phylip input.tsv -o output.phy
 "###,
         )
         .arg(

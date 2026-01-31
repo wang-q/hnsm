@@ -32,7 +32,6 @@
 //! assert_eq!(clusters.len(), 2);
 //! ```
 
-use intspan::ScoringMatrix;
 use std::collections::HashMap;
 
 /// Markov Clustering Algorithm configuration and execution
@@ -81,7 +80,7 @@ impl Mcl {
     ///
     /// A vector of clusters, where each cluster is a vector of node indices
     /// corresponding to the input `ScoringMatrix`.
-    pub fn perform_clustering(&self, sm: &ScoringMatrix<f32>) -> Vec<Vec<usize>> {
+    pub fn perform_clustering(&self, sm: &intspan::ScoringMatrix<f32>) -> Vec<Vec<usize>> {
         let mut matrix = SparseMat::from_scoring_matrix(sm);
         matrix.normalize();
 
@@ -128,9 +127,9 @@ struct SparseMat {
 }
 
 impl SparseMat {
-    fn from_scoring_matrix(sm: &ScoringMatrix<f32>) -> Self {
+    fn from_scoring_matrix(sm: &intspan::ScoringMatrix<f32>) -> Self {
         let size = sm.size();
-        let mut cols = vec![Vec::new(); size];
+        let mut cols: Vec<Vec<(usize, f64)>> = vec![Vec::new(); size];
         
         // Iterating N^2 is required as ScoringMatrix is generic
         // Assuming reasonably sparse or small N
@@ -227,6 +226,7 @@ impl SparseMat {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use intspan::ScoringMatrix;
 
     #[test]
     fn test_mcl_simple_clusters() {

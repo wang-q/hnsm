@@ -31,7 +31,6 @@
 //! assert_eq!(clusters.len(), 2);
 //! ```
 
-use intspan::ScoringMatrix;
 use rand::prelude::*;
 
 /// K-Medoids Clustering (Lloyd-like algorithm)
@@ -58,7 +57,7 @@ impl KMedoids {
     }
 
     /// Perform clustering on the given distance matrix
-    pub fn perform_clustering(&self, matrix: &ScoringMatrix<f32>) -> Vec<Vec<usize>> {
+    pub fn perform_clustering(&self, matrix: &intspan::ScoringMatrix<f32>) -> Vec<Vec<usize>> {
         let n = matrix.size();
         if n == 0 {
             return vec![];
@@ -166,6 +165,7 @@ impl KMedoids {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use intspan::ScoringMatrix;
 
     #[test]
     fn test_kmedoids_simple() {

@@ -1,6 +1,5 @@
 use clap::*;
 use std::io::Write;
-use intspan::ScoringMatrix;
 
 // Create clap subcommand arguments
 pub fn make_subcommand() -> Command {
@@ -113,7 +112,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     // 2. Load Matrix
     //----------------------------
     // ScoringMatrix::from_pair_scores is only implemented for f32
-    let (sm, names) = ScoringMatrix::<f32>::from_pair_scores(infile, opt_same, opt_missing);
+    let (sm, names) = intspan::ScoringMatrix::<f32>::from_pair_scores(infile, opt_same, opt_missing);
     
     //----------------------------
     // 3. Clustering

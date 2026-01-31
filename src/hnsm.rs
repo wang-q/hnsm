@@ -44,6 +44,8 @@ fn main() -> anyhow::Result<()> {
         .subcommand(cmd::synt::make_subcommand())
         // gff
         .subcommand(cmd::gff::make_subcommand())
+        // mat
+        .subcommand(cmd::mat::make_subcommand())
         .after_help(
             r###"
 Subcommand groups:
@@ -64,6 +66,8 @@ Subcommand groups:
 
 * Synteny
     * synt chain / synt das / synt dna / synt merge / synt view
+* Matrix
+    * mat phylip
 
 "###,
         );
@@ -72,6 +76,7 @@ Subcommand groups:
     match app.get_matches().subcommand() {
         Some(("synt", sub_matches)) => cmd::synt::execute(sub_matches),
         Some(("gff", sub_matches)) => cmd::gff::execute(sub_matches),
+        Some(("mat", sub_matches)) => cmd::mat::execute(sub_matches),
         Some(("clust", sub_matches)) => cmd::clust::execute(sub_matches),
         Some(("count", sub_matches)) => cmd::count::execute(sub_matches),
         Some(("dedup", sub_matches)) => cmd::dedup::execute(sub_matches),
