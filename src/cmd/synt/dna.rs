@@ -6,6 +6,37 @@ use std::io::Write;
 pub fn make_subcommand() -> Command {
     Command::new("dna")
         .about("Synteny detection using minimizer graphs")
+        .after_help(
+            r###"
+Algorithm adopted from `ntSynt`
+
+* Algorithm & Scoring
+    1. Minimizer Sketching (Compression)
+       The sequence is reduced to a set of "minimizers" (representative k-mers).
+       A window `w` slides over the sequence, picking the lexicographically smallest k-mer.
+       This reduces data size while preserving local similarity.
+
+    2. Graph-Based Chaining
+       * Nodes: Minimizers shared between genomes.
+       * Edges: Connect minimizers that are adjacent in the original sequences.
+       * Synteny Blocks: Linear paths in this graph represent syntenic regions.
+
+    3. Iterative Refinement (Multi-Round)
+       The algorithm runs in multiple rounds with decreasing window sizes (e.g., w=1000 -> w=100 -> w=10).
+       * Large w: Finds large, coarse synteny blocks quickly.
+       * Small w: Fills in gaps and finds smaller blocks in remaining regions.
+       Regions covered by previous rounds are masked to avoid redundancy.
+
+    4. Filtering & Cleaning
+       * Repetitive Elements: High-frequency minimizers (repeats) are ignored.
+       * Gap Filling: Blocks are merged if they are close enough (`--chain-gap`).
+       * Size Filter: Short blocks are discarded (`--block-size`).
+
+* Examples
+    hnsm synt dna genome1.fa genome2.fa
+
+"###,
+        )
         .arg(
             Arg::new("infiles")
                 .help("Input FASTA files")

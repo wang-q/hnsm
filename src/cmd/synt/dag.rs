@@ -13,32 +13,32 @@ pub fn make_subcommand() -> Command {
             r###"
 Algorithm adopted from `DAGchainer`
 
-# Algorithm & Scoring
+* Algorithm & Scoring
+    1. The Concept (2D Plane)
+       Imagine Genome 1 on the X-axis and Genome 2 on the Y-axis.
+       Each gene match is a point (x, y) on this plane.
+       Synteny blocks appear as diagonal lines of points.
 
-1. **The Concept (2D Plane)**
-   - Imagine Genome 1 on the X-axis and Genome 2 on the Y-axis.
-   - Each gene match is a point (x, y) on this plane.
-   - Synteny blocks appear as diagonal lines of points.
+    2. The Goal
+       Find the "best" path connecting these points (Chains).
+       "Best" means maximizing the Total Score.
 
-2. **The Goal**
-   - Find the "best" path connecting these points (Chains).
-   - "Best" means maximizing the Total Score.
+    3. Scoring Logic
+       * Reward: High similarity matches increase the score.
+         Score = Similarity * Max_Score (default 50).
+       * Penalty: Gaps between points decrease the score.
+         Gap Penalty = Gap_Open + (Distance * Gap_Extend).
+         Distance is calculated in "atomic" units (default 1 unit = 3000 bp).
 
-3. **Scoring Logic**
-   - **Reward**: High similarity matches increase the score.
-     - Score = Similarity * Max_Score (default 50).
-   - **Penalty**: Gaps between points decrease the score.
-     - Gap Penalty = Gap_Open + (Distance * Gap_Extend).
-     - Distance is calculated in "atomic" units (default 1 unit = 3000 bp).
+    4. The Solution (DAGchainer)
+       Uses Dynamic Programming to find the optimal path.
+       For every point, it calculates: "If I extend a chain from a previous point, what is the best score I can get?"
+       Current_Score = Match_Score + max(Previous_Score - Gap_Penalty).
+       This effectively balances "more matches" vs "tight collinearity".
 
-4. **The Solution (DAGchainer)**
-   - Uses Dynamic Programming to find the optimal path.
-   - For every point, it calculates: "If I extend a chain from a previous point, what is the best score I can get?"
-     - Current_Score = Match_Score + max(Previous_Score - Gap_Penalty).
-   - This effectively balances "more matches" vs "tight collinearity".
+* Examples
+    hnsm synt dag pos.tsv match.tsv
 
-# Standard format
-hnsm synt dag pos.tsv match.tsv
 "###,
         )
         .arg(
