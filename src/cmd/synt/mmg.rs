@@ -4,8 +4,8 @@ use std::collections::HashMap;
 use std::io::Write;
 
 pub fn make_subcommand() -> Command {
-    Command::new("dna")
-        .about("Synteny detection using minimizer graphs")
+    Command::new("mmg")
+        .about("Synteny detection using MiniMizer Graphs")
         .after_help(
             r###"
 Algorithm adopted from `ntSynt`
@@ -47,7 +47,7 @@ Algorithm adopted from `ntSynt`
     * Note: Overlapping blocks from different rounds are expected.
 
 * Examples
-    hnsm synt dna genome1.fa genome2.fa
+    hnsm synt mmg genome1.fa genome2.fa
 "###,
         )
         .arg(
