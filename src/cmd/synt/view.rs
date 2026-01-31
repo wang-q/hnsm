@@ -104,7 +104,13 @@ pub fn execute(matches: &clap::ArgMatches) -> anyhow::Result<()> {
                 let line = line?;
                 let fields: Vec<&str> = line.split('\t').collect();
                 if fields.len() >= 2 {
-                    let seq_name = fields[0].to_string();
+                    let raw_name = fields[0];
+                    let seq_name = if raw_name.starts_with(&format!("{}.", genome_name)) {
+                        raw_name.to_string()
+                    } else {
+                        format!("{}.{}", genome_name, raw_name)
+                    };
+                    
                     let len: u64 = fields[1].parse()?;
                     chrom_lengths.insert(seq_name.clone(), len);
                     seq_to_genome.insert(seq_name.clone(), genome_name.clone());
@@ -143,6 +149,11 @@ pub fn execute(matches: &clap::ArgMatches) -> anyhow::Result<()> {
         genomes.sort();
 
         genome_order = genomes;
+    }
+
+    // Force two tracks for self-comparison
+    if genome_order.len() == 1 {
+        genome_order.push(genome_order[0].clone());
     }
 
     // 3. Layout Tracks
@@ -315,18 +326,30 @@ fn draw_ribbons(writer: &mut impl Write, layout: &Layout, blocks: &[Block]) -> s
         let g2 = g2.unwrap();
 
         // Get Y coordinates
-        let y1_idx = layout.genome_order.iter().position(|g| g == g1).unwrap();
-        let y2_idx = layout.genome_order.iter().position(|g| g == g2).unwrap();
+        let is_self_mode =
+            layout.genome_order.len() == 2 && layout.genome_order[0] == layout.genome_order[1];
 
-        if y1_idx == y2_idx {
-            continue;
-        } // Intra-genome not supported well yet
+        let (y1_idx, y2_idx) = if is_self_mode {
+            (0, 1)
+        } else {
+            (
+                layout.genome_order.iter().position(|g| g == g1).unwrap(),
+                layout.genome_order.iter().position(|g| g == g2).unwrap(),
+            )
+        };
+
+        let is_intra = y1_idx == y2_idx;
 
         let y1 = layout.margin_y
             + y1_idx as f64 * layout.track_height
             + layout.track_height / 2.0
             + 10.0; // Bottom of bar
-        let y2 = layout.margin_y + y2_idx as f64 * layout.track_height + layout.track_height / 2.0; // Top of bar
+        
+        let y2 = if is_intra {
+            y1
+        } else {
+            layout.margin_y + y2_idx as f64 * layout.track_height + layout.track_height / 2.0
+        };
 
         // Get X coordinates
         let x1_off = *layout.chrom_offsets.get(&r1.seq_name).unwrap();
@@ -354,7 +377,14 @@ fn draw_ribbons(writer: &mut impl Write, layout: &Layout, blocks: &[Block]) -> s
         let opacity = 0.5;
 
         // Bezier Path
-        let h = (y2 - y1) / 2.0;
+        let (cy1, cy2) = if is_intra {
+            let dist = (x1_start - x2_start).abs();
+            let arc_h = (dist * 0.2).clamp(20.0, layout.track_height * 0.8);
+            (y1 + arc_h, y2 + arc_h)
+        } else {
+            let h = (y2 - y1) / 2.0;
+            (y1 + h, y2 - h)
+        };
 
         writeln!(
             writer,
@@ -362,17 +392,17 @@ fn draw_ribbons(writer: &mut impl Write, layout: &Layout, blocks: &[Block]) -> s
             x1_start,
             y1,
             x1_start,
-            y1 + h,
+            cy1,
             x2_start,
-            y2 - h,
+            cy2,
             x2_start,
             y2,
             x2_end,
             y2,
             x2_end,
-            y2 - h,
+            cy2,
             x1_end,
-            y1 + h,
+            cy1,
             x1_end,
             y1,
             color,
