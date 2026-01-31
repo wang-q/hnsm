@@ -102,12 +102,12 @@ Commands:
   clust       Clustering commands
   synt        Synteny analysis commands
   gff         GFF file operations
+  mat         Matrix operations
   help        Print this message or the help of the given subcommand(s)
 
 Options:
   -h, --help     Print help
   -V, --version  Print version
-
 
 Subcommand groups:
 
@@ -117,17 +117,16 @@ Subcommand groups:
     * transform: replace / rc / filter / dedup / mask / sixframe
     * indexing: gz / range / prefilter
 * Fastq files: interleave / fq2fa
-
 * Distance
     * DNA/protein: dist hv / dist seq
     * vectors: dist vector
     * manifold
 * Clustering
     * clust cc / clust dbscan / clust km / clust mcl
-
+* Distancd Matrix
+    * mat phylip
 * Synteny
     * synt chain / synt das / synt dna / synt merge / synt view
-
 ```
 
 ## Examples
@@ -545,6 +544,34 @@ hnsm range tests/clust/SRR6323163.fa.gz "k141_4576(-):285-455|frame=2"
 hnsm prefilter 3300035148.fna.gz "tests/clust/APH(3')-IIIa.fa" -c 1000000 -p 8
 
 ```
+
+### Matrix commands
+
+```bash
+hnsm mat phylip tests/mat/IBPA.fa.tsv
+
+hnsm mat pair tests/mat/IBPA.phy
+
+hnsm mat format tests/mat/IBPA.phy
+
+hnsm mat subset tests/mat/IBPA.phy tests/mat/IBPA.list
+
+hnsm dist seq tests/mat/IBPA.fa -k 7 -w 1 |
+    hnsm mat phylip stdin -o tests/mat/IBPA.71.phy
+
+hnsm mat compare tests/mat/IBPA.phy tests/mat/IBPA.71.phy --method all
+# Sequences in matrices: 10 and 10
+# Common sequences: 10
+# Method  Score
+# pearson 0.935803
+# spearman        0.919631
+# mae     0.113433
+# cosine  0.978731
+# jaccard 0.759106
+# euclid  1.229844
+
+```
+
 
 ## Author
 

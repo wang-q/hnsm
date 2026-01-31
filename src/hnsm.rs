@@ -47,8 +47,7 @@ fn main() -> anyhow::Result<()> {
         // mat
         .subcommand(cmd::mat::make_subcommand())
         .after_help(
-            r###"
-Subcommand groups:
+            r###"Subcommand groups:
 
 * Fasta files
     * info: size / count / masked / n50
@@ -56,18 +55,16 @@ Subcommand groups:
     * transform: replace / rc / filter / dedup / mask / sixframe
     * indexing: gz / range / prefilter
 * Fastq files: interleave / fq2fa
-
 * Distance
     * DNA/protein: dist hv / dist seq
     * vectors: dist vector
     * manifold
 * Clustering
     * clust cc / clust dbscan / clust km / clust mcl
-
+* Distancd Matrix
+    * mat phylip
 * Synteny
     * synt chain / synt das / synt dna / synt merge / synt view
-* Matrix
-    * mat phylip
 
 "###,
         );
