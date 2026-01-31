@@ -222,9 +222,9 @@ hnsm synt view [OPTIONS] <infile> [size_files...]
 hnsm gff rg tests/genome/mg1655.gff.gz --tag cds --key protein_id --asm mg1655 -s --ss -o mg1655.rg.tsv
 
 # 2. 计算蛋白相似度矩阵
-hnsm distance tests/genome/mg1655.pro.fa.gz -k 7 -w 2 |
+hnsm dist seq tests/genome/mg1655.pro.fa.gz -k 7 -w 2 --sim |
     rgr filter stdin --ff-ne 1:2 \
-    > mg1655.dist.tsv
+    > mg1655.sim.tsv
 
 # dag chain
 

@@ -263,7 +263,15 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
                     total2,
                     inter,
                     union,
-                    if is_sim { 1.0 - mash } else { mash },
+                    if is_sim {
+                        if mash > 1.0 {
+                            0.0
+                        } else {
+                            1.0 - mash
+                        }
+                    } else {
+                        mash
+                    },
                     jaccard,
                     containment
                 )
@@ -272,7 +280,15 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
                     "{}\t{}\t{:.4}\t{:.4}\t{:.4}\n",
                     e1.name,
                     e2.name,
-                    if is_sim { 1.0 - mash } else { mash },
+                    if is_sim {
+                        if mash > 1.0 {
+                            0.0
+                        } else {
+                            1.0 - mash
+                        }
+                    } else {
+                        mash
+                    },
                     jaccard,
                     containment
                 )
