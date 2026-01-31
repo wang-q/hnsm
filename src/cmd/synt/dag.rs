@@ -179,12 +179,9 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     // eprintln!("{:#?}", mol_pair_map);
 
     let outfile = args.get_one::<String>("outfile").unwrap();
-    let mut writer: Box<dyn Write> = if outfile == "stdout" {
-        Box::new(io::BufWriter::new(io::stdout()))
-    } else {
-        log::info!("Writing output to {}", outfile);
-        Box::new(io::BufWriter::new(std::fs::File::create(outfile)?))
-    };
+    let mut writer = intspan::writer(outfile);
+
+    writeln!(writer, "# Block_ID\tRange\tCount\tScore")?;
 
     let mut alignment_count = 0;
     for mol_pair in mol_pair_map.keys() {
@@ -206,10 +203,10 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
             .collect::<Vec<_>>();
 
         // The maximum column value of any match. Used to adjust coords for reverse diagonals
-        let mut max_y = 0;
-        if let Some(value) = scores.iter().map(|e| e.y).max_by(|a, b| a.cmp(b)) {
-            max_y = value;
-        }
+        // let mut max_y = 0;
+        // if let Some(value) = scores.iter().map(|e| e.y).max_by(|a, b| a.cmp(b)) {
+        //     max_y = value;
+        // }
         // eprintln!("scores = {:#?}", scores);
 
         // Sort scores by x coordinate, then y coordinate
@@ -244,7 +241,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
                 continue;
             }
 
-            print_alignment(&mut writer, &scores, &chain, max_y, alignment_count)?;
+            print_alignment(&mut writer, &scores, &chain, alignment_count, &acc_info)?;
             alignment_count += 1;
         }
     }
@@ -258,27 +255,27 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
 struct Feature {
     mol: String,
     acc: String,
-    // end5: usize,
-    // end3: usize,
+    start: usize,
+    end: usize,
     mid: usize,
 }
 
 fn store_acc_info(
     mol: &str,
     acc: &str,
-    end5: usize,
-    end3: usize,
+    start: usize,
+    end: usize,
     acc_info: &mut HashMap<String, Feature>,
 ) {
     if !acc_info.contains_key(acc) {
         // Calculate the midpoint
-        let mid_pt = ((end5 + end3) as f64 / 2.0).round() as usize;
+        let mid_pt = ((start + end) as f64 / 2.0).round() as usize;
         // Create and populate the Feature struct
         let feature = Feature {
             mol: mol.to_string(),
             acc: acc.to_string(),
-            // end5,
-            // end3,
+            start,
+            end,
             mid: mid_pt,
         };
 
@@ -318,8 +315,7 @@ fn pair_key(
 }
 
 fn read_positions(path: &str) -> anyhow::Result<HashMap<String, Feature>> {
-    let file = std::fs::File::open(path)?;
-    let reader = io::BufReader::new(file);
+    let reader = intspan::reader(path);
     let mut acc_info = HashMap::new();
 
     for line in reader.lines() {
@@ -350,13 +346,6 @@ fn read_positions(path: &str) -> anyhow::Result<HashMap<String, Feature>> {
                     store_acc_info(mol, acc, start, end, &mut acc_info);
                 }
             }
-        } else if parts.len() >= 4 {
-            // Standard 4-column format
-            let mol = parts[0];
-            let acc = parts[1];
-            let start: usize = parts[2].parse()?;
-            let end: usize = parts[3].parse()?;
-            store_acc_info(mol, acc, start, end, &mut acc_info);
         }
     }
     Ok(acc_info)
@@ -370,8 +359,7 @@ fn parse_match_file(
     HashMap<(String, String), f32>,
     HashMap<(String, String), Vec<(String, String)>>,
 )> {
-    let file = std::fs::File::open(file_path)?;
-    let reader = io::BufReader::new(file);
+    let reader = intspan::reader(file_path);
 
     let mut acc_pair_map: HashMap<(String, String), f32> = HashMap::new();
     let mut mol_pair_map: HashMap<(String, String), Vec<(String, String)>> = HashMap::new();
@@ -443,32 +431,63 @@ fn print_alignment<W: Write>(
     writer: &mut W,
     scores: &[MatchPair],
     chain: &Chain,
-    _max_y: i32,
     alignment_count: usize,
+    acc_info: &HashMap<String, Feature>,
 ) -> io::Result<()> {
+    let indices = &chain.indices;
+    let count = indices.len();
+    let score = chain.score;
+
+    if indices.is_empty() {
+        return Ok(());
+    }
+
+    // Gather X ranges and Y ranges
+    let mut x_features = Vec::with_capacity(count);
+    let mut y_features = Vec::with_capacity(count);
+
+    for &idx in indices {
+        let pair = &scores[idx].pair_key;
+        let f1 = acc_info.get(&pair.0).unwrap();
+        let f2 = acc_info.get(&pair.1).unwrap();
+        x_features.push(f1);
+        y_features.push(f2);
+    }
+
+    // Determine bounds for X
+    let x_mol = &x_features[0].mol;
+    let x_min_start = x_features.iter().map(|f| f.start).min().unwrap();
+    let x_max_end = x_features.iter().map(|f| f.end).max().unwrap();
+    // X is always + (reference)
+
+    // Determine bounds for Y
+    let y_mol = &y_features[0].mol;
+    let y_min_start = y_features.iter().map(|f| f.start).min().unwrap();
+    let y_max_end = y_features.iter().map(|f| f.end).max().unwrap();
+
+    // Determine Y strand
+    // Compare Y coordinates of first and last element in chain
+    // Since scores are sorted by X, chain is ordered by X.
+    let first_idx = indices[0];
+    let last_idx = indices[indices.len() - 1];
+    let y_first = scores[first_idx].y;
+    let y_last = scores[last_idx].y;
+
+    let y_strand = if y_first <= y_last { "+" } else { "-" };
+
+    // Output X line
     writeln!(
         writer,
-        "> Alignment #{} score = {:.1}",
-        alignment_count + 1,
-        chain.score
+        "{}\t{}({}):{}-{}\t{}\t{:.1}",
+        alignment_count, x_mol, "+", x_min_start, x_max_end, count, score
     )?;
-    for (i, &index) in chain.indices.iter().enumerate() {
-        let print_y = scores[index].y;
-        // Note: reverse_order logic removed as it was always false in original code,
-        // but if we want to support it, we need to pass a flag.
-        // Assuming forward order for now as per original execute function.
 
-        writeln!(
-            writer,
-            "{}\t{},{}\t{}\t{}\t{:7.1}\t{:7.1}",
-            i,
-            scores[index].pair_key.0,
-            scores[index].pair_key.1,
-            scores[index].x,
-            print_y,
-            scores[index].score,
-            chain.path_scores[i],
-        )?;
-    }
+    // Output Y line
+    writeln!(
+        writer,
+        "{}\t{}({}):{}-{}\t{}\t{:.1}",
+        alignment_count, y_mol, y_strand, y_min_start, y_max_end, count, score
+    )?;
+
     Ok(())
 }

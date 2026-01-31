@@ -134,53 +134,6 @@ fn command_synt_merge() -> anyhow::Result<()> {
 
 #[test]
 fn command_synt_dag() -> anyhow::Result<()> {
-    let annot_path = "tests/dag_annot.tsv";
-    let match_path = "tests/dag_match.tsv";
-    let output_path = "tests/dag_out.tsv";
-
-    let annot_content = "\
-G1\tP1\t100\t200
-G1\tP2\t300\t400
-G2\tP3\t100\t200
-G2\tP4\t300\t400
-";
-    fs::write(annot_path, annot_content)?;
-
-    let match_content = "\
-P1\tP3\t1.0
-P2\tP4\t1.0
-";
-    fs::write(match_path, match_content)?;
-
-    let mut cmd = Command::cargo_bin("hnsm")?;
-    let output = cmd
-        .arg("synt")
-        .arg("dag")
-        .arg(annot_path)
-        .arg(match_path)
-        .arg("-o")
-        .arg(output_path)
-        .arg("--mna")
-        .arg("1")
-        .output()?;
-
-    assert!(output.status.success());
-
-    let content = fs::read_to_string(output_path)?;
-    assert!(content.contains("P1"));
-    assert!(content.contains("P3"));
-    assert!(content.contains("P2"));
-    assert!(content.contains("P4"));
-
-    fs::remove_file(annot_path)?;
-    fs::remove_file(match_path)?;
-    fs::remove_file(output_path)?;
-
-    Ok(())
-}
-
-#[test]
-fn command_synt_dag_new_format() -> anyhow::Result<()> {
     let annot_path = "tests/dag_new_annot.tsv";
     let match_path = "tests/dag_new_match.tsv";
     let output_path = "tests/dag_new_out.tsv";
@@ -218,10 +171,8 @@ G2\tG4\t0.90
     let content = fs::read_to_string(output_path)?;
     // println!("Output content:\n{}", content);
 
-    assert!(content.contains("G1"));
-    assert!(content.contains("G3"));
-    assert!(content.contains("G2"));
-    assert!(content.contains("G4"));
+    assert!(content.contains("P1.chr1"));
+    assert!(content.contains("P2.chr1"));
 
     fs::remove_file(annot_path)?;
     fs::remove_file(match_path)?;
