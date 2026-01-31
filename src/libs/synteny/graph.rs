@@ -195,12 +195,12 @@ impl SyntenyGraph {
     /// Returns a list of paths, where each path is a list of minimizer hashes.
     pub fn get_linear_paths(&self) -> Vec<Vec<u64>> {
         let node_bound = self.graph.node_bound();
-        let invalid = NodeIndex::end(); 
-        
+        let invalid = NodeIndex::end();
+
         // Adjacency tables: None=0, Some(x)=1 unique, Some(invalid)=many/conflict
         let mut adj_out = vec![None; node_bound];
         let mut adj_in = vec![None; node_bound];
-        
+
         // 1. Global Edge Scan (O(E))
         // Collapses parallel edges and detects branching
         for edge in self.graph.edge_references() {
@@ -208,7 +208,7 @@ impl SyntenyGraph {
             let v = edge.target();
             let u_idx = u.index();
             let v_idx = v.index();
-            
+
             // Update Out u
             match adj_out[u_idx] {
                 None => adj_out[u_idx] = Some(v),
@@ -218,7 +218,7 @@ impl SyntenyGraph {
                     }
                 }
             }
-            
+
             // Update In v
             match adj_in[v_idx] {
                 None => adj_in[v_idx] = Some(u),
@@ -229,21 +229,23 @@ impl SyntenyGraph {
                 }
             }
         }
-        
+
         let mut paths = Vec::new();
         let mut visited = vec![false; node_bound];
         let all_nodes: Vec<NodeIndex> = self.graph.node_indices().collect();
-        
+
         // 2. Find paths starting from valid heads
         for &node in &all_nodes {
-            if visited[node.index()] { continue; }
-            
+            if visited[node.index()] {
+                continue;
+            }
+
             let u_in = adj_in[node.index()];
             // Skip isolated nodes (no in, no out)
             if u_in.is_none() && adj_out[node.index()].is_none() {
                 continue;
             }
-            
+
             // Is Start Node?
             let is_start = if let Some(parent) = u_in {
                 if parent == invalid {
@@ -262,62 +264,72 @@ impl SyntenyGraph {
             } else {
                 true // 0 parents -> Start
             };
-            
+
             if is_start {
                 let mut path = Vec::new();
                 let mut curr = node;
-                
+
                 loop {
-                    if visited[curr.index()] { break; }
+                    if visited[curr.index()] {
+                        break;
+                    }
                     visited[curr.index()] = true;
                     path.push(self.graph[curr].hash);
-                    
+
                     // Move next
                     if let Some(next) = adj_out[curr.index()] {
-                        if next == invalid { break; } // Branching out
-                        
+                        if next == invalid {
+                            break;
+                        } // Branching out
+
                         let next_in = adj_in[next.index()];
                         if next_in == Some(invalid) {
                             break; // Next has multiple parents
                         }
-                        
+
                         // Check if next's unique parent is us
                         if next_in != Some(curr) {
-                             break;
+                            break;
                         }
-                        
+
                         curr = next;
                     } else {
                         break; // End of path
                     }
                 }
-                
+
                 if !path.is_empty() {
                     paths.push(path);
                 }
             }
         }
-        
+
         // 3. Handle Pure Cycles (Rings) or Remnants
         for &node in &all_nodes {
-            if visited[node.index()] { continue; }
-            
+            if visited[node.index()] {
+                continue;
+            }
+
             // Skip isolated nodes here too!
             if adj_in[node.index()].is_none() && adj_out[node.index()].is_none() {
                 continue;
             }
-            
+
             let mut path = Vec::new();
             let mut curr = node;
-            
+
             loop {
-                if visited[curr.index()] { break; }
+                if visited[curr.index()] {
+                    break;
+                }
                 visited[curr.index()] = true;
                 path.push(self.graph[curr].hash);
-                
+
                 if let Some(next) = adj_out[curr.index()] {
-                     if next == invalid { break; } 
-                     curr = next;
+                    if next == invalid {
+                        break;
+                    }
+                    curr = next;
                 } else {
                     break;
                 }
@@ -326,7 +338,7 @@ impl SyntenyGraph {
                 paths.push(path);
             }
         }
-        
+
         paths
     }
 }

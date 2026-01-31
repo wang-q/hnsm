@@ -64,8 +64,10 @@ impl SyntenyBlock {
 
                     // Find occurrence pair (occ_u, occ_v) such that occ_v.pos - occ_u.pos == dist
                     // Optimization: Use binary search since occurrences are sorted by seq_id then pos
-                    
-                    let find_range = |occs: &[crate::libs::synteny::graph::Occurrence], sid: u32| -> std::ops::Range<usize> {
+
+                    let find_range = |occs: &[crate::libs::synteny::graph::Occurrence],
+                                      sid: u32|
+                     -> std::ops::Range<usize> {
                         let start = occs.partition_point(|occ| occ.seq_id < sid);
                         let len = occs[start..].partition_point(|occ| occ.seq_id <= sid);
                         start..start + len
@@ -88,7 +90,7 @@ impl SyntenyBlock {
                     for occ_u in u_slice {
                         // We need occ_v.pos == occ_u.pos + dist
                         let target_pos = occ_u.pos + dist;
-                        
+
                         if let Ok(idx) = v_slice.binary_search_by_key(&target_pos, |occ| occ.pos) {
                             start_pos = Some(occ_u.pos);
                             end_pos = Some(v_slice[idx].pos);

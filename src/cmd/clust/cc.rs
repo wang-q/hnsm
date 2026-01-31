@@ -116,7 +116,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
                     .collect();
                 // Already sorted in cc, but let's be safe or just use the first as rep
                 // Note: scc sorting logic above sorts members within component
-                
+
                 if let Some(rep) = members.first().copied() {
                     for member in members {
                         writer.write_fmt(format_args!("{}\t{}\n", rep, member))?;

@@ -1,7 +1,7 @@
+use anyhow::Context;
 use std::fs::File;
 use std::io::{BufRead, BufReader, Write};
 use std::path::Path;
-use anyhow::Context;
 
 #[derive(Debug, Clone)]
 pub struct Segment {
@@ -77,7 +77,7 @@ pub fn read_blocks_from_reader<R: BufRead>(reader: R) -> anyhow::Result<Vec<Bloc
         if line.starts_with('#') || line.is_empty() {
             continue;
         }
-        
+
         if let Some((block_id, range)) = Segment::from_line(&line) {
             match current_block_id {
                 Some(id) if id == block_id => {

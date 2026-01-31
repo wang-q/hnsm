@@ -1,7 +1,6 @@
 use assert_cmd::prelude::*;
 use std::process::Command;
 
-
 #[test]
 fn command_clust_dbscan() -> anyhow::Result<()> {
     let mut cmd = Command::cargo_bin("hnsm")?;
@@ -160,7 +159,7 @@ fn command_clust_mcl_pair() -> anyhow::Result<()> {
 
     // Cluster 1 (size 3) + Cluster 2 (size 2) = 5 pairs
     assert_eq!(stdout.lines().count(), 5);
-    
+
     // Check representative output
     assert!(stdout.contains("A\tA"));
     assert!(stdout.contains("A\tB"));
@@ -185,7 +184,7 @@ fn command_clust_kmedoids() -> anyhow::Result<()> {
 
     // Output should contain at least 2 lines (clusters)
     assert!(stdout.lines().count() >= 2);
-    
+
     Ok(())
 }
 

@@ -10,7 +10,7 @@ pub fn make_subcommand() -> Command {
              1.0-10.0%: --chain-gap 100000\n  \
              > 10.0%:  --chain-gap 1000000\n\
              \n\
-             If --divergence is not specified, --chain-gap defaults to 100000."
+             If --divergence is not specified, --chain-gap defaults to 100000.",
         )
         .arg(
             Arg::new("infile")
@@ -50,7 +50,7 @@ pub fn make_subcommand() -> Command {
 pub fn execute(matches: &ArgMatches) -> anyhow::Result<()> {
     let infile = matches.get_one::<String>("infile").unwrap();
     let outfile = matches.get_one::<String>("outfile").unwrap();
-    
+
     // Determine default chain_gap based on divergence
     // ntSynt:
     // < 1%: 10,000
@@ -110,9 +110,8 @@ fn merge_blocks(mut blocks: Vec<Block>, chain_gap: u64) -> Vec<Block> {
         }
         let r1 = &a.ranges[0];
         let r2 = &b.ranges[0];
-        
-        r1.seq_name.cmp(&r2.seq_name)
-            .then(r1.start.cmp(&r2.start))
+
+        r1.seq_name.cmp(&r2.seq_name).then(r1.start.cmp(&r2.start))
     });
 
     let mut merged = Vec::new();
@@ -146,10 +145,10 @@ fn can_merge(b1: &Block, b2: &Block, chain_gap: u64) -> bool {
 
     // 2. Iterate through all ranges and check consistency
     // Ranges are now sorted by seq_name, so we can safely compare by index.
-    
+
     for (i, r1) in b1.ranges.iter().enumerate() {
         let r2 = &b2.ranges[i];
-        
+
         // Genome mismatch
         if r1.seq_name != r2.seq_name {
             return false;
@@ -167,7 +166,9 @@ fn can_merge(b1: &Block, b2: &Block, chain_gap: u64) -> bool {
             // Genomic coordinates: r1.start < r1.end <= r2.start < r2.end
             if r2.start < r1.end {
                 // Overlap or wrong order
-                if r2.start < r1.start { return false; } // Definitely wrong order (r2 starts before r1)
+                if r2.start < r1.start {
+                    return false;
+                } // Definitely wrong order (r2 starts before r1)
                 0 // Overlap treated as 0 gap (allow merging overlapping blocks)
             } else {
                 r2.start - r1.end
@@ -181,8 +182,8 @@ fn can_merge(b1: &Block, b2: &Block, chain_gap: u64) -> bool {
             // Block 1 (r1): 400-500 (-)  <- Physically downstream
             // Block 2 (r2): 200-300 (-)  <- Physically upstream (logical next)
             if r2.end > r1.start {
-                 // Wrong order: r2 is physically after r1, which violates the negative strand collinearity
-                 return false;
+                // Wrong order: r2 is physically after r1, which violates the negative strand collinearity
+                return false;
             }
             r1.start - r2.end
         };
@@ -197,10 +198,10 @@ fn can_merge(b1: &Block, b2: &Block, chain_gap: u64) -> bool {
 
 fn merge_two(b1: &Block, b2: &Block) -> Block {
     let mut new_ranges = Vec::new();
-    
+
     for (i, r1) in b1.ranges.iter().enumerate() {
         let r2 = &b2.ranges[i];
-        
+
         // Merge range: min start, max end
         // This is safe because we checked collinearity and overlap/gap.
         new_ranges.push(Segment {

@@ -136,16 +136,10 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     match opt_format.as_str() {
         "cluster" => {
             for component in clusters {
-                let members: Vec<&str> = component
-                    .iter()
-                    .map(|&idx| names[idx].as_str())
-                    .collect();
+                let members: Vec<&str> = component.iter().map(|&idx| names[idx].as_str()).collect();
                 // Already sorted
 
-                writer.write_fmt(format_args!(
-                    "{}\n",
-                    members.join("\t")
-                ))?;
+                writer.write_fmt(format_args!("{}\n", members.join("\t")))?;
             }
         }
         "pair" => {
@@ -172,12 +166,9 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
                         // So do nothing.
                     }
                 }
-                
+
                 let rep_name = &names[best_rep];
-                let members: Vec<&str> = component
-                    .iter()
-                    .map(|&idx| names[idx].as_str())
-                    .collect();
+                let members: Vec<&str> = component.iter().map(|&idx| names[idx].as_str()).collect();
                 // Already sorted
 
                 for member in members {

@@ -64,8 +64,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     for i in 0..matrix.size() {
         for j in 0..=i {
             let distance = matrix.get(i, j);
-            writer
-                .write_fmt(format_args!("{}\t{}\t{}\n", names[j], names[i], distance))?;
+            writer.write_fmt(format_args!("{}\t{}\t{}\n", names[j], names[i], distance))?;
         }
     }
 

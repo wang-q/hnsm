@@ -89,13 +89,13 @@ impl Mcl {
 
         while changed && iter < self.max_iter {
             let prev_matrix = matrix.clone();
-            
+
             // Expansion (Power 2)
             matrix = matrix.expand();
-            
+
             // Inflation (Element-wise power + Normalize)
             matrix.inflate(self.inflation);
-            
+
             // Pruning
             matrix.prune(self.prune_limit);
 
@@ -114,7 +114,7 @@ impl Mcl {
                 graph.add_edge(i, j, ());
             }
         }
-        
+
         petgraph::algo::tarjan_scc(&graph)
     }
 }
@@ -130,7 +130,7 @@ impl SparseMat {
     fn from_scoring_matrix(sm: &intspan::ScoringMatrix<f32>) -> Self {
         let size = sm.size();
         let mut cols: Vec<Vec<(usize, f64)>> = vec![Vec::new(); size];
-        
+
         // Iterating N^2 is required as ScoringMatrix is generic
         // Assuming reasonably sparse or small N
         for i in 0..size {
@@ -161,12 +161,12 @@ impl SparseMat {
 
     fn expand(&self) -> Self {
         let mut new_cols = vec![Vec::new(); self.size];
-        
+
         // M_new = M * M
         // Col j of M_new = M * col_j(M)
         for j in 0..self.size {
             let mut accumulator: HashMap<usize, f64> = HashMap::new();
-            
+
             // For each non-zero entry (k, val_k) in col j of M
             for &(k, val_k) in &self.cols[j] {
                 // Add val_k * col_k(M) to accumulator
@@ -176,16 +176,19 @@ impl SparseMat {
                     }
                 }
             }
-            
+
             // Convert accumulator to vec
             let mut col: Vec<(usize, f64)> = accumulator.into_iter().collect();
             // Sort by row index
             col.sort_by_key(|(r, _)| *r);
             new_cols[j] = col;
         }
-        Self { size: self.size, cols: new_cols }
+        Self {
+            size: self.size,
+            cols: new_cols,
+        }
     }
-    
+
     fn inflate(&mut self, power: f64) {
         for col in &mut self.cols {
             for (_, v) in col.iter_mut() {
@@ -194,25 +197,27 @@ impl SparseMat {
         }
         self.normalize();
     }
-    
+
     fn prune(&mut self, threshold: f64) {
         for col in &mut self.cols {
             col.retain(|(_, v)| *v > threshold);
         }
     }
-    
+
     fn is_converged(&self, other: &Self) -> bool {
-        if self.size != other.size { return false; }
-        
+        if self.size != other.size {
+            return false;
+        }
+
         // Compare structure and values
         for j in 0..self.size {
             let col1 = &self.cols[j];
             let col2 = &other.cols[j];
-            
+
             if col1.len() != col2.len() {
                 return false;
             }
-            
+
             for ((r1, v1), (r2, v2)) in col1.iter().zip(col2.iter()) {
                 if r1 != r2 || (*v1 - *v2).abs() > 1e-5 {
                     return false;
@@ -232,25 +237,29 @@ mod tests {
     fn test_mcl_simple_clusters() {
         // Create 2 disconnected cliques: A-B-C and D-E
         let mut sm = ScoringMatrix::<f32>::with_size_and_defaults(5, 1.0, 0.0);
-        
+
         // Clique 1: 0, 1, 2
-        sm.set(0, 1, 1.0); sm.set(1, 0, 1.0);
-        sm.set(0, 2, 1.0); sm.set(2, 0, 1.0);
-        sm.set(1, 2, 1.0); sm.set(2, 1, 1.0);
-        
+        sm.set(0, 1, 1.0);
+        sm.set(1, 0, 1.0);
+        sm.set(0, 2, 1.0);
+        sm.set(2, 0, 1.0);
+        sm.set(1, 2, 1.0);
+        sm.set(2, 1, 1.0);
+
         // Clique 2: 3, 4
-        sm.set(3, 4, 1.0); sm.set(4, 3, 1.0);
+        sm.set(3, 4, 1.0);
+        sm.set(4, 3, 1.0);
 
         let mcl = Mcl::new(2.0);
         let clusters = mcl.perform_clustering(&sm);
 
         assert_eq!(clusters.len(), 2);
-        
+
         // Verify cluster contents
         let mut c1 = clusters.iter().find(|c| c.contains(&0)).unwrap().clone();
         c1.sort();
         assert_eq!(c1, vec![0, 1, 2]);
-        
+
         let mut c2 = clusters.iter().find(|c| c.contains(&3)).unwrap().clone();
         c2.sort();
         assert_eq!(c2, vec![3, 4]);
@@ -261,7 +270,7 @@ mod tests {
         let mut mcl = Mcl::new(2.0);
         mcl.set_prune_limit(1e-4);
         mcl.set_max_iter(50);
-        
+
         assert_eq!(mcl.prune_limit, 1e-4);
         assert_eq!(mcl.max_iter, 50);
     }

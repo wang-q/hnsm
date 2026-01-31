@@ -6,7 +6,7 @@ use std::io::Write;
 pub fn make_subcommand() -> Command {
     Command::new("rg")
         .about("Extract ranges from GFF files")
-         .after_help(
+        .after_help(
             r###"
 Extract ranges from GFF files.
 
@@ -25,7 +25,7 @@ Examples:
 
 "###,
         )
-       .arg(
+        .arg(
             Arg::new("infile")
                 .required(true)
                 .index(1)
@@ -106,7 +106,10 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
         file_name.split('.').next().unwrap_or("unknown").to_string()
     };
 
-    eprintln!("gff rg: infile={}, outfile={}, tag={}, asm={}, simplify={}, key={}", infile, outfile, opt_tag, opt_asm, is_simplify, opt_key);
+    eprintln!(
+        "gff rg: infile={}, outfile={}, tag={}, asm={}, simplify={}, key={}",
+        infile, outfile, opt_tag, opt_asm, is_simplify, opt_key
+    );
 
     let reader = intspan::reader(infile);
     let mut reader = gff::io::Reader::new(reader);
@@ -131,7 +134,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
                 key = key[..i].to_string();
             }
         }
-        
+
         // Range
         let mut seq_name = record.reference_sequence_name().to_string();
         if is_seq_simplify {

@@ -203,9 +203,7 @@ where
     F: Fn(u64) -> bool,
 {
     // Use minimizer_iter with our custom FilterBuildHasher
-    let build_hasher = FilterBuildHasher {
-        filter: &filter,
-    };
+    let build_hasher = FilterBuildHasher { filter: &filter };
 
     let builder = MinimizerBuilder::<u64, _>::new()
         .minimizer_size(k)
@@ -217,8 +215,9 @@ where
     // We check the original sequence at the minimizer's position.
     // Note: This effectively drops windows where the minimizer falls in a masked region.
     // It avoids allocation and complex iterator mapping.
-    
-    builder.iter(seq)
+
+    builder
+        .iter(seq)
         .map(|(hash, pos, is_rc)| {
             let strand = !is_rc;
             MinimizerInfo {
@@ -229,13 +228,17 @@ where
             }
         })
         .filter(|m| {
-            if m.hash == u64::MAX { return false; } // Should be filtered by FilterHasher if used, but explicit check is fine.
-            
+            if m.hash == u64::MAX {
+                return false;
+            } // Should be filtered by FilterHasher if used, but explicit check is fine.
+
             if soft_mask {
                 let start = m.pos as usize;
                 let end = start + k;
-                if end > seq.len() { return false; } // Should not happen
-                
+                if end > seq.len() {
+                    return false;
+                } // Should not happen
+
                 // Check if any byte in seq[start..end] is lowercase
                 !seq[start..end].iter().any(|&b| b.is_ascii_lowercase())
             } else {
@@ -269,19 +272,19 @@ mod tests {
         let seq = b"ACGTacgtACGT";
         let k = 4;
         let w = 1; // Small window to test individual k-mers
-        
+
         // Without soft mask: "acgt" (lowercase) is a valid k-mer (different hash from ACGT)
         let mins_no_mask = seq_sketch(seq, 1, k, w, false, |_| true);
         // ACGT (0), CGTa (1), GTac (2), Tacg (3), acgt (4), cgtA (5), gtAC (6), tACG (7), ACGT (8)
         // We expect some minimizers.
-        assert!(mins_no_mask.len() >= 2); 
+        assert!(mins_no_mask.len() >= 2);
 
         // With soft mask: "acgt" and any k-mer containing lowercase should be ignored.
         // k-mers containing lowercase:
         // CGTa, GTac, Tacg, acgt, cgtA, gtAC, tACG
         // Only ACGT (0) and ACGT (8) are purely uppercase.
         let mins_mask = seq_sketch(seq, 1, k, w, true, |_| true);
-        
+
         // Should only find the two uppercase blocks
         // ACGT at 0
         // ACGT at 8

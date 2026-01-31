@@ -112,8 +112,9 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     // 2. Load Matrix
     //----------------------------
     // ScoringMatrix::from_pair_scores is only implemented for f32
-    let (sm, names) = intspan::ScoringMatrix::<f32>::from_pair_scores(infile, opt_same, opt_missing);
-    
+    let (sm, names) =
+        intspan::ScoringMatrix::<f32>::from_pair_scores(infile, opt_same, opt_missing);
+
     //----------------------------
     // 3. Clustering
     //----------------------------
@@ -143,15 +144,9 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     match opt_format.as_str() {
         "cluster" => {
             for component in clusters {
-                let members: Vec<&str> = component
-                    .iter()
-                    .map(|&idx| names[idx].as_str())
-                    .collect();
-        
-                writer.write_fmt(format_args!(
-                    "{}\n",
-                    members.join("\t")
-                ))?;
+                let members: Vec<&str> = component.iter().map(|&idx| names[idx].as_str()).collect();
+
+                writer.write_fmt(format_args!("{}\n", members.join("\t")))?;
             }
         }
         "pair" => {
@@ -178,10 +173,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
                 }
 
                 let rep_name = &names[best_rep];
-                let members: Vec<&str> = component
-                    .iter()
-                    .map(|&idx| names[idx].as_str())
-                    .collect();
+                let members: Vec<&str> = component.iter().map(|&idx| names[idx].as_str()).collect();
 
                 for member in members {
                     writer.write_fmt(format_args!("{}\t{}\n", rep_name, member))?;

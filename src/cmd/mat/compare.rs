@@ -80,8 +80,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     // Get common sequence names
     let names1 = matrix1.get_names();
     let names2 = matrix2.get_names();
-    let common_names: Vec<_> =
-        names1.iter().filter(|name| names2.contains(name)).collect();
+    let common_names: Vec<_> = names1.iter().filter(|name| names2.contains(name)).collect();
 
     // Report sequence counts
     eprintln!(
@@ -98,10 +97,8 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     }
 
     // Extract values for comparison
-    let mut values1 =
-        Vec::with_capacity(common_names.len() * (common_names.len() - 1) / 2);
-    let mut values2 =
-        Vec::with_capacity(common_names.len() * (common_names.len() - 1) / 2);
+    let mut values1 = Vec::with_capacity(common_names.len() * (common_names.len() - 1) / 2);
+    let mut values2 = Vec::with_capacity(common_names.len() * (common_names.len() - 1) / 2);
 
     for i in 0..common_names.len() {
         for j in 0..i {

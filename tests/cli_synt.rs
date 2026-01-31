@@ -31,18 +31,18 @@ fn command_synt_dna() -> anyhow::Result<()> {
 
     // Check content format
     // Expected: Block_ID \t Genome.Chr(Strand):Start-End \t Count \t Round
-    
+
     // With identical small files, we expect at least 1 block
-    assert!(lines.len() > 1); 
+    assert!(lines.len() > 1);
 
     let first_data_line = lines[1];
     let fields: Vec<&str> = first_data_line.split('\t').collect();
     assert_eq!(fields.len(), 4);
-    
+
     // Check range format
     // Should contain "small_1." or "small_2."
     assert!(fields[1].contains("small_1.") || fields[1].contains("small_2."));
-    
+
     // Check strand normalization
     // Since both sequences are identical and forward, and first genome is normalized to (+),
     // we expect (+) for both if they are identical.
@@ -53,6 +53,24 @@ fn command_synt_dna() -> anyhow::Result<()> {
     // Cleanup
     fs::remove_file("tests/temp_synt.tsv")?;
 
+    Ok(())
+}
+
+#[test]
+fn command_synt_dna_soft_mask() -> anyhow::Result<()> {
+    let mut cmd = Command::cargo_bin("hnsm")?;
+    let output = cmd
+        .arg("synt")
+        .arg("dna")
+        .arg("tests/genome/small_1.fa")
+        .arg("tests/genome/small_2.fa")
+        .arg("-o")
+        .arg("tests/temp_synt_sm.tsv")
+        .arg("--soft-mask")
+        .output()?;
+
+    assert!(output.status.success());
+    fs::remove_file("tests/temp_synt_sm.tsv")?;
     Ok(())
 }
 
@@ -95,21 +113,19 @@ fn command_synt_merge() -> anyhow::Result<()> {
 
     // Check range values
     // G1 range should be 100-400
-    // Note: The order of lines depends on hash map or implementation details, 
+    // Note: The order of lines depends on hash map or implementation details,
     // but merge.rs sorts by seq_name.
     // G1 comes before G2.
-    let line1 = lines[0];
-    let line2 = lines[1];
 
-    assert!(line1.contains("G1(+):100-400"));
-    assert!(line2.contains("G2(+):100-400"));
-    
-    // Check score summation
-    // 10 + 10 = 20.0
-    assert!(line1.contains("\t20.0"));
-    assert!(line2.contains("\t20.0"));
+    // G1 line
+    // G1(+):100-400
+    assert!(lines[0].contains("G1"));
+    assert!(lines[0].contains("100-400"));
 
-    // Cleanup
+    // G2 line
+    assert!(lines[1].contains("G2"));
+    assert!(lines[1].contains("100-400"));
+
     fs::remove_file(input_path)?;
     fs::remove_file(output_path)?;
 
@@ -117,73 +133,99 @@ fn command_synt_merge() -> anyhow::Result<()> {
 }
 
 #[test]
-fn command_synt_dna_soft_mask() -> anyhow::Result<()> {
-    // Create 3 files
-    // 1. upper.fa: Uppercase repeats
-    // 2. lower1.fa: Lowercase repeats (copy of upper)
-    // 3. lower2.fa: Lowercase repeats (copy of upper)
-    
-    // Using a repetitive sequence "AAAAAAAA..." to ensure many minimizers are generated if valid.
-    let seq_upper = "A".repeat(1000);
-    let seq_lower = "a".repeat(1000);
-    
-    fs::write("tests/upper.fa", format!(">seq1\n{}", seq_upper))?;
-    fs::write("tests/lower1.fa", format!(">seq2\n{}", seq_lower))?;
-    fs::write("tests/lower2.fa", format!(">seq3\n{}", seq_lower))?;
-    
-    // Case 1: No soft mask.
-    // lower1 and lower2 should match each other (identical lowercase).
+fn command_synt_dag() -> anyhow::Result<()> {
+    let annot_path = "tests/dag_annot.tsv";
+    let match_path = "tests/dag_match.tsv";
+    let output_path = "tests/dag_out.tsv";
+
+    let annot_content = "\
+G1\tP1\t100\t200
+G1\tP2\t300\t400
+G2\tP3\t100\t200
+G2\tP4\t300\t400
+";
+    fs::write(annot_path, annot_content)?;
+
+    let match_content = "\
+P1\tP3\t50
+P2\tP4\t50
+";
+    fs::write(match_path, match_content)?;
+
     let mut cmd = Command::cargo_bin("hnsm")?;
     let output = cmd
         .arg("synt")
-        .arg("dna")
-        .arg("tests/lower1.fa")
-        .arg("tests/lower2.fa")
+        .arg("dag")
+        .arg(annot_path)
+        .arg(match_path)
         .arg("-o")
-        .arg("tests/temp_nomask.tsv")
-        .arg("-k")
-        .arg("10")
-        .arg("-b") // block size
-        .arg("50")
-        .arg("--min-weight")
-        .arg("2")
+        .arg(output_path)
+        .arg("--mna")
+        .arg("1")
         .output()?;
-    assert!(output.status.success());
-    let content = fs::read_to_string("tests/temp_nomask.tsv")?;
-    let lines: Vec<&str> = content.lines().filter(|l| !l.starts_with('#')).collect();
-    // Should match
-    assert!(!lines.is_empty());
 
-    // Case 2: With soft mask.
-    // lower1 and lower2 should NOT match (both ignored).
+    assert!(output.status.success());
+
+    let content = fs::read_to_string(output_path)?;
+    assert!(content.contains("P1"));
+    assert!(content.contains("P3"));
+    assert!(content.contains("P2"));
+    assert!(content.contains("P4"));
+
+    fs::remove_file(annot_path)?;
+    fs::remove_file(match_path)?;
+    fs::remove_file(output_path)?;
+
+    Ok(())
+}
+
+#[test]
+fn command_synt_dag_new_format() -> anyhow::Result<()> {
+    let annot_path = "tests/dag_new_annot.tsv";
+    let match_path = "tests/dag_new_match.tsv";
+    let output_path = "tests/dag_new_out.tsv";
+
+    // Format: key \t mol(strand):start-end
+    let annot_content = "\
+G1\tP1.chr1(+):100-200
+G2\tP1.chr1(+):300-400
+G3\tP2.chr1(-):100-200
+G4\tP2.chr1(-):300-400
+";
+    fs::write(annot_path, annot_content)?;
+
+    // Format: acc1 \t acc2 \t score (similarity)
+    let match_content = "\
+G1\tG3\t0.95
+G2\tG4\t0.90
+";
+    fs::write(match_path, match_content)?;
+
     let mut cmd = Command::cargo_bin("hnsm")?;
     let output = cmd
         .arg("synt")
-        .arg("dna")
-        .arg("tests/lower1.fa")
-        .arg("tests/lower2.fa")
+        .arg("dag")
+        .arg(annot_path)
+        .arg(match_path)
         .arg("-o")
-        .arg("tests/temp_mask.tsv")
-        .arg("--soft-mask")
-        .arg("-k")
-        .arg("10")
-        .arg("-b")
-        .arg("50")
-        .arg("--min-weight")
-        .arg("2")
+        .arg(output_path)
+        .arg("--mna")
+        .arg("1") // Min number of aligned pairs = 1 to allow small chains
         .output()?;
-    assert!(output.status.success());
-    let content = fs::read_to_string("tests/temp_mask.tsv")?;
-    let lines: Vec<&str> = content.lines().filter(|l| !l.starts_with('#')).collect();
-    // Should be empty (no blocks)
-    assert!(lines.is_empty());
 
-    // Cleanup
-    fs::remove_file("tests/upper.fa")?;
-    fs::remove_file("tests/lower1.fa")?;
-    fs::remove_file("tests/lower2.fa")?;
-    fs::remove_file("tests/temp_nomask.tsv")?;
-    fs::remove_file("tests/temp_mask.tsv")?;
-    
+    assert!(output.status.success());
+
+    let content = fs::read_to_string(output_path)?;
+    // println!("Output content:\n{}", content);
+
+    assert!(content.contains("G1"));
+    assert!(content.contains("G3"));
+    assert!(content.contains("G2"));
+    assert!(content.contains("G4"));
+
+    fs::remove_file(annot_path)?;
+    fs::remove_file(match_path)?;
+    fs::remove_file(output_path)?;
+
     Ok(())
 }

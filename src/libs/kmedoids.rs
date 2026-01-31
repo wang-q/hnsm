@@ -49,11 +49,7 @@ impl KMedoids {
     /// * `max_iter` - Maximum number of iterations per run
     /// * `runs` - Number of random initializations to perform
     pub fn new(k: usize, max_iter: usize, runs: usize) -> Self {
-        Self {
-            k,
-            max_iter,
-            runs,
-        }
+        Self { k, max_iter, runs }
     }
 
     /// Perform clustering on the given distance matrix
@@ -68,28 +64,26 @@ impl KMedoids {
 
         let mut best_cost = f32::MAX;
         let mut best_assignment = vec![0; n];
-        
+
         let mut rng = rand::rng();
         let indices: Vec<usize> = (0..n).collect();
 
         for _ in 0..self.runs {
             // 1. Initialize medoids
-            let mut medoids: Vec<usize> = indices
-                .choose_multiple(&mut rng, self.k)
-                .cloned()
-                .collect();
-            
+            let mut medoids: Vec<usize> =
+                indices.choose_multiple(&mut rng, self.k).cloned().collect();
+
             let mut assignment = vec![0; n];
             let mut iter = 0;
-            
+
             // Loop until convergence or max_iter
             loop {
                 let mut changed = false;
-                
+
                 // 2. Assignment step
                 for i in 0..n {
                     let mut min_dist = f32::MAX;
-                    let mut closest_c_idx = 0; 
+                    let mut closest_c_idx = 0;
 
                     for (c_idx, &medoid) in medoids.iter().enumerate() {
                         let d = matrix.get(i, medoid);
@@ -135,7 +129,7 @@ impl KMedoids {
                     }
                     medoids[c_idx] = new_medoid;
                 }
-                
+
                 iter += 1;
             }
 
@@ -157,7 +151,7 @@ impl KMedoids {
         for (i, &c_idx) in best_assignment.iter().enumerate() {
             res_clusters[c_idx].push(i);
         }
-        
+
         res_clusters.into_iter().filter(|c| !c.is_empty()).collect()
     }
 }
@@ -179,11 +173,11 @@ mod tests {
         let clusters = kmedoids.perform_clustering(&sm);
 
         assert_eq!(clusters.len(), 2);
-        
+
         // Check content of clusters
         let c1 = &clusters[0];
         let c2 = &clusters[1];
-        
+
         // One cluster should contain 0,1 and other 2,3
         let has_0 = c1.contains(&0) || c2.contains(&0);
         let has_2 = c1.contains(&2) || c2.contains(&2);
@@ -196,7 +190,7 @@ mod tests {
         let sm = ScoringMatrix::<f32>::with_size_and_defaults(3, 0.0, 1.0);
         let kmedoids = KMedoids::new(1, 10, 1);
         let clusters = kmedoids.perform_clustering(&sm);
-        
+
         assert_eq!(clusters.len(), 1);
         assert_eq!(clusters[0].len(), 3);
     }
@@ -207,7 +201,7 @@ mod tests {
         let sm = ScoringMatrix::<f32>::with_size_and_defaults(3, 0.0, 1.0);
         let kmedoids = KMedoids::new(3, 10, 1);
         let clusters = kmedoids.perform_clustering(&sm);
-        
+
         assert_eq!(clusters.len(), 3);
     }
 }

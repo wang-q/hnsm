@@ -101,19 +101,18 @@ pub fn execute(matches: &ArgMatches) -> anyhow::Result<()> {
     let divergence = matches.get_one::<f64>("divergence");
 
     // Logic from ntSynt
-    let (default_rounds, default_block_size, default_chain_gap) =
-        if let Some(d) = divergence {
-            if *d < 1.0 {
-                ("100,10", 500, 10000)
-            } else if *d <= 10.0 {
-                ("250,100", 1000, 50000)
-            } else {
-                ("500,250", 10000, 50000)
-            }
+    let (default_rounds, default_block_size, default_chain_gap) = if let Some(d) = divergence {
+        if *d < 1.0 {
+            ("100,10", 500, 10000)
+        } else if *d <= 10.0 {
+            ("250,100", 1000, 50000)
         } else {
-            // Fallback if no divergence specified, use "medium" defaults or what was previously hardcoded
-            ("1000,100,10", 0, 20000)
-        };
+            ("500,250", 10000, 50000)
+        }
+    } else {
+        // Fallback if no divergence specified, use "medium" defaults or what was previously hardcoded
+        ("1000,100,10", 0, 20000)
+    };
 
     let rounds_str = matches
         .get_one::<String>("rounds")
@@ -142,13 +141,7 @@ pub fn execute(matches: &ArgMatches) -> anyhow::Result<()> {
     }
 
     let finder = SyntenyFinder::new(
-        k,
-        rounds,
-        min_weight,
-        max_freq,
-        block_size,
-        chain_gap,
-        soft_mask,
+        k, rounds, min_weight, max_freq, block_size, chain_gap, soft_mask,
     );
 
     // Pre-scan to build seq_names map
@@ -189,10 +182,7 @@ pub fn execute(matches: &ArgMatches) -> anyhow::Result<()> {
     }
 
     let mut writer = intspan::writer(outfile);
-    writeln!(
-        writer,
-        "# Block_ID\tRange\tCount\tRound"
-    )?;
+    writeln!(writer, "# Block_ID\tRange\tCount\tRound")?;
     let mut block_counter = 0;
 
     let provider = |emit: &mut dyn FnMut(&str, &[u8])| -> anyhow::Result<()> {
@@ -224,10 +214,10 @@ pub fn execute(matches: &ArgMatches) -> anyhow::Result<()> {
                 .get(&range.seq_id)
                 .cloned()
                 .unwrap_or_else(|| format!("Seq_{}", range.seq_id));
-            
+
             let current_strand = if flip { !range.strand } else { range.strand };
             let strand_char = if current_strand { '+' } else { '-' };
-            
+
             let _ = writeln!(
                 writer,
                 "{}\t{}({}):{}-{}\t{}\t{}",

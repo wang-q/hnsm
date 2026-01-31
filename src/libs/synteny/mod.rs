@@ -2,8 +2,8 @@
 pub mod algo;
 pub mod block;
 pub mod chain;
-pub mod io;
 pub mod graph;
+pub mod io;
 
 #[cfg(test)]
 mod tests;

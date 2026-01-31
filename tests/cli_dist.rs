@@ -18,13 +18,13 @@ fn command_dist_hv() -> anyhow::Result<()> {
     // Check if output contains expected content
     // Based on distance command output in cli_clust.rs, we expect self-comparison of the file
     // But hv command with single file merges all sequences and compares to itself?
-    // Let's check hv help: 
-    // "For a single sequence file: Merge all sequences within the file into a single hypervector. 
+    // Let's check hv help:
+    // "For a single sequence file: Merge all sequences within the file into a single hypervector.
     // Note that comparing this set to itself (self-comparison) is not meaningful..."
-    
+
     // Actually, if we pass a single file to hv, it returns 1 line: file vs file.
     // Let's verify with a run.
-    
+
     assert!(stdout.lines().count() >= 1);
     assert!(stdout.contains("tests/clust/IBPA.fa"));
 
@@ -45,7 +45,7 @@ fn command_dist_hv_pair() -> anyhow::Result<()> {
     assert!(stdout.contains("tests/clust/IBPA.fa"));
     // Similarity should be 1.0 / Distance 0.0
     // The output format: <file1> <file2> ... <mash_dist> ...
-    
+
     Ok(())
 }
 

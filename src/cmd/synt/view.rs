@@ -94,7 +94,7 @@ pub fn execute(matches: &clap::ArgMatches) -> anyhow::Result<()> {
                 .next()
                 .unwrap_or("unknown")
                 .to_string();
-            
+
             genome_order.push(genome_name.clone());
             let entry = genome_chroms.entry(genome_name.clone()).or_default();
 
@@ -131,7 +131,7 @@ pub fn execute(matches: &clap::ArgMatches) -> anyhow::Result<()> {
         // 2. Group sequences into "Genomes" by name prefix
         // e.g. "mg1655.NC_000913" -> Genome "mg1655"
         let all_seqs: Vec<String> = seq_max_len.keys().cloned().collect();
-        
+
         for seq in all_seqs {
             let genome_name = seq.split('.').next().unwrap_or(&seq).to_string();
             seq_to_genome.insert(seq.clone(), genome_name.clone());
@@ -140,8 +140,8 @@ pub fn execute(matches: &clap::ArgMatches) -> anyhow::Result<()> {
 
         // Determine genome order (sorted alphabetically)
         let mut genomes: Vec<String> = genome_chroms.keys().cloned().collect();
-        genomes.sort(); 
-        
+        genomes.sort();
+
         genome_order = genomes;
     }
 
@@ -150,20 +150,23 @@ pub fn execute(matches: &clap::ArgMatches) -> anyhow::Result<()> {
     let margin_y = 50.0;
     // let track_height = (height - 2.0 * margin_y) / (genome_order.len().max(1) as f64);
     let height = 2.0 * margin_y + track_height * (genome_order.len().max(1) as f64);
-    
+
     // Find global max length to scale x
     let mut global_max_len = 0;
     for chroms in genome_chroms.values() {
-        let total_len: u64 = chroms.iter().map(|c| *chrom_lengths.get(c).unwrap_or(&0)).sum();
+        let total_len: u64 = chroms
+            .iter()
+            .map(|c| *chrom_lengths.get(c).unwrap_or(&0))
+            .sum();
         // Or if we stack them horizontally?
         // Usually ribbon plots stack chromosomes of one genome horizontally with gaps.
         if total_len > global_max_len {
             global_max_len = total_len;
         }
     }
-    
+
     let scale_x = (width - 2.0 * margin_x) / (global_max_len as f64).max(1.0);
-    
+
     // Calculate offsets for chromosomes on each track
     let mut chrom_offsets: HashMap<String, f64> = HashMap::new();
     let chrom_gap = global_max_len as f64 * 0.01; // 1% gap
@@ -174,7 +177,7 @@ pub fn execute(matches: &clap::ArgMatches) -> anyhow::Result<()> {
             // Sort chromosomes? Alphabetical for now if not specified
             let mut sorted_chroms = chroms.clone();
             sorted_chroms.sort();
-            
+
             for chrom in sorted_chroms {
                 chrom_offsets.insert(chrom.clone(), current_x);
                 let len = *chrom_lengths.get(&chrom).unwrap_or(&0) as f64;
@@ -200,9 +203,19 @@ pub fn execute(matches: &clap::ArgMatches) -> anyhow::Result<()> {
 
     // 4. Generate SVG
     let mut writer = intspan::writer(outfile);
-    writeln!(writer, r#"<svg width="{}" height="{}" xmlns="http://www.w3.org/2000/svg">"#, layout.width, layout.height)?;
-    writeln!(writer, r#"<style>text {{ font-family: sans-serif; font-size: 12px; }}</style>"#)?;
-    writeln!(writer, r#"<rect width="100%" height="100%" fill="white" />"#)?;
+    writeln!(
+        writer,
+        r#"<svg width="{}" height="{}" xmlns="http://www.w3.org/2000/svg">"#,
+        layout.width, layout.height
+    )?;
+    writeln!(
+        writer,
+        r#"<style>text {{ font-family: sans-serif; font-size: 12px; }}</style>"#
+    )?;
+    writeln!(
+        writer,
+        r#"<rect width="100%" height="100%" fill="white" />"#
+    )?;
 
     draw_tracks(&mut writer, &layout, no_label)?;
     draw_ribbons(&mut writer, &layout, &blocks)?;
@@ -228,35 +241,49 @@ struct Layout {
     global_max_len: u64,
 }
 
-fn draw_tracks(
-    writer: &mut impl Write,
-    layout: &Layout,
-    no_label: bool,
-) -> std::io::Result<()> {
+fn draw_tracks(writer: &mut impl Write, layout: &Layout, no_label: bool) -> std::io::Result<()> {
     for (i, g_name) in layout.genome_order.iter().enumerate() {
         let y = layout.margin_y + i as f64 * layout.track_height + layout.track_height / 2.0;
-        
+
         // Draw Label
         if !no_label {
-            writeln!(writer, r#"<text x="{}" y="{}" text-anchor="end" dominant-baseline="middle" font-weight="bold">{}</text>"#, layout.margin_x - 10.0, y + 5.0, g_name)?;
+            writeln!(
+                writer,
+                r#"<text x="{}" y="{}" text-anchor="end" dominant-baseline="middle" font-weight="bold">{}</text>"#,
+                layout.margin_x - 10.0,
+                y + 5.0,
+                g_name
+            )?;
         }
 
         if let Some(chroms) = layout.genome_chroms.get(g_name) {
             let mut sorted_chroms = chroms.clone();
             sorted_chroms.sort();
-            
+
             for chrom in sorted_chroms {
                 let x = *layout.chrom_offsets.get(&chrom).unwrap();
                 let len = *layout.chrom_lengths.get(&chrom).unwrap_or(&0) as f64;
                 let w = len * layout.scale_x;
-                
+
                 // Draw Chromosome Bar
-                writeln!(writer, r##"<rect x="{:.1}" y="{:.1}" width="{:.1}" height="10" fill="#ddd" stroke="#999" rx="5" />"##, x, y, w)?;
-                
+                writeln!(
+                    writer,
+                    r##"<rect x="{:.1}" y="{:.1}" width="{:.1}" height="10" fill="#ddd" stroke="#999" rx="5" />"##,
+                    x, y, w
+                )?;
+
                 // Draw Chromosome Name
                 if !no_label {
-                    let display_name = chrom.strip_prefix(&format!("{}.", g_name)).unwrap_or(&chrom);
-                    writeln!(writer, r##"<text x="{:.1}" y="{:.1}" dy="25" text-anchor="middle" font-size="10" fill="#666">{}</text>"##, x + w/2.0, y, display_name)?;
+                    let display_name = chrom
+                        .strip_prefix(&format!("{}.", g_name))
+                        .unwrap_or(&chrom);
+                    writeln!(
+                        writer,
+                        r##"<text x="{:.1}" y="{:.1}" dy="25" text-anchor="middle" font-size="10" fill="#666">{}</text>"##,
+                        x + w / 2.0,
+                        y,
+                        display_name
+                    )?;
                 }
             }
         }
@@ -264,73 +291,98 @@ fn draw_tracks(
     Ok(())
 }
 
-fn draw_ribbons(
-    writer: &mut impl Write,
-    layout: &Layout,
-    blocks: &[Block],
-) -> std::io::Result<()> {
-    let colors = ["#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7"];
-    
+fn draw_ribbons(writer: &mut impl Write, layout: &Layout, blocks: &[Block]) -> std::io::Result<()> {
+    let colors = [
+        "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7",
+    ];
+
     for (block_idx, block) in blocks.iter().enumerate() {
-        if block.ranges.len() < 2 { continue; }
-        
+        if block.ranges.len() < 2 {
+            continue;
+        }
+
         // Assume pairwise for simplicity: Range 0 -> Range 1
         let r1 = &block.ranges[0];
         let r2 = &block.ranges[1];
-        
+
         let g1 = layout.seq_to_genome.get(&r1.seq_name);
         let g2 = layout.seq_to_genome.get(&r2.seq_name);
-        
-        if g1.is_none() || g2.is_none() { continue; }
+
+        if g1.is_none() || g2.is_none() {
+            continue;
+        }
         let g1 = g1.unwrap();
         let g2 = g2.unwrap();
-        
+
         // Get Y coordinates
         let y1_idx = layout.genome_order.iter().position(|g| g == g1).unwrap();
         let y2_idx = layout.genome_order.iter().position(|g| g == g2).unwrap();
-        
-        if y1_idx == y2_idx { continue; } // Intra-genome not supported well yet
-        
-        let y1 = layout.margin_y + y1_idx as f64 * layout.track_height + layout.track_height / 2.0 + 10.0; // Bottom of bar
+
+        if y1_idx == y2_idx {
+            continue;
+        } // Intra-genome not supported well yet
+
+        let y1 = layout.margin_y
+            + y1_idx as f64 * layout.track_height
+            + layout.track_height / 2.0
+            + 10.0; // Bottom of bar
         let y2 = layout.margin_y + y2_idx as f64 * layout.track_height + layout.track_height / 2.0; // Top of bar
-        
+
         // Get X coordinates
         let x1_off = *layout.chrom_offsets.get(&r1.seq_name).unwrap();
         let x2_off = *layout.chrom_offsets.get(&r2.seq_name).unwrap();
-        
+
         let x1_start = x1_off + r1.start as f64 * layout.scale_x;
         let x1_end = x1_off + r1.end as f64 * layout.scale_x;
-        
+
         // Handle strand for r2
         let (x2_start, x2_end) = if r1.strand == r2.strand {
-            (x2_off + r2.start as f64 * layout.scale_x, x2_off + r2.end as f64 * layout.scale_x)
+            (
+                x2_off + r2.start as f64 * layout.scale_x,
+                x2_off + r2.end as f64 * layout.scale_x,
+            )
         } else {
             // Invert visualization for inverted alignment?
             // Usually we draw a "twist".
-            (x2_off + r2.end as f64 * layout.scale_x, x2_off + r2.start as f64 * layout.scale_x)
+            (
+                x2_off + r2.end as f64 * layout.scale_x,
+                x2_off + r2.start as f64 * layout.scale_x,
+            )
         };
-        
+
         let color = colors[block_idx % colors.len()];
         let opacity = 0.5;
-        
+
         // Bezier Path
         let h = (y2 - y1) / 2.0;
-        
-        writeln!(writer, r#"<path d="M {:.1} {:.1} C {:.1} {:.1}, {:.1} {:.1}, {:.1} {:.1} L {:.1} {:.1} C {:.1} {:.1}, {:.1} {:.1}, {:.1} {:.1} Z" fill="{}" fill-opacity="{}" stroke="none" />"#,
-            x1_start, y1,
-            x1_start, y1 + h, x2_start, y2 - h, x2_start, y2,
-            x2_end, y2,
-            x2_end, y2 - h, x1_end, y1 + h, x1_end, y1,
-            color, opacity
+
+        writeln!(
+            writer,
+            r#"<path d="M {:.1} {:.1} C {:.1} {:.1}, {:.1} {:.1}, {:.1} {:.1} L {:.1} {:.1} C {:.1} {:.1}, {:.1} {:.1}, {:.1} {:.1} Z" fill="{}" fill-opacity="{}" stroke="none" />"#,
+            x1_start,
+            y1,
+            x1_start,
+            y1 + h,
+            x2_start,
+            y2 - h,
+            x2_start,
+            y2,
+            x2_end,
+            y2,
+            x2_end,
+            y2 - h,
+            x1_end,
+            y1 + h,
+            x1_end,
+            y1,
+            color,
+            opacity
         )?;
     }
     Ok(())
 }
 
-fn draw_scale_bar(
-    writer: &mut impl Write,
-    layout: &Layout,
-) -> std::io::Result<()> {
+fn draw_scale_bar(writer: &mut impl Write, layout: &Layout) -> std::io::Result<()> {
     if layout.global_max_len > 0 {
         let target_width = (layout.width - 2.0 * layout.margin_x) / 5.0;
         let target_bp = target_width / layout.scale_x;
@@ -354,15 +406,38 @@ fn draw_scale_bar(
 
         let bar_x = layout.width - layout.margin_x - bar_width;
         let bar_y = layout.height - 20.0;
-        
-        writeln!(writer, r##"<line x1="{:.1}" y1="{:.1}" x2="{:.1}" y2="{:.1}" stroke="black" stroke-width="2" />"##, 
-            bar_x, bar_y, bar_x + bar_width, bar_y)?;
-        writeln!(writer, r##"<line x1="{:.1}" y1="{:.1}" x2="{:.1}" y2="{:.1}" stroke="black" stroke-width="2" />"##, 
-            bar_x, bar_y - 5.0, bar_x, bar_y + 5.0)?; // Left tick
-        writeln!(writer, r##"<line x1="{:.1}" y1="{:.1}" x2="{:.1}" y2="{:.1}" stroke="black" stroke-width="2" />"##, 
-            bar_x + bar_width, bar_y - 5.0, bar_x + bar_width, bar_y + 5.0)?; // Right tick
-        writeln!(writer, r##"<text x="{:.1}" y="{:.1}" text-anchor="middle" font-size="12">{}</text>"##, 
-            bar_x + bar_width / 2.0, bar_y - 10.0, bar_label)?;
+
+        writeln!(
+            writer,
+            r##"<line x1="{:.1}" y1="{:.1}" x2="{:.1}" y2="{:.1}" stroke="black" stroke-width="2" />"##,
+            bar_x,
+            bar_y,
+            bar_x + bar_width,
+            bar_y
+        )?;
+        writeln!(
+            writer,
+            r##"<line x1="{:.1}" y1="{:.1}" x2="{:.1}" y2="{:.1}" stroke="black" stroke-width="2" />"##,
+            bar_x,
+            bar_y - 5.0,
+            bar_x,
+            bar_y + 5.0
+        )?; // Left tick
+        writeln!(
+            writer,
+            r##"<line x1="{:.1}" y1="{:.1}" x2="{:.1}" y2="{:.1}" stroke="black" stroke-width="2" />"##,
+            bar_x + bar_width,
+            bar_y - 5.0,
+            bar_x + bar_width,
+            bar_y + 5.0
+        )?; // Right tick
+        writeln!(
+            writer,
+            r##"<text x="{:.1}" y="{:.1}" text-anchor="middle" font-size="12">{}</text>"##,
+            bar_x + bar_width / 2.0,
+            bar_y - 10.0,
+            bar_label
+        )?;
     }
     Ok(())
 }

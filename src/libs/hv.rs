@@ -128,10 +128,10 @@ pub fn hash_hv_i8(seed_vec: &[u64], hv_d: usize) -> Vec<i32> {
         for i in 0..num_chunk {
             let rnd_bits = rng.next_u64();
             let bytes = rnd_bits.to_ne_bytes();
-            
+
             // Load 8 bytes into SIMD vector
             let vec_u8 = u8x8::from_array(bytes);
-            
+
             // Cast u8 to i8 (0..255 -> 0..127, -128..-1)
             // Then cast to i32 for accumulation
             let vec_vals = vec_u8.cast::<i8>().cast::<i32>();
@@ -165,7 +165,7 @@ fn hash_hv_i8_serial(seed_vec: &[u64], hv_d: usize) -> Vec<i32> {
         for i in 0..num_chunk {
             let rnd_bits = rng.next_u64();
             let bytes = rnd_bits.to_ne_bytes();
-            
+
             // Iterate over each byte in the u64
             for j in 0..8 {
                 let val_i8 = bytes[j] as i8;

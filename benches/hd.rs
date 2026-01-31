@@ -343,5 +343,3 @@ criterion_main!(benches);
 - 推荐将 `encode_hash_hd_simd_i8` 的逻辑（使用 i8 累加代替位操作）合并到 `src/libs/hv.rs` 的主库中，以获得最大的性能提升。
 - 保持 `hash_hv` 接收 `&[u64]` 的接口更改，为调用者提供更大的灵活性。
 */
-
-

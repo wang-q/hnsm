@@ -92,7 +92,7 @@ impl SyntenyFinder {
 
             info!("Total minimizers: {}", total_minimizers);
             info!("Repetitive minimizers (frequency >= 2): {}", counts.len());
-            
+
             info!("Pass 2: Building graph...");
 
             // 2. Build Graph (Second Pass)
@@ -135,17 +135,23 @@ impl SyntenyFinder {
             graph.prune_low_weight_edges(self.min_weight);
 
             info!("Edges after pruning: {}", graph.graph.edge_count());
-            
+
             // 3.5 Transitive Reduction
             info!("Performing transitive reduction...");
             graph.transitive_reduction();
-            info!("Edges after transitive reduction: {}", graph.graph.edge_count());
+            info!(
+                "Edges after transitive reduction: {}",
+                graph.graph.edge_count()
+            );
 
             info!("Finding linear paths...");
 
             // 4. Find linear paths and convert to blocks
             let paths = graph.get_linear_paths();
-            info!("Found {} linear paths. Converting to blocks...", paths.len());
+            info!(
+                "Found {} linear paths. Converting to blocks...",
+                paths.len()
+            );
             let mut blocks_found = 0;
 
             for path in paths {
