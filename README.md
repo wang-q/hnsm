@@ -96,14 +96,12 @@ Commands:
   range       Extract sequence regions by coordinates
   prefilter   Prefilter genome/metagenome assembly by amino acid minimizers
   interleave  Interleave paired-end sequences
-  distance    Estimate sequence distances using minimizers
-  hv          Estimate distances between DNA/protein files using hypervectors
-  similarity  Calculate similarity between vectors
+  fq2fa       Convert FASTQ to FASTA format
+  dist        Distance related commands
   manifold    Manifold learning based on pairwise distances
   clust       Clustering commands
-  mat         Matrix commands
-  das         Domain architecture similarity
-  chain       Chains of syntenic genes
+  synt        Synteny analysis commands
+  gff         GFF file operations
   help        Print this message or the help of the given subcommand(s)
 
 Options:
@@ -118,18 +116,17 @@ Subcommand groups:
     * records: one / some / order / split
     * transform: replace / rc / filter / dedup / mask / sixframe
     * indexing: gz / range / prefilter
-* Fastq files: interleave
+* Fastq files: interleave / fq2fa
 
 * Distance
-    * DNA/protein: distance / hv
-    * vectors: similarity
+    * DNA/protein: dist hv / dist seq
+    * vectors: dist vector
     * manifold
-* Clustering: clust cc / clust dbscan
-* Matrix: mat pair / mat phylip
+* Clustering
+    * clust cc / clust dbscan / clust km / clust mcl
 
 * Synteny
-    * das
-    * chain
+    * synt chain / synt das / synt dna / synt merge / synt view
 
 ```
 
@@ -223,25 +220,25 @@ cargo run --bin hnsm fq2fa tests/fastq/R1.fq.gz
 #### Similarity and dissimilarity (distance) of vectors
 
 ```bash
-hnsm similarity tests/clust/domain.tsv --mode euclid --bin
+hnsm dist vector tests/clust/domain.tsv --mode euclid --bin
 
-hnsm similarity tests/clust/domain.tsv --mode cosine --bin
+hnsm dist vector tests/clust/domain.tsv --mode cosine --bin
 
-hnsm similarity tests/clust/domain.tsv --mode jaccard --bin
+hnsm dist vector tests/clust/domain.tsv --mode jaccard --bin
 
 hyperfine --warmup 1 \
     -n p1 \
-    'hnsm similarity data/Domian_content_1000.tsv --mode jaccard --bin -p 1 > /dev/null' \
+    'hnsm dist vector data/Domian_content_1000.tsv --mode jaccard --bin -p 1 > /dev/null' \
     -n p2 \
-    'hnsm similarity data/Domian_content_1000.tsv --mode jaccard --bin -p 2 > /dev/null' \
+    'hnsm dist vector data/Domian_content_1000.tsv --mode jaccard --bin -p 2 > /dev/null' \
     -n p3 \
-    'hnsm similarity data/Domian_content_1000.tsv --mode jaccard --bin -p 3 > /dev/null' \
+    'hnsm dist vector data/Domian_content_1000.tsv --mode jaccard --bin -p 3 > /dev/null' \
     -n p4 \
-    'hnsm similarity data/Domian_content_1000.tsv --mode jaccard --bin -p 4 > /dev/null' \
+    'hnsm dist vector data/Domian_content_1000.tsv --mode jaccard --bin -p 4 > /dev/null' \
     -n p6 \
-    'hnsm similarity data/Domian_content_1000.tsv --mode jaccard --bin -p 6 > /dev/null' \
+    'hnsm dist vector data/Domian_content_1000.tsv --mode jaccard --bin -p 6 > /dev/null' \
     -n p8 \
-    'hnsm similarity data/Domian_content_1000.tsv --mode jaccard --bin -p 8 > /dev/null' \
+    'hnsm dist vector data/Domian_content_1000.tsv --mode jaccard --bin -p 8 > /dev/null' \
     --export-markdown sim.md.tmp
 
 ```
@@ -260,7 +257,7 @@ hyperfine --warmup 1 \
 #### Pairwise distances by Minimizer
 
 ```console
-$ hnsm distance tests/clust/IBPA.fa -k 7 -w 1 |
+$ hnsm dist seq tests/clust/IBPA.fa -k 7 -w 1 |
     hnsm mat phylip stdin
   10
 IBPA_ECOLI      0       0.0669  0.2014  0.2106  0.4405  0       0.0011  0.7124  0.5454  0.3675
@@ -348,32 +345,32 @@ curl -L https://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/000/006/765/GCF_000006765.1
 * mash
 
 ```bash
-hnsm distance tests/genome/sakai.fa.gz tests/genome/mg1655.fa.gz --hasher mod -k 21 -w 1
+hnsm dist seq tests/genome/sakai.fa.gz tests/genome/mg1655.fa.gz --hasher mod -k 21 -w 1
 #NC_002695       NC_000913       0.0221  0.4580  0.5881
 #NC_002127       NC_000913       0.6640  0.0000  0.0006
 #NC_002128       NC_000913       0.4031  0.0001  0.0053
 
 hnsm rc tests/genome/mg1655.fa.gz |
-    hnsm distance tests/genome/sakai.fa.gz stdin --hasher mod -k 21 -w 1
+    hnsm dist seq tests/genome/sakai.fa.gz stdin --hasher mod -k 21 -w 1
 #NC_002695       RC_NC_000913    0.0221  0.4580  0.5881
 #NC_002127       RC_NC_000913    0.6640  0.0000  0.0006
 #NC_002128       RC_NC_000913    0.4031  0.0001  0.0053
 
 hnsm rc tests/genome/mg1655.fa.gz |
-    hnsm distance tests/genome/mg1655.fa.gz stdin --hasher mod -k 21 -w 1
+    hnsm dist seq tests/genome/mg1655.fa.gz stdin --hasher mod -k 21 -w 1
 #NC_000913       RC_NC_000913    0.0000  1.0000  1.0000
 hnsm rc tests/genome/mg1655.fa.gz |
-    hnsm distance tests/genome/mg1655.fa.gz stdin --hasher rapid -k 21 -w 1
+    hnsm dist seq tests/genome/mg1655.fa.gz stdin --hasher rapid -k 21 -w 1
 #NC_000913       RC_NC_000913    0.2289  0.0041  0.0082
 
-hnsm distance tests/genome/sakai.fa.gz tests/genome/mg1655.fa.gz --merge --hasher mod -k 21 -w 1
+hnsm dist seq tests/genome/sakai.fa.gz tests/genome/mg1655.fa.gz --merge --hasher mod -k 21 -w 1
 #tests/genome/sakai.fa.gz   tests/genome/mg1655.fa.gz  5302382 4543891 3064483 6781790 0.0226  0.4519  0.5779
 
-hnsm distance tests/genome/sakai.fa.gz tests/genome/mg1655.fa.gz --merge --hasher rapid -k 21 -w 1
+hnsm dist seq tests/genome/sakai.fa.gz tests/genome/mg1655.fa.gz --merge --hasher rapid -k 21 -w 1
 #tests/genome/sakai.fa.gz   tests/genome/mg1655.fa.gz  5394043 4562542 3071076 6885509 0.0230  0.4460  0.5693
 
 echo -e "tests/genome/sakai.fa.gz\ntests/genome/mg1655.fa.gz" |
-    hnsm distance stdin --merge --list --hasher mod -k 21 -w 1
+    hnsm dist seq stdin --merge --list --hasher mod -k 21 -w 1
 #tests/genome/sakai.fa.gz   tests/genome/sakai.fa.gz   5302382 5302382 5302382 5302382 0.0000  1.0000  1.0000
 #tests/genome/sakai.fa.gz   tests/genome/mg1655.fa.gz  5302382 4543891 3064483 6781790 0.0226  0.4519  0.5779
 #tests/genome/mg1655.fa.gz  tests/genome/sakai.fa.gz   4543891 5302382 3064483 6781790 0.0226  0.4519  0.6744
@@ -412,37 +409,37 @@ hnsm synt view tests/synt/mg1655_sakai.tsv -o tests/synt/mg1655_sakai.svg
 
 ```bash
 
-hnsm distance tests/genome/mg1655.pro.fa.gz tests/genome/pao1.pro.fa.gz -k 7 -w 2 |
+hnsm dist seq tests/genome/mg1655.pro.fa.gz tests/genome/pao1.pro.fa.gz -k 7 -w 2 |
     rgr filter stdin --ne 3:1
 
 hyperfine --warmup 1 \
     -n p1 \
-    'hnsm distance tests/genome/mg1655.pro.fa.gz tests/genome/pao1.pro.fa.gz -k 7 -w 2 -p 1 > /dev/null' \
+    'hnsm dist seq tests/genome/mg1655.pro.fa.gz tests/genome/pao1.pro.fa.gz -k 7 -w 2 -p 1 --merge > /dev/null' \
     -n p2 \
-    'hnsm distance tests/genome/mg1655.pro.fa.gz tests/genome/pao1.pro.fa.gz -k 7 -w 2 -p 2 > /dev/null' \
+    'hnsm dist seq tests/genome/mg1655.pro.fa.gz tests/genome/pao1.pro.fa.gz -k 7 -w 2 -p 2 > /dev/null' \
     -n p3 \
-    'hnsm distance tests/genome/mg1655.pro.fa.gz tests/genome/pao1.pro.fa.gz -k 7 -w 2 -p 3 > /dev/null' \
+    'hnsm dist seq tests/genome/mg1655.pro.fa.gz tests/genome/pao1.pro.fa.gz -k 7 -w 2 -p 3 > /dev/null' \
     -n p4 \
-    'hnsm distance tests/genome/mg1655.pro.fa.gz tests/genome/pao1.pro.fa.gz -k 7 -w 2 -p 4 > /dev/null' \
+    'hnsm dist seq tests/genome/mg1655.pro.fa.gz tests/genome/pao1.pro.fa.gz -k 7 -w 2 -p 4 > /dev/null' \
     -n p6 \
-    'hnsm distance tests/genome/mg1655.pro.fa.gz tests/genome/pao1.pro.fa.gz -k 7 -w 2 -p 6 > /dev/null' \
+    'hnsm dist seq tests/genome/mg1655.pro.fa.gz tests/genome/pao1.pro.fa.gz -k 7 -w 2 -p 6 > /dev/null' \
     -n p8 \
-    'hnsm distance tests/genome/mg1655.pro.fa.gz tests/genome/pao1.pro.fa.gz -k 7 -w 2 -p 8 > /dev/null' \
+    'hnsm dist seq tests/genome/mg1655.pro.fa.gz tests/genome/pao1.pro.fa.gz -k 7 -w 2 -p 8 > /dev/null' \
     --export-markdown dis.md.tmp
 
 hyperfine --warmup 1 \
     -n p1 \
-    'hnsm distance tests/genome/mg1655.pro.fa.gz tests/genome/pao1.pro.fa.gz -k 7 -w 2 --zero -p 1 > /dev/null' \
+    'hnsm dist seq tests/genome/mg1655.pro.fa.gz tests/genome/pao1.pro.fa.gz -k 7 -w 2 --zero -p 1 > /dev/null' \
     -n p2 \
-    'hnsm distance tests/genome/mg1655.pro.fa.gz tests/genome/pao1.pro.fa.gz -k 7 -w 2 --zero -p 2 > /dev/null' \
+    'hnsm dist seq tests/genome/mg1655.pro.fa.gz tests/genome/pao1.pro.fa.gz -k 7 -w 2 --zero -p 2 > /dev/null' \
     -n p3 \
-    'hnsm distance tests/genome/mg1655.pro.fa.gz tests/genome/pao1.pro.fa.gz -k 7 -w 2 --zero -p 3 > /dev/null' \
+    'hnsm dist seq tests/genome/mg1655.pro.fa.gz tests/genome/pao1.pro.fa.gz -k 7 -w 2 --zero -p 3 > /dev/null' \
     -n p4 \
-    'hnsm distance tests/genome/mg1655.pro.fa.gz tests/genome/pao1.pro.fa.gz -k 7 -w 2 --zero -p 4 > /dev/null' \
+    'hnsm dist seq tests/genome/mg1655.pro.fa.gz tests/genome/pao1.pro.fa.gz -k 7 -w 2 --zero -p 4 > /dev/null' \
     -n p6 \
-    'hnsm distance tests/genome/mg1655.pro.fa.gz tests/genome/pao1.pro.fa.gz -k 7 -w 2 --zero -p 6 > /dev/null' \
+    'hnsm dist seq tests/genome/mg1655.pro.fa.gz tests/genome/pao1.pro.fa.gz -k 7 -w 2 --zero -p 6 > /dev/null' \
     -n p8 \
-    'hnsm distance tests/genome/mg1655.pro.fa.gz tests/genome/pao1.pro.fa.gz -k 7 -w 2 --zero -p 8 > /dev/null' \
+    'hnsm dist seq tests/genome/mg1655.pro.fa.gz tests/genome/pao1.pro.fa.gz -k 7 -w 2 --zero -p 8 > /dev/null' \
     --export-markdown dis.md.tmp
 
 ```
@@ -470,26 +467,26 @@ hyperfine --warmup 1 \
 * Hypervector
 
 ```bash
-hnsm hv tests/clust/IBPA.fa
+hnsm dist hv tests/clust/IBPA.fa
 #tests/clust/IBPA.fa     tests/clust/IBPA.fa     776     776     776     776     0.0000  1.0000  1.0000
-hnsm distance tests/clust/IBPA.fa --merge
+hnsm dist seq tests/clust/IBPA.fa --merge
 #tests/clust/IBPA.fa     tests/clust/IBPA.fa     763     763     763     763     0.0000  1.0000  1.0000
 
-hnsm hv tests/genome/mg1655.pro.fa.gz
+hnsm dist hv tests/genome/mg1655.pro.fa.gz
 #tests/genome/mg1655.pro.fa.gz    tests/genome/mg1655.pro.fa.gz    1240734 1240734 1240734 1240734 0.0000  1.0000  1.0000
-hnsm distance tests/genome/mg1655.pro.fa.gz --merge
+hnsm dist seq tests/genome/mg1655.pro.fa.gz --merge
 #tests/genome/mg1655.pro.fa.gz    tests/genome/mg1655.pro.fa.gz    1267403 1267403 1267403 1267403 0.0000  1.0000  1.0000
 
-hnsm hv tests/genome/mg1655.pro.fa.gz tests/genome/pao1.pro.fa.gz -k 7 -w 1
+hnsm dist hv tests/genome/mg1655.pro.fa.gz tests/genome/pao1.pro.fa.gz -k 7 -w 1
 #tests/genome/mg1655.pro.fa.gz    tests/genome/pao1.pro.fa.gz      1240734 1733273 81195   2892811 0.4154  0.0281  0.0654
-hnsm distance tests/genome/mg1655.pro.fa.gz tests/genome/pao1.pro.fa.gz -k 7 -w 1 --merge
+hnsm dist seq tests/genome/mg1655.pro.fa.gz tests/genome/pao1.pro.fa.gz -k 7 -w 1 --merge
 #tests/genome/mg1655.pro.fa.gz    tests/genome/pao1.pro.fa.gz      1267403 1770832 60605   2977630 0.4602  0.0204  0.0478
 
 hyperfine --warmup 1 \
-    -n distance \
-    'hnsm distance tests/genome/mg1655.pro.fa.gz tests/genome/pao1.pro.fa.gz -k 7 -w 2 -p 1 --merge > /dev/null' \
+    -n "dist seq" \
+    'hnsm dist seq tests/genome/mg1655.pro.fa.gz tests/genome/pao1.pro.fa.gz -k 7 -w 1 --merge > /dev/null' \
     -n hv \
-    'hnsm hv tests/genome/mg1655.pro.fa.gz tests/genome/pao1.pro.fa.gz -k 7 -w 2 -p 1 > /dev/null' \
+    'hnsm dist hv tests/genome/mg1655.pro.fa.gz tests/genome/pao1.pro.fa.gz -k 7 -w 2 -p 1 > /dev/null' \
     --export-markdown dis.md.tmp
 
 ```
@@ -498,15 +495,15 @@ hyperfine --warmup 1 \
 
 | Command    |    Mean [ms] | Min [ms] | Max [ms] |    Relative |
 |:-----------|-------------:|---------:|---------:|------------:|
-| `distance` |  161.5 ± 3.3 |    154.6 |    167.4 |        1.00 |
-| `hv`       | 1571.1 ± 4.4 |   1564.7 |   1577.3 | 9.73 ± 0.20 |
+| `distancc` |  161.5 ± 3.3 |    154.6 |    167.4 |        1.00 |
+| `dist hv`  | 1571.1 ± 4.4 |   1564.7 |   1577.3 | 9.73 ± 0.20 |
 
 * hash_hd_i8
 
 | Command | Mean [ms] | Min [ms] | Max [ms] | Relative |
 |:---|---:|---:|---:|---:|
-| `distance` | 140.9 ± 2.9 | 135.1 | 147.9 | 1.00 |
-| `hv` | 1034.9 ± 14.5 | 1022.8 | 1072.1 | 7.34 ± 0.18 |
+| `dist seq` | 140.9 ± 2.9 | 135.1 | 147.9 | 1.00 |
+| `dist hv` | 1034.9 ± 14.5 | 1022.8 | 1072.1 | 7.34 ± 0.18 |
 
 ```bash
 # WSL has not perf
@@ -517,7 +514,7 @@ hyperfine --warmup 1 \
 cargo install flamegraph
 
 flamegraph -- \
-    hnsm distance tests/genome/mg1655.pro.fa.gz tests/genome/pao1.pro.fa.gz -k 7 -w 2 -p 1 --merge > /dev/null
+    hnsm dist seq tests/genome/mg1655.pro.fa.gz tests/genome/pao1.pro.fa.gz -k 7 -w 2 -p 1 --merge > /dev/null
 
 ```
 
@@ -525,7 +522,7 @@ flamegraph -- \
 
 ```bash
 hnsm sixframe tests/genome/sakai.fa.gz --len 35 |
-    hnsm distance stdin tests/genome/mg1655.pro.fa.gz -k 7 -w 2 -p 4 |
+    hnsm dist seq stdin tests/genome/mg1655.pro.fa.gz -k 7 -w 2 -p 4 |
     wc -l
 #21124
 

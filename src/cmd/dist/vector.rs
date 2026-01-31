@@ -4,11 +4,11 @@ use std::io::BufRead;
 
 // Create clap subcommand arguments
 pub fn make_subcommand() -> Command {
-    Command::new("similarity")
-        .about("Calculate similarity between vectors")
+    Command::new("vector")
+        .about("Calculate similarity/distance between vectors")
         .after_help(
             r###"
-This command calculates pairwise similarity between vectors in input file(s).
+This command calculates pairwise similarity/distance between vectors in input file(s).
 
 modes:
     * euclidean distance
