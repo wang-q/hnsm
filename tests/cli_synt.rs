@@ -147,8 +147,8 @@ G2\tP4\t300\t400
     fs::write(annot_path, annot_content)?;
 
     let match_content = "\
-P1\tP3\t50
-P2\tP4\t50
+P1\tP3\t1.0
+P2\tP4\t1.0
 ";
     fs::write(match_path, match_content)?;
 

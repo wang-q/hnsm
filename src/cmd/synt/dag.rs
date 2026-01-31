@@ -13,8 +13,32 @@ pub fn make_subcommand() -> Command {
             r###"
 Algorithm adopted from `DAGchainer`
 
+# Algorithm & Scoring
+
+1. **The Concept (2D Plane)**
+   - Imagine Genome 1 on the X-axis and Genome 2 on the Y-axis.
+   - Each gene match is a point (x, y) on this plane.
+   - Synteny blocks appear as diagonal lines of points.
+
+2. **The Goal**
+   - Find the "best" path connecting these points (Chains).
+   - "Best" means maximizing the Total Score.
+
+3. **Scoring Logic**
+   - **Reward**: High similarity matches increase the score.
+     - Score = Similarity * Max_Score (default 50).
+   - **Penalty**: Gaps between points decrease the score.
+     - Gap Penalty = Gap_Open + (Distance * Gap_Extend).
+     - Distance is calculated in "atomic" units (default 1 unit = 3000 bp).
+
+4. **The Solution (DAGchainer)**
+   - Uses Dynamic Programming to find the optimal path.
+   - For every point, it calculates: "If I extend a chain from a previous point, what is the best score I can get?"
+     - Current_Score = Match_Score + max(Previous_Score - Gap_Penalty).
+   - This effectively balances "more matches" vs "tight collinearity".
+
 # Standard format
-hnsm synt dag annot.tsv match.tsv
+hnsm synt dag pos.tsv match.tsv
 "###,
         )
         .arg(
@@ -22,7 +46,7 @@ hnsm synt dag annot.tsv match.tsv
                 .required(true)
                 .index(1)
                 .num_args(2)
-                .help("Input files: 1. Annotation file, 2. Match file."),
+                .help("Input files: 1. Position file, 2. Match file."),
         )
         .arg(
             Arg::new("go")
@@ -121,9 +145,9 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     //----------------------------
     // Ops
     //----------------------------
-    let annot_file = &infiles[0];
+    let pos_file = &infiles[0];
     let match_file = &infiles[1];
-    let acc_info = read_annotations(annot_file)?;
+    let acc_info = read_positions(pos_file)?;
     let (acc_pair_map, mol_pair_map) = parse_match_file(match_file, &acc_info, &chain_opt)?;
     // eprintln!("{:#?}", mol_pair_map);
 
@@ -264,7 +288,7 @@ fn pair_key(
     (acc_pair_key, mol_pair_key)
 }
 
-fn read_annotations(path: &str) -> anyhow::Result<HashMap<String, Feature>> {
+fn read_positions(path: &str) -> anyhow::Result<HashMap<String, Feature>> {
     let file = std::fs::File::open(path)?;
     let reader = io::BufReader::new(file);
     let mut acc_info = HashMap::new();
@@ -345,14 +369,9 @@ fn parse_match_file(
         }
 
         // Calculate score
-        let score = if raw_score <= 1.0 {
-            // Assume Similarity (0.0 - 1.0)
-            // Scale to 0 - max_match_score
-            (raw_score as f32) * opt.max_match_score
-        } else {
-            // Assume Bitscore or pre-calculated score > 1.0
-            (raw_score as f32).min(opt.max_match_score)
-        };
+        // Only consider Similarity (0.0 - 1.0)
+        // Scale to 0 - max_match_score
+        let score = (raw_score as f32) * opt.max_match_score;
 
         if !acc_info.contains_key(acc_1) || !acc_info.contains_key(acc_2) {
             continue;
