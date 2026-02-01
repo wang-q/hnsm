@@ -6,19 +6,19 @@
 
 命令结构如下：
 
-*   `hnsm synt dna`: 基于 Minimizer 图的 DNA 共线性分析。
+*   `hnsm synt mmg`: 基于 Minimizer 图的 DNA 共线性分析。
 *   `hnsm synt das`: 基于动态规划的结构域架构相似性分析。
 *   `hnsm synt merge`: 通用的共线性块合并/缝合工具。
 *   `hnsm synt view`: 共线性结果可视化工具 (SVG)。
 
-## 2. `hnsm synt dna` 设计详情
+## 2. `hnsm synt mmg` 设计详情
 
-`hnsm synt dna` 是基于 Minimizer 图的高效 DNA 共线性分析工具。
+`hnsm synt mmg` 是基于 Minimizer 图的高效 DNA 共线性分析工具。
 
 请参考命令行帮助获取详细的算法说明和参数列表：
 
 ```bash
-hnsm synt dna --help
+hnsm synt mmg --help
 ```
 
 ### 2.1. 结果解读示例 (Output Interpretation Example)
@@ -125,34 +125,6 @@ hnsm synt merge raw_blocks.tsv -d 5 -o merged.tsv
 hnsm synt merge raw_blocks.tsv --chain-gap 50000 -o merged_manual.tsv
 ```
 
-## 4. `hnsm synt view` 设计详情
-
-`hnsm synt view` 是一个轻量级的可视化工具，直接将 `hnsm synt dna/merge` 的结果转换为 SVG 矢量图，无需依赖 Python/R 环境。
-
-### 4.1. 核心功能
-*   **输入**: 共线性块文件 (.tsv) 和可选的基因组长度文件 (.size)。
-*   **输出**: 标准 SVG 文件，可直接在浏览器或矢量图软件中打开。
-*   **布局**: 简单的线性堆叠布局 (Linear Stack Layout)。
-
-### 4.2. 算法逻辑
-1.  **坐标映射**: 将基因组序列映射到画布上的水平轨道 (Tracks)。
-2.  **贝塞尔曲线**: 使用三次贝塞尔曲线 (Cubic Bezier Curves) 连接共线性区域，平滑展示倒位 (Inversions) 和易位 (Translocations)。
-3.  **自动缩放**: 根据输入序列的最大长度自动调整画布宽度。
-
-### 4.3. 接口设计
-
-```bash
-hnsm synt view [OPTIONS] <infile> [size_files...]
-```
-
-#### 参数选项
-*   `infile` (Required): 输入共线性块文件 (.tsv)。
-*   `size_files` (Optional): 染色体长度文件，用于准确绘制染色体边界。
-*   `--outfile, -o <FILE>`: 输出 SVG 文件路径 (默认: stdout)。
-*   `--width <INT>`: 画布宽度 (默认: 1000)。
-*   `--height <INT>`: 每个轨道的高度（即基因组间的距离）(默认: 300)。
-*   `--no-label`: 隐藏序列名称标签。
-
 ## 5. `hnsm synt das` 设计详情
 
 `hnsm synt das` 用于计算结构域架构相似性（Domain Architecture Similarity），采用动态规划算法对序列特征进行比对。
@@ -167,25 +139,39 @@ hnsm synt view [OPTIONS] <infile> [size_files...]
 *   `--header, -H`: 标记输入文件是否包含表头。
 *   `--outfile, -o <FILE>`: 输出文件路径 (默认: stdout)。
 
+## FastGA + UCSC chainNet 共线性检测
+
+```bash
+FastGA -v -psl tests/genome/sakai.fa.gz tests/genome/mg1655.fa.gz > tmp.psl
+
+pgr chain -t="" tests/genome/mg1655.fa.gz tests/genome/sakai.fa.gz tmp.psl > tmp.syn.maf
+
+
+```
+
 ## 基于蛋白相似度的共线性检测
 
 ### E. coli mg1655 基因组内部
 
 ```bash
 # 生成基因位置
-hnsm gff rg tests/genome/mg1655.gff.gz --tag cds --key protein_id --asm mg1655 -s --ss -o mg1655.rg.tsv
+hnsm gff rg tests/genome/mg1655.gff.gz --tag cds --key protein_id --asm mg1655 -s --ss \
+    -o tests/genome/mg1655.rg.tsv
 
 # 计算蛋白相似度矩阵
 hnsm dist seq tests/genome/mg1655.pro.fa.gz -k 7 -w 2 --sim -p 8 |
     rgr filter stdin --ff-ne 1:2 \
-    > mg1655.sim.tsv
+    > tests/genome/mg1655.sim.tsv
 
 # dag chain
 # 接收两个文件：1. 基因位置文件 2. 蛋白相似度矩阵文件
-hnsm synt dag mg1655.rg.tsv mg1655.sim.tsv -o mg1655.chain.tsv
+hnsm synt dag mg1655.rg.tsv mg1655.sim.tsv -o tests/genome/mg1655.dag.tsv
 
 # 显示共线性块
-hnsm synt view mg1655.chain.tsv mg1655.size.tsv -o mg1655.chain.svg
+cargo run --bin hnsm synt ribbon tests/genome/mg1655.dag.tsv tests/genome/mg1655.size.tsv -o mg1655.ribbon.svg
+
+cargo run --bin hnsm synt circle tests/genome/mg1655.dag.tsv tests/genome/mg1655.size.tsv -o mg1655.circle.svg
+
 
 ```
 
