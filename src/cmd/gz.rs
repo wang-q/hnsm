@@ -90,7 +90,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
         Box::new(std::io::BufReader::new(file))
     };
 
-    let mut writer = noodles_bgzf::MultithreadedWriter::with_worker_count(
+    let mut writer = noodles_bgzf::io::MultithreadedWriter::with_worker_count(
         opt_parallel,
         Box::new(std::io::BufWriter::new(
             std::fs::File::create(&outfile).unwrap(),

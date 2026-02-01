@@ -144,7 +144,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
             // Init reader for each chunk
             if is_bgzf {
                 hnsm::Input::Bgzf(
-                    noodles_bgzf::indexed_reader::Builder::default()
+                    noodles_bgzf::io::indexed_reader::Builder::default()
                         .build_from_path(infile)
                         .unwrap(),
                 )

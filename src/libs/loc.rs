@@ -6,7 +6,7 @@ use std::io::{BufRead, Read, Seek, SeekFrom};
 pub enum Input {
     Buf(Box<dyn BufRead>),
     File(std::fs::File),
-    Bgzf(bgzf::IndexedReader<std::fs::File>),
+    Bgzf(bgzf::io::IndexedReader<std::fs::File>),
 }
 
 pub fn create_loc(infile: &str, locfile: &str, is_bgzf: bool) -> anyhow::Result<()> {
@@ -14,7 +14,7 @@ pub fn create_loc(infile: &str, locfile: &str, is_bgzf: bool) -> anyhow::Result<
         // http://www.htslib.org/doc/bgzip.html
         // Bgzip will attempt to ensure BGZF blocks end on a newline when the input is a text file.
         // The exception to this is where a single line is larger than a BGZF block (64Kb).
-        Input::Bgzf(bgzf::indexed_reader::Builder::default().build_from_path(infile)?)
+        Input::Bgzf(bgzf::io::indexed_reader::Builder::default().build_from_path(infile)?)
     } else {
         Input::Buf(reader_buf(infile))
     };

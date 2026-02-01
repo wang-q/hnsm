@@ -7,7 +7,7 @@ fn command_synt_dna() -> anyhow::Result<()> {
     let mut cmd = Command::cargo_bin("hnsm")?;
     let output = cmd
         .arg("synt")
-        .arg("dna")
+        .arg("mmg")
         .arg("tests/genome/small_1.fa")
         .arg("tests/genome/small_2.fa")
         .arg("-o")
@@ -61,7 +61,7 @@ fn command_synt_dna_soft_mask() -> anyhow::Result<()> {
     let mut cmd = Command::cargo_bin("hnsm")?;
     let output = cmd
         .arg("synt")
-        .arg("dna")
+        .arg("mmg")
         .arg("tests/genome/small_1.fa")
         .arg("tests/genome/small_2.fa")
         .arg("-o")

@@ -146,7 +146,7 @@ pub fn execute(args: &ArgMatches) -> anyhow::Result<()> {
     let loc_of: indexmap::IndexMap<String, (u64, usize)> = hnsm::load_loc(&loc_file)?;
 
     let mut reader = if is_bgzf {
-        hnsm::Input::Bgzf(noodles_bgzf::indexed_reader::Builder::default().build_from_path(infile)?)
+        hnsm::Input::Bgzf(noodles_bgzf::io::indexed_reader::Builder::default().build_from_path(infile)?)
     } else {
         hnsm::Input::File(std::fs::File::open(std::path::Path::new(infile))?)
     };
