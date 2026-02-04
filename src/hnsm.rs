@@ -14,12 +14,8 @@ fn main() -> anyhow::Result<()> {
         // info
         // records
         // transform
-        // transform
-        .subcommand(cmd::sixframe::make_subcommand())
         // index
         .subcommand(cmd::prefilter::make_subcommand())
-        // fastq
-        .subcommand(cmd::interleave::make_subcommand())
         // distance
         .subcommand(cmd::dist::make_subcommand())
         .subcommand(cmd::manifold::make_subcommand())
@@ -33,24 +29,19 @@ fn main() -> anyhow::Result<()> {
         .subcommand(cmd::mat::make_subcommand())
         .after_help(
             r###"Subcommand groups:
-
-* Fasta files
-    * info: size / count / masked / n50
-    * records: one / some / order / split
-    * transform: replace / rc / filter / dedup / mask / sixframe
-    * indexing: gz / range / prefilter
-* Fastq files: interleave / fq2fa
+* Indexing
+    * prefilter
 * Distance
-    * DNA/protein: dist hv / dist seq
-    * vectors: dist vector
+    * dist hv / dist seq / dist vector
     * manifold
 * Clustering
     * clust cc / clust dbscan / clust km / clust mcl
 * Matrix
     * mat compare / mat format / mat pair / mat phylip / mat subset
 * Synteny
-    * synt chain / synt das / synt dna / synt merge / synt view
-
+    * synt dag / synt das / synt mmg / synt merge / synt ribbon / synt circle
+* GFF
+    * gff rg
 "###,
         );
 
@@ -61,9 +52,7 @@ fn main() -> anyhow::Result<()> {
         Some(("mat", sub_matches)) => cmd::mat::execute(sub_matches),
         Some(("clust", sub_matches)) => cmd::clust::execute(sub_matches),
         Some(("manifold", sub_matches)) => cmd::manifold::execute(sub_matches),
-        Some(("sixframe", sub_matches)) => cmd::sixframe::execute(sub_matches),
         Some(("prefilter", sub_matches)) => cmd::prefilter::execute(sub_matches),
-        Some(("interleave", sub_matches)) => cmd::interleave::execute(sub_matches),
         Some(("dist", sub_matches)) => cmd::dist::execute(sub_matches),
         _ => unreachable!(),
     }?;
