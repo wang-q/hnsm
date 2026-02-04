@@ -12,10 +12,6 @@ fn main() -> anyhow::Result<()> {
         .arg_required_else_help(true)
         .color(ColorChoice::Auto)
         // info
-        .subcommand(cmd::size::make_subcommand())
-        .subcommand(cmd::count::make_subcommand())
-        .subcommand(cmd::masked::make_subcommand())
-        .subcommand(cmd::n50::make_subcommand())
         // records
         .subcommand(cmd::one::make_subcommand())
         .subcommand(cmd::some::make_subcommand())
@@ -75,9 +71,7 @@ fn main() -> anyhow::Result<()> {
         Some(("gff", sub_matches)) => cmd::gff::execute(sub_matches),
         Some(("mat", sub_matches)) => cmd::mat::execute(sub_matches),
         Some(("clust", sub_matches)) => cmd::clust::execute(sub_matches),
-        Some(("count", sub_matches)) => cmd::count::execute(sub_matches),
         Some(("dedup", sub_matches)) => cmd::dedup::execute(sub_matches),
-        Some(("n50", sub_matches)) => cmd::n50::execute(sub_matches),
         Some(("one", sub_matches)) => cmd::one::execute(sub_matches),
         Some(("some", sub_matches)) => cmd::some::execute(sub_matches),
         Some(("order", sub_matches)) => cmd::order::execute(sub_matches),
@@ -87,9 +81,7 @@ fn main() -> anyhow::Result<()> {
         Some(("filter", sub_matches)) => cmd::filter::execute(sub_matches),
         Some(("manifold", sub_matches)) => cmd::manifold::execute(sub_matches),
         Some(("mask", sub_matches)) => cmd::mask::execute(sub_matches),
-        Some(("masked", sub_matches)) => cmd::masked::execute(sub_matches),
         Some(("sixframe", sub_matches)) => cmd::sixframe::execute(sub_matches),
-        Some(("size", sub_matches)) => cmd::size::execute(sub_matches),
         Some(("gz", sub_matches)) => cmd::gz::execute(sub_matches),
         Some(("range", sub_matches)) => cmd::range::execute(sub_matches),
         Some(("prefilter", sub_matches)) => cmd::prefilter::execute(sub_matches),
