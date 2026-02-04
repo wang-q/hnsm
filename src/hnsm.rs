@@ -13,13 +13,7 @@ fn main() -> anyhow::Result<()> {
         .color(ColorChoice::Auto)
         // info
         // records
-        .subcommand(cmd::one::make_subcommand())
-        .subcommand(cmd::some::make_subcommand())
-        .subcommand(cmd::order::make_subcommand())
-        .subcommand(cmd::split::make_subcommand())
         // transform
-        .subcommand(cmd::replace::make_subcommand())
-        .subcommand(cmd::rc::make_subcommand())
         .subcommand(cmd::filter::make_subcommand())
         .subcommand(cmd::dedup::make_subcommand())
         .subcommand(cmd::mask::make_subcommand())
@@ -72,12 +66,6 @@ fn main() -> anyhow::Result<()> {
         Some(("mat", sub_matches)) => cmd::mat::execute(sub_matches),
         Some(("clust", sub_matches)) => cmd::clust::execute(sub_matches),
         Some(("dedup", sub_matches)) => cmd::dedup::execute(sub_matches),
-        Some(("one", sub_matches)) => cmd::one::execute(sub_matches),
-        Some(("some", sub_matches)) => cmd::some::execute(sub_matches),
-        Some(("order", sub_matches)) => cmd::order::execute(sub_matches),
-        Some(("split", sub_matches)) => cmd::split::execute(sub_matches),
-        Some(("replace", sub_matches)) => cmd::replace::execute(sub_matches),
-        Some(("rc", sub_matches)) => cmd::rc::execute(sub_matches),
         Some(("filter", sub_matches)) => cmd::filter::execute(sub_matches),
         Some(("manifold", sub_matches)) => cmd::manifold::execute(sub_matches),
         Some(("mask", sub_matches)) => cmd::mask::execute(sub_matches),

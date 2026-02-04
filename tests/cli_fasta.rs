@@ -15,68 +15,6 @@ fn command_invalid() -> anyhow::Result<()> {
 }
 
 
-#[test]
-fn command_some() -> anyhow::Result<()> {
-    let mut cmd = Command::cargo_bin("hnsm")?;
-    let output = cmd
-        .arg("some")
-        .arg("tests/fasta/ufasta.fa")
-        .arg("tests/fasta/list.txt")
-        .output()?;
-    let stdout = String::from_utf8(output.stdout)?;
-
-    assert_eq!(stdout.lines().count(), 4);
-    assert!(stdout.contains("read0\n"), "read0");
-    assert!(stdout.contains("read12\n"), "read12");
-
-    let mut cmd = Command::cargo_bin("hnsm")?;
-    let output = cmd
-        .arg("some")
-        .arg("tests/fasta/ufasta.fa")
-        .arg("tests/fasta/list.txt")
-        .arg("-i")
-        .output()?;
-    let stdout = String::from_utf8(output.stdout)?;
-
-    assert_eq!(stdout.lines().count(), 91);
-    assert!(!stdout.contains("read0\n"), "read0");
-    assert!(!stdout.contains("read12\n"), "read12");
-
-    Ok(())
-}
-
-#[test]
-fn command_order() -> anyhow::Result<()> {
-    let mut cmd = Command::cargo_bin("hnsm")?;
-    let output = cmd
-        .arg("order")
-        .arg("tests/fasta/ufasta.fa")
-        .arg("tests/fasta/list.txt")
-        .output()?;
-    let stdout = String::from_utf8(output.stdout)?;
-
-    assert_eq!(stdout.lines().count(), 4);
-    assert!(stdout.contains("read12\n"), "read12");
-    assert!(stdout.contains("read0\n"), "read0");
-
-    Ok(())
-}
-
-#[test]
-fn command_one() -> anyhow::Result<()> {
-    let mut cmd = Command::cargo_bin("hnsm")?;
-    let output = cmd
-        .arg("one")
-        .arg("tests/fasta/ufasta.fa")
-        .arg("read12")
-        .output()?;
-    let stdout = String::from_utf8(output.stdout)?;
-
-    assert_eq!(stdout.lines().count(), 2);
-    assert!(stdout.contains("read12\n"), "read12");
-
-    Ok(())
-}
 
 
 #[test]
@@ -107,59 +45,8 @@ fn command_mask() -> anyhow::Result<()> {
     Ok(())
 }
 
-#[test]
-fn command_rc() -> anyhow::Result<()> {
-    let mut cmd = Command::cargo_bin("hnsm")?;
-    let output = cmd.arg("rc").arg("tests/fasta/ufasta.fa").output()?;
-    let stdout = String::from_utf8(output.stdout)?;
-
-    assert!(stdout.contains("GgacTgcggCTagAA"), "read46");
-
-    let mut cmd = Command::cargo_bin("hnsm")?;
-    let output = cmd
-        .arg("rc")
-        .arg("tests/fasta/ufasta.fa")
-        .arg("tests/fasta/list.txt")
-        .output()?;
-    let stdout = String::from_utf8(output.stdout)?;
-
-    assert!(stdout.contains(">RC_read12"), "read12");
-    assert!(!stdout.contains(">RC_read46"), "read46");
-    assert!(!stdout.contains("GgacTgcggCTagAA"), "read46");
-
-    Ok(())
-}
 
 
-#[test]
-fn command_replace() -> anyhow::Result<()> {
-    let mut cmd = Command::cargo_bin("hnsm")?;
-    let output = cmd
-        .arg("replace")
-        .arg("tests/fasta/ufasta.fa")
-        .arg("tests/fasta/replace.tsv")
-        .output()?;
-    let stdout = String::from_utf8(output.stdout)?;
-
-    assert_eq!(stdout.lines().count(), 95);
-    assert!(stdout.contains(">359"), "read0");
-    assert!(!stdout.contains(">read0"), "read0");
-
-    let mut cmd = Command::cargo_bin("hnsm")?;
-    let output = cmd
-        .arg("replace")
-        .arg("tests/fasta/ufasta.fa")
-        .arg("tests/fasta/replace.tsv")
-        .arg("--some")
-        .output()?;
-    let stdout = String::from_utf8(output.stdout)?;
-
-    assert_eq!(stdout.lines().count(), 6);
-    assert!(stdout.contains(">359"), "read0");
-    assert!(!stdout.contains(">read0"), "read0");
-
-    Ok(())
-}
 
 // faops filter -l 0 -a 10 -z 50 tests/fasta/ufasta.fa stdout
 // faops filter -l 0 -a 1 -u <(cat tests/fasta/ufasta.fa tests/fasta/ufasta.fa) stdout
@@ -321,53 +208,6 @@ fn command_dedup() -> anyhow::Result<()> {
     Ok(())
 }
 
-#[test]
-fn command_split_name() -> anyhow::Result<()> {
-    let tempdir = TempDir::new()?;
-    let tempdir_str = tempdir.path().to_str().unwrap();
-
-    let mut cmd = Command::cargo_bin("hnsm")?;
-    cmd.arg("split")
-        .arg("name")
-        .arg("tests/fasta/ufasta.fa")
-        .arg("-o")
-        .arg(tempdir_str)
-        .assert()
-        .success()
-        .stdout(predicate::str::is_empty());
-
-    assert!(&tempdir.path().join("read0.fa").is_file());
-    assert!(!&tempdir.path().join("000.fa").exists());
-
-    tempdir.close()?;
-    Ok(())
-}
-
-#[test]
-fn command_split_about() -> anyhow::Result<()> {
-    let tempdir = TempDir::new()?;
-    let tempdir_str = tempdir.path().to_str().unwrap();
-
-    let mut cmd = Command::cargo_bin("hnsm")?;
-    cmd.arg("split")
-        .arg("about")
-        .arg("tests/fasta/ufasta.fa")
-        .arg("-c")
-        .arg("2000")
-        .arg("-o")
-        .arg(tempdir_str)
-        .assert()
-        .success()
-        .stdout(predicate::str::is_empty());
-
-    assert!(!&tempdir.path().join("read0.fa").is_file());
-    assert!(&tempdir.path().join("000.fa").exists());
-    assert!(&tempdir.path().join("004.fa").exists());
-    assert!(!&tempdir.path().join("005.fa").exists());
-
-    tempdir.close()?;
-    Ok(())
-}
 
 
 #[test]
