@@ -94,7 +94,6 @@ Commands:
   sixframe    Translate DNA sequences in six frames
   gz          Compressing a file using the BGZF format
   range       Extract sequence regions by coordinates
-  prefilter   Prefilter genome/metagenome assembly by amino acid minimizers
   interleave  Interleave paired-end sequences
   fq2fa       Convert FASTQ to FASTA format
   dist        Distance related commands
@@ -115,7 +114,7 @@ Subcommand groups:
     * info: size / count / masked / n50
     * records: one / some / order / split
     * transform: replace / rc / filter / dedup / mask / sixframe
-    * indexing: gz / range / prefilter
+    * indexing: gz / range
 * Fastq files: interleave / fq2fa
 * Distance
     * DNA/protein: dist hv / dist seq
@@ -545,32 +544,6 @@ hnsm prefilter 3300035148.fna.gz "tests/clust/APH(3')-IIIa.fa" -c 1000000 -p 8
 
 ```
 
-### Matrix commands
-
-```bash
-hnsm mat phylip tests/mat/IBPA.fa.tsv
-
-hnsm mat pair tests/mat/IBPA.phy
-
-hnsm mat format tests/mat/IBPA.phy
-
-hnsm mat subset tests/mat/IBPA.phy tests/mat/IBPA.list
-
-hnsm dist seq tests/mat/IBPA.fa -k 7 -w 1 |
-    hnsm mat phylip stdin -o tests/mat/IBPA.71.phy
-
-hnsm mat compare tests/mat/IBPA.phy tests/mat/IBPA.71.phy --method all
-# Sequences in matrices: 10 and 10
-# Common sequences: 10
-# Method  Score
-# pearson 0.935803
-# spearman        0.919631
-# mae     0.113433
-# cosine  0.978731
-# jaccard 0.759106
-# euclid  1.229844
-
-```
 
 
 ## Author
